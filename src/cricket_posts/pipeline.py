@@ -231,7 +231,9 @@ class PosterComposer:
                 "subjects": subjects,
                 # When the growth ladder runs out, centring turns a hole at the
                 # bottom into balanced margins, which is what a designer does.
-                "copy_justify": "center" if state.centered else "flex-start",
+                "copy_justify": "center"
+                if (state.centered or archetype.centered)
+                else "flex-start",
                 "zone": zone,
                 "width": width,
                 "height": height,

@@ -23,6 +23,7 @@ from .models import Rect
 class ArchetypeId(str, Enum):
     LEFT_COLUMN = "left_column"
     BOTTOM_THIRD = "bottom_third"
+    CENTER_STAGE = "center_stage"
 
 
 class BarPosition(str, Enum):
@@ -42,6 +43,9 @@ class Archetype(BaseModel):
     columns: int = 1
     bar: BarPosition = BarPosition.BOTTOM
     banner: bool = True
+    #: Centre the copy horizontally and set it ragged-centre. Suits announcement
+    #: posters that carry no photography, where a left column looks lopsided.
+    centered: bool = False
 
     def region_rect(self, width: int, height: int) -> Rect:
         left, top, right, bottom = self.expected_region
@@ -74,6 +78,22 @@ ARCHETYPES: dict[ArchetypeId, Archetype] = {
         ),
         expected_region=(0.03, 0.03, 0.42, 0.88),
         columns=1,
+    ),
+    ArchetypeId.CENTER_STAGE: Archetype(
+        id=ArchetypeId.CENTER_STAGE,
+        label="Centred announcement, artwork framing the edges",
+        negative_space_brief=(
+            "Keep a large calm rectangle through the middle of the canvas — the "
+            "central two thirds horizontally and from just below the top edge to the "
+            "lower fifth — as near-flat, light background with no detail, no strokes "
+            "and no small marks. Concentrate every colour block, diagonal plane and "
+            "decorative mark into the outer margins: the top-left and top-right "
+            "corners, the left and right edges, and the bottom corners, framing the "
+            "empty centre without intruding on it."
+        ),
+        expected_region=(0.08, 0.09, 0.92, 0.80),
+        columns=1,
+        centered=True,
     ),
     ArchetypeId.BOTTOM_THIRD: Archetype(
         id=ArchetypeId.BOTTOM_THIRD,

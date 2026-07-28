@@ -1,0 +1,55 @@
+{
+  "brand": {
+    "name": "22 YARDS HOUSTON",
+    "tagline": "",
+    "location": "Houston, TX",
+    "contact_lines": [],
+    "palette": {
+      "ink": "#12296E",
+      "surface": "#F5F7FF",
+      "accent": "#FFC629",
+      "highlight": "#1B6BE0"
+    }
+  },
+  "content": {
+    "content_type": "camp",
+    "organization": "22 YARDS HOUSTON",
+    "eyebrow": "REGISTRATIONS NOW OPEN",
+    "title": "SUMMER CRICKET & ACTIVITY CAMP",
+    "subtitle": "Give their summer a real season.",
+    "tagline": "STRUCTURED DAYS. BRIGHTER SUMMERS.",
+    "schedule": {
+      "display_text": "MAY 25 – AUGUST 7  ·  MON–FRI  ·  9 AM – 1 PM"
+    },
+    "program_info": "EXTENDED CARE UNTIL 4 PM",
+    "detail_lines": [
+      "SEPARATE SOFT BALL & HARD BALL GROUPS"
+    ],
+    "location_lines": [
+      "22 Yards Houston Cricket Facility",
+      "14929 Westpark Dr, Suite 300",
+      "Houston, TX 77082"
+    ],
+    "contacts": [
+      { "display_text": "+1 (713) 498-2155" },
+      { "display_text": "+1 (737) 323-0270" }
+    ],
+    "sections": [
+      {
+        "heading": "",
+        "text": "A structured, active and fully supervised summer experience for young athletes.",
+        "items": []
+      },
+      {
+        "heading": "",
+        "text": "Built for working parents who want their kids moving, learning and off screens all summer.",
+        "items": []
+      }
+    ],
+    "cta_lines": [
+      "VISIT US",
+      "22yardshouston.com/registrations",
+      "CALL OR TEXT"
+    ]
+  }
+}

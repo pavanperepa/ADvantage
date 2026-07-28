@@ -18,6 +18,13 @@
       ],
       "seed": 1800976199,
       "note": "Background-only geometric plate, brand palette locked at generation."
+    },
+    {
+      "file": "geometric-center-frame-01.png",
+      "archetype": "center_stage",
+      "intents": [],
+      "seed": 1525146270,
+      "note": "Corner-weighted frame, calm centre. For information-only announcements."
     }
   ]
 }

@@ -282,3 +282,35 @@ body {
   font-weight: var(--display-weight);
   letter-spacing: var(--display-tracking);
 }
+
+/* --- centred archetype --------------------------------------------------
+   Information-only posters carry no photography, so a left column reads as
+   lopsided. Everything centres on the optical axis instead. */
+
+.arch-center_stage .canvas__stack { align-items: center; text-align: center; }
+
+.arch-center_stage .c-lockup { flex-direction: column; gap: calc(12px * var(--s)); }
+.arch-center_stage .c-lockup__mark {
+  width: calc(190px * var(--s));
+  height: calc(190px * var(--s));
+}
+.arch-center_stage .c-lockup__words { text-align: center; }
+
+.arch-center_stage .c-headline { text-align: center; }
+
+.arch-center_stage .c-badge,
+.arch-center_stage .c-chip,
+.arch-center_stage .c-ribbon { align-self: center; text-align: center; }
+
+.arch-center_stage .c-paragraph { max-width: 88%; margin: 0 auto; }
+.arch-center_stage .c-paragraph p { text-align: center; }
+
+.arch-center_stage .c-bullets ul {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: calc(10px * var(--s)) calc(26px * var(--s));
+}
+.arch-center_stage .c-bullets li { align-items: center; }
+
+.arch-center_stage .c-stats { justify-content: center; }

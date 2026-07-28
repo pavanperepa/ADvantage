@@ -11,6 +11,7 @@ from typing import Any
 from dotenv import load_dotenv
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
+from .archetypes import ArchetypeId
 from .models import (
     AuditSeverity,
     BrandProfile,
@@ -256,7 +257,6 @@ def run_compose(
     output: Path | None,
     plate: str | None = None,
 ) -> None:
-    from .archetypes import ArchetypeId
     from .pipeline import PosterComposer
 
     payload = json.loads(input_path.read_text(encoding="utf-8"))
@@ -420,7 +420,11 @@ def build_parser() -> argparse.ArgumentParser:
     compose.add_argument(
         "--theme", choices=[mode.value for mode in ColorMode], default=ColorMode.DARK.value
     )
-    compose.add_argument("--archetype", choices=["left_column", "bottom_third"])
+    compose.add_argument(
+        "--archetype",
+        choices=[archetype.value for archetype in ArchetypeId],
+        help="Force a layout archetype instead of matching one to the plate.",
+    )
     compose.add_argument("--logo", type=Path)
     compose.add_argument("--plate", help="Use a specific plate file from the bank.")
     compose.add_argument("--output", type=Path)
