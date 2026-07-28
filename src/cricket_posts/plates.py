@@ -87,13 +87,19 @@ def select_plate(
     *,
     root: Path = PLATE_DIR,
     min_zone_area: float = 260_000.0,
+    only_file: str | None = None,
 ) -> PlateChoice | None:
     """Pick the plate whose measured calm rectangle best suits the archetype."""
     from .archetypes import ARCHETYPES
 
     expectation = ARCHETYPES[archetype]
     best: tuple[float, PlateChoice] | None = None
-    for entry in bank.candidates(archetype, intent):
+    entries = bank.candidates(archetype, intent)
+    if only_file:
+        entries = [entry for entry in bank.entries if entry.file == only_file]
+        if not entries:
+            raise ValueError(f"No plate named {only_file!r} in the bank.")
+    for entry in entries:
         plate = entry.path(root)
         if not plate.exists():
             continue

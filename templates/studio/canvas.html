@@ -75,15 +75,18 @@
       </div>
     </div>
 
-    {% if info_cells %}
-      <div class="canvas__bar" data-region="footer" data-audit data-field="contact bar">
-        {{ c.info_bar(info_cells) }}
-      </div>
-    {% endif %}
-
-    {% if banner_block %}
-      <div class="canvas__banner" data-region="banner">{{ c.banner(banner_block) }}</div>
-    {% endif %}
+    {# Bar and banner share one bottom stack so their heights cannot disagree.
+       Positioning the bar with a guessed banner offset hid it behind the banner. #}
+    <div class="canvas__bottom">
+      {% if info_cells %}
+        <div class="canvas__bar" data-region="footer" data-audit data-field="contact bar">
+          {{ c.info_bar(info_cells) }}
+        </div>
+      {% endif %}
+      {% if banner_block %}
+        <div class="canvas__banner" data-region="banner">{{ c.banner(banner_block) }}</div>
+      {% endif %}
+    </div>
   </main>
 </body>
 </html>

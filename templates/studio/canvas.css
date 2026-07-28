@@ -212,12 +212,16 @@ body {
 
 /* --- information bar ---------------------------------------------------- */
 
-.canvas__bar {
+.canvas__bottom {
   position: absolute;
   z-index: 3;
-  right: calc(56px * var(--s));
-  bottom: calc(var(--banner-h, 0px) + 44px * var(--s));
-  left: calc(56px * var(--s));
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.canvas__bar {
+  margin: 0 calc(56px * var(--s)) calc(30px * var(--s));
 }
 
 .c-infobar {
@@ -267,11 +271,6 @@ body {
 /* --- banner ------------------------------------------------------------- */
 
 .canvas__banner {
-  position: absolute;
-  z-index: 3;
-  right: 0;
-  bottom: 0;
-  left: 0;
   padding: calc(24px * var(--s)) 0;
   background: var(--text);
   text-align: center;

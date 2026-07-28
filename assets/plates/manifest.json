@@ -6,6 +6,18 @@
       "intents": [],
       "seed": 1932308921,
       "note": "Seed plate. Subjects are baked in; background-only plates supersede it."
+    },
+    {
+      "file": "austin-geometric-left-01.png",
+      "archetype": "left_column",
+      "intents": [
+        "bold_attention",
+        "professional_clean",
+        "youthful_energetic",
+        "modern_sleek"
+      ],
+      "seed": 1800976199,
+      "note": "Background-only geometric plate, brand palette locked at generation."
     }
   ]
 }

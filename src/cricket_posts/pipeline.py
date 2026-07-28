@@ -166,11 +166,15 @@ class PosterComposer:
         color_mode: ColorMode = ColorMode.DARK,
         archetype_id: ArchetypeId | None = None,
         logo_path: Path | None = None,
+        plate_file: str | None = None,
     ) -> ComposeResult:
         blocks = derive_blocks(content, brand)
 
         plate = select_plate(
-            self.plate_bank, archetype_id or ArchetypeId.LEFT_COLUMN, intent
+            self.plate_bank,
+            archetype_id or ArchetypeId.LEFT_COLUMN,
+            intent,
+            only_file=plate_file,
         )
         if plate is None:
             raise RuntimeError(

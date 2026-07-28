@@ -254,6 +254,7 @@ def run_compose(
     archetype: str | None,
     logo: Path | None,
     output: Path | None,
+    plate: str | None = None,
 ) -> None:
     from .archetypes import ArchetypeId
     from .pipeline import PosterComposer
@@ -281,6 +282,7 @@ def run_compose(
             color_mode=color_mode,
             archetype_id=ArchetypeId(archetype) if archetype else None,
             logo_path=logo,
+            plate_file=plate,
         )
     finally:
         composer.renderer.close()
@@ -420,6 +422,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     compose.add_argument("--archetype", choices=["left_column", "bottom_third"])
     compose.add_argument("--logo", type=Path)
+    compose.add_argument("--plate", help="Use a specific plate file from the bank.")
     compose.add_argument("--output", type=Path)
 
     bank = subparsers.add_parser("bank", help="Rebuild an asset manifest.")
@@ -474,6 +477,7 @@ def main() -> None:
             archetype=args.archetype,
             logo=args.logo,
             output=args.output,
+            plate=args.plate,
         )
     elif args.command == "bank":
         run_bank_index(args.kind)
