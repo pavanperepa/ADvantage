@@ -1,0 +1,195 @@
+/* Locally bundled poster typefaces. See assets/fonts/NOTICE.md for licensing.
+   font-display: block matters here: the renderer must never screenshot fallback
+   metrics, and PlaywrightRenderer additionally awaits document.fonts.ready. */
+
+@font-face {
+  font-family: "Anton";
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+  src: url("../../assets/fonts/anton-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Bebas Neue";
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+  src: url("../../assets/fonts/bebas-neue-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Archivo Black";
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+  src: url("../../assets/fonts/archivo-black-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Archivo";
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+  src: url("../../assets/fonts/archivo-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Archivo";
+  font-weight: 600;
+  font-style: normal;
+  font-display: block;
+  src: url("../../assets/fonts/archivo-600.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Archivo";
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+  src: url("../../assets/fonts/archivo-700.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Archivo Narrow";
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+  src: url("../../assets/fonts/archivo-narrow-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Archivo Narrow";
+  font-weight: 600;
+  font-style: normal;
+  font-display: block;
+  src: url("../../assets/fonts/archivo-narrow-600.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Archivo Narrow";
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+  src: url("../../assets/fonts/archivo-narrow-700.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+  src: url("../../assets/fonts/inter-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-weight: 600;
+  font-style: normal;
+  font-display: block;
+  src: url("../../assets/fonts/inter-600.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+  src: url("../../assets/fonts/inter-700.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Outfit";
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+  src: url("../../assets/fonts/outfit-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Outfit";
+  font-weight: 600;
+  font-style: normal;
+  font-display: block;
+  src: url("../../assets/fonts/outfit-600.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Outfit";
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+  src: url("../../assets/fonts/outfit-700.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+  src: url("../../assets/fonts/space-grotesk-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  font-weight: 500;
+  font-style: normal;
+  font-display: block;
+  src: url("../../assets/fonts/space-grotesk-500.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+  src: url("../../assets/fonts/space-grotesk-700.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Playfair Display";
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+  src: url("../../assets/fonts/playfair-display-700.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Playfair Display";
+  font-weight: 900;
+  font-style: normal;
+  font-display: block;
+  src: url("../../assets/fonts/playfair-display-900.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Fraunces";
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+  src: url("../../assets/fonts/fraunces-700.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Poppins";
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+  src: url("../../assets/fonts/poppins-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Poppins";
+  font-weight: 600;
+  font-style: normal;
+  font-display: block;
+  src: url("../../assets/fonts/poppins-600.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Poppins";
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+  src: url("../../assets/fonts/poppins-700.woff2") format("woff2");
+}

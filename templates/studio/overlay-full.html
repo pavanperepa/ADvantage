@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ content.title }}</title>
+  <link rel="stylesheet" href="{{ fonts_url }}">
+  <style>
+    :root {
+      --ink: #10233F;
+      --red: #D92D20;
+      --yellow: #FFC629;
+      --blue: #1C7ED6;
+      --white: #FFFFFF;
+      --s: {{ scale }};
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: {{ width }}px; height: {{ height }}px; overflow: hidden; }
+    body {
+      position: relative;
+      background: url("{{ plate_url }}") center/cover no-repeat;
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .col {
+      position: absolute;
+      left: calc(72px * var(--s));
+      top: calc(56px * var(--s));
+      width: calc(700px * var(--s));
+    }
+
+    .lockup { display: flex; align-items: center; gap: calc(20px * var(--s)); }
+    .lockup img {
+      width: calc(150px * var(--s));
+      height: calc(150px * var(--s));
+      object-fit: contain;
+    }
+    .lockup .name {
+      color: var(--ink);
+      font-family: Archivo, Inter, sans-serif;
+      font-size: calc(40px * var(--s));
+      font-weight: 700;
+      line-height: 1.05;
+    }
+    .lockup .sub {
+      color: var(--ink);
+      font-family: Archivo, Inter, sans-serif;
+      font-size: calc(21px * var(--s));
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      opacity: 0.82;
+    }
+
+    h1 {
+      margin-top: calc(46px * var(--s));
+      color: var(--ink);
+      font-family: Anton, Impact, sans-serif;
+      font-size: calc(104px * var(--s));
+      font-weight: 400;
+      letter-spacing: 0.004em;
+      line-height: 0.9;
+    }
+    h1 .accent { color: var(--red); }
+
+    .badge {
+      display: inline-block;
+      margin-top: calc(26px * var(--s));
+      padding: calc(16px * var(--s)) calc(26px * var(--s));
+      border-radius: calc(10px * var(--s));
+      background: var(--yellow);
+      color: var(--ink);
+      font-family: Archivo, sans-serif;
+      font-size: calc(31px * var(--s));
+      font-weight: 700;
+      line-height: 1.12;
+      transform: rotate(-1.2deg);
+    }
+
+    .intro {
+      margin-top: calc(34px * var(--s));
+      color: var(--ink);
+      font-size: calc(30px * var(--s));
+      font-weight: 500;
+      line-height: 1.34;
+    }
+    .intro b { font-weight: 800; color: var(--red); }
+    .rule {
+      width: calc(430px * var(--s));
+      height: calc(3px * var(--s));
+      margin: calc(26px * var(--s)) 0;
+      background: rgb(16 35 63 / 0.18);
+    }
+    .body-copy {
+      color: var(--ink);
+      font-size: calc(27px * var(--s));
+      font-weight: 400;
+      line-height: 1.38;
+      opacity: 0.92;
+    }
+
+    .benefits {
+      margin-top: calc(34px * var(--s));
+      display: grid;
+      gap: calc(15px * var(--s));
+    }
+    .benefit { display: flex; align-items: center; gap: calc(15px * var(--s)); }
+    .dot {
+      flex: 0 0 auto;
+      width: calc(15px * var(--s));
+      height: calc(15px * var(--s));
+      border-radius: 50%;
+    }
+    .benefit span {
+      color: var(--ink);
+      font-family: Archivo, sans-serif;
+      font-size: calc(25px * var(--s));
+      font-weight: 700;
+      letter-spacing: 0.015em;
+    }
+
+    .ribbon {
+      margin-top: calc(38px * var(--s));
+      display: inline-block;
+      padding: calc(20px * var(--s)) calc(30px * var(--s));
+      border-radius: calc(12px * var(--s));
+      background: var(--ink);
+      transform: rotate(-1deg);
+    }
+    .ribbon .l1 {
+      color: var(--white);
+      font-family: Anton, Impact, sans-serif;
+      font-size: calc(44px * var(--s));
+      line-height: 1;
+      letter-spacing: 0.01em;
+    }
+    .ribbon .l2 {
+      color: var(--yellow);
+      font-family: Anton, Impact, sans-serif;
+      font-size: calc(44px * var(--s));
+      line-height: 1.06;
+      letter-spacing: 0.01em;
+    }
+
+    .info-bar {
+      position: absolute;
+      left: calc(56px * var(--s));
+      right: calc(56px * var(--s));
+      bottom: calc(150px * var(--s));
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-items: center;
+      gap: calc(22px * var(--s));
+      padding: calc(26px * var(--s)) calc(30px * var(--s));
+      border-radius: calc(26px * var(--s));
+      background: var(--white);
+      box-shadow: 0 calc(18px * var(--s)) calc(46px * var(--s)) rgb(0 0 0 / 0.20);
+    }
+    .cell { display: flex; align-items: center; gap: calc(16px * var(--s)); min-width: 0; }
+    .cell + .cell {
+      border-left: 1px solid #E4E7EC;
+      padding-left: calc(20px * var(--s));
+    }
+    .ico {
+      display: flex;
+      flex: 0 0 auto;
+      width: calc(54px * var(--s));
+      height: calc(54px * var(--s));
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+    .ico svg { width: 54%; height: 54%; fill: #FFFFFF; }
+    .ico.pin { background: var(--red); }
+    .ico.web { background: var(--blue); }
+    .ico.call { background: #2F9E44; }
+    .label {
+      color: #6B7280;
+      font-family: Archivo, sans-serif;
+      font-size: calc(19px * var(--s));
+      font-weight: 700;
+      letter-spacing: 0.09em;
+    }
+    .value {
+      color: var(--ink);
+      font-size: calc(24px * var(--s));
+      font-weight: 600;
+      line-height: 1.3;
+      white-space: nowrap;
+    }
+    .value.b { font-weight: 800; }
+
+    .banner {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      padding: calc(26px * var(--s)) 0;
+      background: var(--ink);
+      text-align: center;
+    }
+    .banner span {
+      font-family: Anton, Impact, sans-serif;
+      font-size: calc(52px * var(--s));
+      letter-spacing: 0.015em;
+    }
+    .banner .a { color: var(--white); }
+    .banner .b { color: var(--yellow); }
+  </style>
+</head>
+<body>
+  <div class="col">
+    <div class="lockup">
+      {% if logo_url %}<img src="{{ logo_url }}" alt="">{% endif %}
+      <div>
+        <div class="name">{{ wordmark_name }}</div>
+        {% for line in wordmark_sub %}<div class="sub">{{ line }}</div>{% endfor %}
+      </div>
+    </div>
+
+    <h1>{{ headline_head }}<span class="accent">{{ headline_accent }}</span>{{ headline_tail }}</h1>
+
+    {% if content.subtitle %}<div class="badge">{{ content.subtitle }}</div>{% endif %}
+
+    {% if intro %}<p class="intro">{{ intro }}</p>{% endif %}
+    <div class="rule"></div>
+    {% if body_copy %}<p class="body-copy">{{ body_copy }}</p>{% endif %}
+
+    {% if benefits %}
+      <div class="benefits">
+        {% for item in benefits %}
+          <div class="benefit">
+            <span class="dot" style="background: {{ item.color }}"></span>
+            <span>{{ item.text }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% if ribbon_lines %}
+      <div class="ribbon">
+        {% for line in ribbon_lines %}
+          <div class="{{ 'l1' if loop.first else 'l2' }}">{{ line }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="info-bar">
+    <div class="cell">
+      <span class="ico pin">
+        <svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>
+      </span>
+      <div>
+        {% for line in location_lines %}
+          <div class="value {{ 'b' if loop.first }}">{{ line }}</div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="cell">
+      <span class="ico web">
+        <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm6.9 9h-3a15.6 15.6 0 0 0-1.2-5.3A8 8 0 0 1 18.9 11zM12 4.1c.8 1.1 1.5 3 1.7 6.9h-3.4c.2-3.9.9-5.8 1.7-6.9zM4.3 13h3c.1 2.1.5 4 1.2 5.3A8 8 0 0 1 4.3 13zm3-2h-3a8 8 0 0 1 4.2-5.3A15.6 15.6 0 0 0 7.3 11zM12 19.9c-.8-1.1-1.5-3-1.7-6.9h3.4c-.2 3.9-.9 5.8-1.7 6.9zm2.7-1.6c.7-1.3 1.1-3.2 1.2-5.3h3a8 8 0 0 1-4.2 5.3z"/></svg>
+      </span>
+      <div>
+        <div class="label">{{ web_label }}</div>
+        <div class="value">{{ website }}</div>
+      </div>
+    </div>
+    <div class="cell">
+      <span class="ico call">
+        <svg viewBox="0 0 24 24"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.24 11.4 11.4 0 0 0 3.6.58 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11.4 11.4 0 0 0 .58 3.6 1 1 0 0 1-.25 1z"/></svg>
+      </span>
+      <div>
+        <div class="label">{{ call_label }}</div>
+        {% for phone in phones %}<div class="value b">{{ phone }}</div>{% endfor %}
+      </div>
+    </div>
+  </div>
+
+  {% if banner_lines %}
+    <div class="banner">
+      {% for line in banner_lines %}
+        <span class="{{ 'a' if loop.first else 'b' }}">{{ line }}{{ " " if not loop.last }}</span>
+      {% endfor %}
+    </div>
+  {% endif %}
+</body>
+</html>

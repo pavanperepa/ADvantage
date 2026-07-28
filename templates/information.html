@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <style>{% include "shared.css" %}</style>
+  <style>
+    .poster::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -3;
+      background:
+        linear-gradient(90deg, rgba(7,17,13,.98) 0%, rgba(7,17,13,.9) 47%, rgba(7,17,13,.22) 78%),
+        linear-gradient(0deg, rgba(7,17,13,.9), transparent 36%);
+    }
+    .poster::after {
+      content: "";
+      position: absolute;
+      z-index: -2;
+      top: 0;
+      left: 0;
+      width: 18px;
+      height: 100%;
+      background: var(--accent);
+    }
+    header {
+      position: absolute;
+      top: 62px;
+      left: 72px;
+      right: 66px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand img { filter: invert(1); }
+    .badge {
+      color: var(--ink);
+      background: var(--accent);
+    }
+    main {
+      position: absolute;
+      top: 245px;
+      left: 72px;
+      width: 650px;
+    }
+    .eyebrow {
+      margin-bottom: 26px;
+      color: var(--accent);
+    }
+    .title {
+      max-width: 610px;
+      font-size: 115px;
+    }
+    .subtitle {
+      max-width: 580px;
+      margin-top: 30px;
+      color: rgba(242,240,232,.85);
+    }
+    .schedule {
+      position: absolute;
+      left: 72px;
+      right: 72px;
+      bottom: 158px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-top: 1px solid rgba(242,240,232,.35);
+      border-bottom: 1px solid rgba(242,240,232,.35);
+    }
+    .detail {
+      min-height: 127px;
+      padding: 26px 24px 22px 0;
+    }
+    .detail + .detail {
+      padding-left: 28px;
+      border-left: 1px solid rgba(242,240,232,.35);
+    }
+    .detail-label {
+      margin-bottom: 12px;
+      color: var(--accent);
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: .13em;
+    }
+    .detail-value {
+      font-family: "Arial Black", Arial, sans-serif;
+      font-size: 23px;
+      letter-spacing: -.025em;
+    }
+    footer {
+      position: absolute;
+      left: 72px;
+      right: 72px;
+      bottom: 63px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .cta {
+      color: var(--ink);
+      background: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <article class="poster">
+    <img class="art" src="{{ background_url }}" alt="">
+    <header>
+      <div class="brand"><img src="{{ logo_url }}" alt="">{{ academy }}</div>
+      <div class="badge">{{ post.badge }}</div>
+    </header>
+    <main>
+      <div class="eyebrow">{{ post.eyebrow }}</div>
+      <h1 class="title">{{ post.title }}</h1>
+      <p class="subtitle">{{ post.subtitle }}</p>
+    </main>
+    <section class="schedule">
+      {% for item in post.details[:3] %}
+      <div class="detail">
+        <div class="detail-label">{{ item.label }}</div>
+        <div class="detail-value">{{ item.value }}</div>
+      </div>
+      {% endfor %}
+    </section>
+    <footer>
+      <div class="contact">{{ post.contact }}</div>
+      <div class="cta">{{ post.cta }}</div>
+    </footer>
+    {% if concept_label %}<div class="sample-flag">{{ concept_label }}</div>{% endif %}
+  </article>
+</body>
+</html>

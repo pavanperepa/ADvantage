@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Layout score calibration</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0d1117;
+      --card: #161b22;
+      --line: #30363d;
+      --ink: #e6edf3;
+      --muted: #8b949e;
+      --good: #3fb950;
+      --warn: #d29922;
+      --bad: #f85149;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f6f8fa;
+        --card: #ffffff;
+        --line: #d0d7de;
+        --ink: #1f2328;
+        --muted: #656d76;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 32px 24px 64px;
+      background: var(--bg);
+      color: var(--ink);
+      font: 15px/1.5 ui-sans-serif, -apple-system, "Segoe UI", system-ui, sans-serif;
+    }
+    header { max-width: 1100px; margin: 0 auto 28px; }
+    h1 { margin: 0 0 6px; font-size: 24px; }
+    .lede { margin: 0; color: var(--muted); max-width: 68ch; }
+    .grid { max-width: 1100px; margin: 0 auto; display: grid; gap: 20px; }
+    .row {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 24px;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--card);
+    }
+    @media (max-width: 720px) { .row { grid-template-columns: 1fr; } }
+    .thumb { width: 100%; border-radius: 8px; border: 1px solid var(--line); display: block; }
+    .rank { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 13px; }
+    .name { margin: 2px 0 10px; font-size: 18px; font-weight: 650; word-break: break-word; }
+    .total { font-size: 32px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+    .total small { font-size: 13px; font-weight: 400; color: var(--muted); }
+    .meta { color: var(--muted); font-size: 13px; margin: 8px 0 16px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    td { padding: 5px 8px 5px 0; vertical-align: middle; }
+    td.metric { width: 190px; color: var(--muted); white-space: nowrap; }
+    td.bar { width: 150px; }
+    td.num { width: 66px; text-align: right; font-variant-numeric: tabular-nums; }
+    td.note { color: var(--muted); }
+    .track { height: 8px; border-radius: 999px; background: var(--line); overflow: hidden; }
+    .fill { height: 100%; border-radius: 999px; }
+    .good { background: var(--good); } .warn { background: var(--warn); } .bad { background: var(--bad); }
+    .pill {
+      display: inline-block; padding: 2px 9px; border-radius: 999px;
+      font-size: 12px; font-weight: 600; border: 1px solid var(--line);
+    }
+    .pill.fail { color: var(--bad); border-color: var(--bad); }
+    .pill.pass { color: var(--good); border-color: var(--good); }
+    .warnings { margin: 12px 0 0; padding-left: 18px; color: var(--warn); font-size: 13px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Layout score calibration</h1>
+    <p class="lede">
+      Ranked worst to best by the deterministic aesthetic score. Compare this ordering
+      against your own eye. Where the two disagree, the weights are wrong — that is what
+      this page exists to catch, before anything is built on top of the score.
+      Generated {{ generated_at }}.
+    </p>
+  </header>
+  <div class="grid">
+    {% for row in rows %}
+      <section class="row">
+        <div>
+          {% if row.image %}<img class="thumb" src="{{ row.image }}" alt="">{% endif %}
+        </div>
+        <div>
+          <div class="rank">#{{ loop.index }} of {{ rows | length }}</div>
+          <div class="name">{{ row.fixture }}</div>
+          {% if row.total is not none %}
+            <div class="total">{{ "%.3f" | format(row.total) }} <small>/ 1.000</small></div>
+          {% else %}
+            <div class="total">&mdash;</div>
+          {% endif %}
+          <p class="meta">
+            <span class="pill {{ 'pass' if row.valid else 'fail' }}">
+              {{ 'audit valid' if row.valid else 'audit failed' }}
+            </span>
+            &nbsp;{{ row.family }} · {{ row.composition }} · {{ row.treatment }} · {{ row.density }}
+            <br>
+            contrast — CSS {{ row.contrast_css }} · measured {{ row.contrast_px }}
+          </p>
+          {% if row.metrics %}
+            <table>
+              {% for metric in row.metrics %}
+                <tr>
+                  <td class="metric">{{ metric.name }}</td>
+                  <td class="bar">
+                    <div class="track">
+                      <div
+                        class="fill {{ 'good' if metric.score >= 0.8 else ('warn' if metric.score >= 0.5 else 'bad') }}"
+                        style="width: {{ (metric.score * 100) | round(1) }}%"
+                      ></div>
+                    </div>
+                  </td>
+                  <td class="num">{{ "%.3f" | format(metric.score) }}</td>
+                  <td class="num">&times;{{ "%.2f" | format(metric.weight) }}</td>
+                  <td class="note">{{ metric.note }}</td>
+                </tr>
+              {% endfor %}
+            </table>
+          {% endif %}
+          {% if row.warnings %}
+            <ul class="warnings">
+              {% for warning in row.warnings %}<li>{{ warning }}</li>{% endfor %}
+            </ul>
+          {% endif %}
+          {% if row.error %}<p class="meta" style="color: var(--bad)">{{ row.error }}</p>{% endif %}
+        </div>
+      </section>
+    {% endfor %}
+  </div>
+</body>
+</html>

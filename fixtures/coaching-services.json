@@ -1,0 +1,28 @@
+{
+  "content_type": "coaching",
+  "organization": "BOUNDARY CRICKET",
+  "eyebrow": "TRAIN · PLAY · REPEAT",
+  "title": "YOUR GAME. YOUR COACH.",
+  "subtitle": "Private cricket coaching built around your goals, schedule, and stage of development.",
+  "detail_lines": ["YOUTH", "ADULTS", "TEAMS"],
+  "location_lines": ["NORTH DALLAS"],
+  "contacts": [
+    {"display_text": "(469) 555-0188"}
+  ],
+  "sections": [
+    {
+      "heading": "COACHING OPTIONS",
+      "items": [
+        "1-ON-1 COACHING",
+        "BATTING DEVELOPMENT",
+        "FAST & SPIN BOWLING",
+        "TEAM SESSIONS"
+      ]
+    },
+    {
+      "heading": "BUILT FOR PROGRESS",
+      "text": "Focused feedback, measurable goals, and game-aware practice."
+    }
+  ],
+  "cta_lines": ["BOOK A SESSION"]
+}

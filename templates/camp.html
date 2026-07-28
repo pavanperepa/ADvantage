@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <style>
+    @page { size: 1080px 1350px; margin: 0; }
+    * { box-sizing: border-box; }
+    html, body {
+      width: 1080px;
+      height: 1350px;
+      margin: 0;
+      overflow: hidden;
+      background: #061b45;
+      color: #fff;
+      font-family: Arial, "Segoe UI", sans-serif;
+    }
+    .poster {
+      position: relative;
+      width: 1080px;
+      height: 1350px;
+      overflow: hidden;
+      isolation: isolate;
+      background: #061b45;
+    }
+    .art {
+      position: absolute;
+      inset: 0;
+      z-index: -5;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .poster::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -4;
+      background:
+        linear-gradient(90deg, rgba(2,16,49,.98) 0%, rgba(2,16,49,.92) 47%, rgba(2,16,49,.24) 78%),
+        linear-gradient(0deg, #020f31 0%, rgba(2,15,49,.96) 46%, rgba(2,15,49,.05) 78%);
+    }
+    .poster::after {
+      content: "";
+      position: absolute;
+      z-index: -3;
+      top: -120px;
+      right: 250px;
+      width: 125px;
+      height: 770px;
+      background: rgba(255,205,0,.9);
+      transform: skewX(-13deg);
+      mix-blend-mode: multiply;
+    }
+    header {
+      position: absolute;
+      top: 42px;
+      left: 54px;
+      right: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      font-size: 19px;
+      font-weight: 900;
+      letter-spacing: .13em;
+    }
+    .brand img {
+      width: 42px;
+      height: 42px;
+      filter: invert(1);
+    }
+    .limited {
+      padding: 11px 18px 10px;
+      color: #071a43;
+      background: #ffcd00;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 950;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .hero {
+      position: absolute;
+      top: 140px;
+      left: 54px;
+      width: 660px;
+    }
+    .kicker {
+      margin-bottom: 18px;
+      color: #ffcd00;
+      font-size: 17px;
+      font-weight: 950;
+      letter-spacing: .15em;
+    }
+    h1 {
+      margin: 0;
+      max-width: 650px;
+      font-family: "Arial Black", Arial, sans-serif;
+      font-size: 70px;
+      font-weight: 950;
+      line-height: .89;
+      letter-spacing: -.055em;
+      text-transform: uppercase;
+    }
+    .subtitle {
+      margin-top: 19px;
+      color: #ffcd00;
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: .035em;
+    }
+    .info-bars {
+      position: absolute;
+      top: 500px;
+      left: 54px;
+      right: 54px;
+      border-top: 1px solid rgba(255,255,255,.34);
+      border-bottom: 1px solid rgba(255,255,255,.34);
+      background: rgba(2,15,49,.78);
+      backdrop-filter: blur(9px);
+    }
+    .info-line {
+      padding: 13px 17px 12px;
+      font-size: 15px;
+      font-weight: 850;
+      letter-spacing: .025em;
+      text-align: center;
+    }
+    .info-line + .info-line {
+      color: #071a43;
+      background: #ffcd00;
+    }
+    .content {
+      position: absolute;
+      top: 598px;
+      left: 54px;
+      right: 54px;
+      display: grid;
+      grid-template-columns: 1.16fr .84fr;
+      gap: 34px;
+    }
+    .section-title {
+      margin: 0 0 13px;
+      color: #ffcd00;
+      font-family: "Arial Black", Arial, sans-serif;
+      font-size: 21px;
+      letter-spacing: .055em;
+    }
+    .highlights {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 18px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      border-top: 1px solid rgba(255,255,255,.25);
+    }
+    .highlights li {
+      position: relative;
+      min-height: 52px;
+      padding: 15px 4px 10px 22px;
+      border-bottom: 1px solid rgba(255,255,255,.2);
+      font-size: 15px;
+      font-weight: 750;
+      line-height: 1.18;
+    }
+    .highlights li::before {
+      content: "";
+      position: absolute;
+      top: 20px;
+      left: 2px;
+      width: 8px;
+      height: 8px;
+      background: #ffcd00;
+      transform: rotate(45deg);
+    }
+    .side-card {
+      padding: 16px 18px 17px;
+      background: rgba(255,255,255,.075);
+      border-left: 4px solid #ffcd00;
+    }
+    .side-card + .side-card { margin-top: 14px; }
+    .side-card h2 {
+      margin: 0 0 8px;
+      color: #ffcd00;
+      font-family: "Arial Black", Arial, sans-serif;
+      font-size: 18px;
+      letter-spacing: .06em;
+    }
+    .side-card p {
+      margin: 0;
+      color: rgba(255,255,255,.88);
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.36;
+    }
+    .coach {
+      position: absolute;
+      top: 910px;
+      left: 54px;
+      right: 54px;
+      min-height: 191px;
+      padding: 22px 25px 20px 222px;
+      background: linear-gradient(90deg, #ffcd00 0 192px, rgba(7,30,75,.96) 192px);
+      border: 1px solid rgba(255,205,0,.66);
+    }
+    .coach-monogram {
+      position: absolute;
+      top: 22px;
+      left: 28px;
+      width: 140px;
+      height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #071a43;
+      border: 4px solid #071a43;
+      border-radius: 50%;
+      font-family: "Arial Black", Arial, sans-serif;
+      font-size: 46px;
+      letter-spacing: -.08em;
+    }
+    .coach h2 {
+      margin: 0 0 13px;
+      color: #ffcd00;
+      font-family: "Arial Black", Arial, sans-serif;
+      font-size: 23px;
+      letter-spacing: -.01em;
+    }
+    .coach p {
+      margin: 0;
+      color: rgba(255,255,255,.88);
+      font-size: 14px;
+      font-weight: 650;
+      line-height: 1.42;
+    }
+    .cta-row {
+      position: absolute;
+      left: 54px;
+      right: 54px;
+      bottom: 122px;
+      display: flex;
+      align-items: stretch;
+      justify-content: space-between;
+      gap: 18px;
+    }
+    .cta {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 19px 25px;
+      color: #071a43;
+      background: #ffcd00;
+      font-family: "Arial Black", Arial, sans-serif;
+      font-size: 21px;
+    }
+    .cta::after { content: "↗"; font-size: 31px; }
+    .availability {
+      display: flex;
+      align-items: center;
+      padding: 0 25px;
+      border: 1px solid #ffcd00;
+      color: #ffcd00;
+      font-size: 16px;
+      font-weight: 900;
+      letter-spacing: .04em;
+    }
+    footer {
+      position: absolute;
+      left: 54px;
+      right: 54px;
+      bottom: 51px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 18px;
+      border-top: 1px solid rgba(255,255,255,.35);
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: .025em;
+    }
+    .phone {
+      color: #ffcd00;
+      font-family: "Arial Black", Arial, sans-serif;
+      font-size: 19px;
+    }
+  </style>
+</head>
+<body>
+  <article class="poster">
+    <img class="art" src="{{ background_url }}" alt="">
+    <header>
+      <div class="brand"><img src="{{ logo_url }}" alt="">{{ copy.header }}</div>
+      <div class="limited">{{ copy.availability }}</div>
+    </header>
+
+    <section class="hero">
+      <div class="kicker">ELITE YOUTH CRICKET • TEXAS</div>
+      <h1>{{ copy.title }}</h1>
+      <div class="subtitle">{{ copy.subtitle }}</div>
+    </section>
+
+    <section class="info-bars">
+      <div class="info-line">{{ copy.schedule }}</div>
+      <div class="info-line">{{ copy.program_info }}</div>
+    </section>
+
+    <section class="content">
+      <div>
+        <h2 class="section-title">{{ copy.highlights_heading }}</h2>
+        <ul class="highlights">
+          {% for item in copy.highlights %}<li>{{ item }}</li>{% endfor %}
+        </ul>
+      </div>
+      <div>
+        <div class="side-card">
+          <h2>{{ copy.learn_heading }}</h2>
+          <p>{{ copy.learn_text }}</p>
+        </div>
+        <div class="side-card">
+          <h2>{{ copy.why_heading }}</h2>
+          <p>{{ copy.why_text }}</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="coach">
+      <div class="coach-monogram">IC</div>
+      <h2>{{ copy.coach }}</h2>
+      <p>{{ copy.coach_bio }}</p>
+    </section>
+
+    <section class="cta-row">
+      <div class="cta">{{ copy.cta }}</div>
+      <div class="availability">{{ copy.availability }}</div>
+    </section>
+
+    <footer>
+      <div>{{ copy.address }}</div>
+      <div class="phone">{{ copy.phone }}</div>
+    </footer>
+  </article>
+</body>
+</html>

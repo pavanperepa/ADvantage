@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ content.title }}</title>
+  <link rel="stylesheet" href="{{ fonts_url }}">
+  <style>
+    :root {
+      --ink: {{ brand.palette.ink }};
+      --surface: #FFFFFF;
+      --accent: {{ brand.palette.accent }};
+      --plate-bg: {{ plate_bg }};
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: {{ width }}px; height: {{ height }}px; overflow: hidden; }
+    body {
+      position: relative;
+      background: url("{{ plate_url }}") center/cover no-repeat;
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+    }
+
+    /* Opaque patch that buries whatever crest the model invented, then the
+       real logo on top. The model must never draw the brand mark. */
+    .logo-patch {
+      position: absolute;
+      left: {{ logo.patch_left }}px;
+      top: {{ logo.patch_top }}px;
+      width: {{ logo.patch_width }}px;
+      height: {{ logo.patch_height }}px;
+      background: var(--plate-bg);
+    }
+    .logo-lockup {
+      position: absolute;
+      left: {{ logo.left }}px;
+      top: {{ logo.top }}px;
+      display: flex;
+      align-items: center;
+      gap: {{ logo.gap }}px;
+    }
+    .logo-lockup img {
+      width: {{ logo.size }}px;
+      height: {{ logo.size }}px;
+      object-fit: contain;
+    }
+    .wordmark { line-height: 1.05; }
+    .wordmark .name {
+      color: var(--ink);
+      font-family: Archivo, Inter, sans-serif;
+      font-size: {{ logo.name_px }}px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .wordmark .sub {
+      color: var(--ink);
+      font-family: Archivo, Inter, sans-serif;
+      font-size: {{ logo.sub_px }}px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      opacity: 0.85;
+    }
+
+    /* The information bar. Every value here is composited, never generated. */
+    .info-bar {
+      position: absolute;
+      left: {{ bar.left }}px;
+      right: {{ bar.left }}px;
+      bottom: {{ bar.bottom }}px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-items: center;
+      gap: {{ bar.gap }}px;
+      padding: {{ bar.pad_y }}px {{ bar.pad_x }}px;
+      border-radius: {{ bar.radius }}px;
+      background: var(--surface);
+      box-shadow: 0 18px 48px rgb(0 0 0 / 0.18);
+    }
+    .cell { display: flex; align-items: center; gap: {{ bar.icon_gap }}px; min-width: 0; }
+    .cell + .cell { border-left: 1px solid #E4E7EC; padding-left: {{ bar.icon_gap }}px; }
+    .badge {
+      display: flex;
+      flex: 0 0 auto;
+      width: {{ bar.icon }}px;
+      height: {{ bar.icon }}px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+    .badge svg { width: 55%; height: 55%; fill: #FFFFFF; }
+    .badge.pin { background: #E03131; }
+    .badge.web { background: #1C7ED6; }
+    .badge.call { background: #2F9E44; }
+    .lines { min-width: 0; }
+    .label {
+      color: #667085;
+      font-size: {{ bar.label_px }}px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: none;
+    }
+    .value {
+      color: var(--ink);
+      font-size: {{ bar.value_px }}px;
+      font-weight: 600;
+      line-height: 1.28;
+      white-space: nowrap;
+    }
+    .value.strong { font-weight: 700; }
+  </style>
+</head>
+<body>
+  {% if logo.patch %}<div class="logo-patch"></div>{% endif %}
+  <div class="logo-lockup">
+    {% if logo_url %}<img src="{{ logo_url }}" alt="">{% endif %}
+    <div class="wordmark">
+      <div class="name">{{ wordmark_name }}</div>
+      {% for line in wordmark_sub %}<div class="sub">{{ line }}</div>{% endfor %}
+    </div>
+  </div>
+
+  <div class="info-bar">
+    <div class="cell">
+      <span class="badge pin">
+        <svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>
+      </span>
+      <div class="lines">
+        {% for line in location_lines %}
+          <div class="value {{ 'strong' if loop.first }}">{{ line }}</div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="cell">
+      <span class="badge web">
+        <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm6.9 9h-3a15.6 15.6 0 0 0-1.2-5.3A8 8 0 0 1 18.9 11zM12 4.1c.8 1.1 1.5 3 1.7 6.9h-3.4c.2-3.9.9-5.8 1.7-6.9zM4.3 13h3c.1 2.1.5 4 1.2 5.3A8 8 0 0 1 4.3 13zm3-2h-3a8 8 0 0 1 4.2-5.3A15.6 15.6 0 0 0 7.3 11zM12 19.9c-.8-1.1-1.5-3-1.7-6.9h3.4c-.2 3.9-.9 5.8-1.7 6.9zm2.7-1.6c.7-1.3 1.1-3.2 1.2-5.3h3a8 8 0 0 1-4.2 5.3z"/></svg>
+      </span>
+      <div class="lines">
+        <div class="label">{{ web_label }}</div>
+        <div class="value">{{ website }}</div>
+      </div>
+    </div>
+    <div class="cell">
+      <span class="badge call">
+        <svg viewBox="0 0 24 24"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.24 11.4 11.4 0 0 0 3.6.58 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11.4 11.4 0 0 0 .58 3.6 1 1 0 0 1-.25 1z"/></svg>
+      </span>
+      <div class="lines">
+        <div class="label">{{ call_label }}</div>
+        {% for phone in phones %}<div class="value strong">{{ phone }}</div>{% endfor %}
+      </div>
+    </div>
+  </div>
+</body>
+</html>

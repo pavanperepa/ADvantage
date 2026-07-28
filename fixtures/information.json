@@ -1,0 +1,24 @@
+{
+  "content_type": "information",
+  "organization": "BOUNDARY CRICKET",
+  "eyebrow": "ACADEMY UPDATE",
+  "title": "SUMMER HOURS",
+  "subtitle": "More daylight. More practice. Extended evening sessions start this Monday.",
+  "detail_lines": [
+    "MON–FRI · 4:00 PM — 10:00 PM",
+    "WEEKENDS · 8:00 AM — 10:00 PM",
+    "EFFECTIVE JULY 01"
+  ],
+  "location_lines": ["NORTH DALLAS, TEXAS"],
+  "contacts": [
+    {"display_text": "boundarycricket.com · (469) 555-0188"}
+  ],
+  "sections": [
+    {
+      "heading": "PLAN YOUR SESSION",
+      "text": "Book coaching or lane time before arriving.",
+      "items": []
+    }
+  ],
+  "cta_lines": ["SAVE THE SCHEDULE"]
+}

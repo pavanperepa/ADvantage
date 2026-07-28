@@ -1,0 +1,28 @@
+{
+  "content_type": "tournament",
+  "organization": "BOUNDARY CRICKET",
+  "eyebrow": "YOUTH T20 · 2026",
+  "title": "NORTH TEXAS SUMMER CUP",
+  "subtitle": "Three match minimum. Certified umpires. One unforgettable weekend.",
+  "schedule": {
+    "display_text": "JUL 18–19 | U12 · U14 · U16 | DEADLINE JUL 10"
+  },
+  "location_lines": ["NORTH DALLAS, TEXAS"],
+  "contacts": [
+    {"display_text": "boundarycricket.com/cup · (469) 555-0188"}
+  ],
+  "categories": [
+    {
+      "name": "TEAM REGISTRATION",
+      "registration_fee": "$499",
+      "contacts": [],
+      "prizes": [
+        {"label": "Three match minimum"},
+        {"label": "Certified umpires"}
+      ],
+      "awards_heading": "DIVISIONS",
+      "awards": ["U12", "U14", "U16"]
+    }
+  ],
+  "cta_lines": ["REGISTER YOUR TEAM", "12 TEAM LIMIT"]
+}

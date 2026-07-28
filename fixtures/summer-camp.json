@@ -1,0 +1,39 @@
+{
+  "content_type": "camp",
+  "organization": "SUPER KINGS ACADEMY",
+  "title": "HIGH PERFORMANCE SUMMER CAMP 2026",
+  "subtitle": "TRAIN LIKE A PROFESSIONAL THIS SUMMER",
+  "schedule": {
+    "display_text": "June 15 - August 21, 2026 | Monday - Friday | 8:00 AM - 12:00 PM"
+  },
+  "program_info": "High Performance Cricket Program | Ages 10-14 Years | 8-Week Program",
+  "location_lines": ["15905 Ronald Reagan Blvd, Leander, Texas"],
+  "contacts": [
+    {"display_text": "+1 (678) 938-9396"}
+  ],
+  "sections": [
+    {
+      "heading": "PROGRAM HIGHLIGHTS",
+      "items": [
+        "Batting Development",
+        "Fast & Spin Bowling Programs",
+        "Match Simulation & Game Awareness",
+        "Power Hitting & Finishing Skills",
+        "Fielding & Athletic Development",
+        "Tactical & Mental Preparation",
+        "High-Intensity Outdoor Training"
+      ]
+    },
+    {
+      "heading": "LEARN FROM",
+      "text": "First-Class Cricketers, ICC Certified Coaches, Pakistan First-Class Professionals, Elite High-Performance Coaches"
+    },
+    {
+      "heading": "WHY JOIN",
+      "text": "Professional training environment focused on: Skill Development, Tactical Awareness, Match Preparation, Confidence & Discipline"
+    }
+  ],
+  "coach_heading": "Head Coach: IAN DEV SINGH CHAUHAN",
+  "coach_bio": "Professional Cricketer, Head Coach Super Kings Academy Texas - 17 First-Class Centuries - Houston Open Champion 2026 - 8000+ First-Class Runs across all 3 formats - MiLC Seattle Thunderbolts Captain",
+  "cta_lines": ["Contact Us Now To Register", "Limited Spots Available"]
+}

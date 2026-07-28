@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <style>{% include "shared.css" %}</style>
+  <style>
+    .poster::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -3;
+      background:
+        linear-gradient(90deg, rgba(6,20,44,.98) 0%, rgba(6,20,44,.88) 48%, rgba(6,20,44,.12) 82%),
+        linear-gradient(0deg, rgba(6,20,44,.96) 0%, transparent 43%),
+        radial-gradient(circle at 75% 15%, rgba(38,217,255,.25), transparent 30%);
+    }
+    .poster::after {
+      content: "";
+      position: absolute;
+      z-index: -2;
+      left: -115px;
+      bottom: 250px;
+      width: 700px;
+      height: 13px;
+      background: var(--accent);
+      transform: rotate(-9deg);
+      box-shadow: 0 23px 0 rgba(38,217,255,.7);
+    }
+    header {
+      position: absolute;
+      top: 58px;
+      left: 66px;
+      right: 66px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand img { filter: invert(1); }
+    .edition {
+      color: var(--accent);
+      font-size: 58px;
+      font-family: "Arial Black", Arial, sans-serif;
+      letter-spacing: -.06em;
+    }
+    main {
+      position: absolute;
+      top: 212px;
+      left: 66px;
+      width: 665px;
+    }
+    .eyebrow {
+      margin-bottom: 26px;
+      color: var(--highlight);
+    }
+    .title {
+      color: var(--surface);
+      font-size: 104px;
+    }
+    .title em {
+      color: var(--accent);
+      font-style: normal;
+    }
+    .subtitle {
+      max-width: 585px;
+      margin-top: 28px;
+      color: rgba(243,234,211,.86);
+    }
+    .badge {
+      position: absolute;
+      top: 690px;
+      right: 66px;
+      color: var(--ink);
+      background: var(--accent);
+      transform: rotate(2deg);
+    }
+    .facts {
+      position: absolute;
+      left: 66px;
+      right: 66px;
+      bottom: 155px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      background: rgba(6,20,44,.82);
+      border: 1px solid rgba(233,185,73,.55);
+      backdrop-filter: blur(12px);
+    }
+    .fact {
+      min-height: 135px;
+      padding: 27px 24px;
+    }
+    .fact + .fact { border-left: 1px solid rgba(233,185,73,.38); }
+    .fact-label {
+      margin-bottom: 15px;
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: .16em;
+    }
+    .fact-value {
+      font-family: "Arial Black", Arial, sans-serif;
+      font-size: 25px;
+      line-height: 1.08;
+    }
+    footer {
+      position: absolute;
+      left: 66px;
+      right: 66px;
+      bottom: 55px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .cta {
+      color: var(--ink);
+      background: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <article class="poster">
+    <img class="art" src="{{ background_url }}" alt="">
+    <header>
+      <div class="brand"><img src="{{ logo_url }}" alt="">{{ academy }}</div>
+      <div class="edition">T20</div>
+    </header>
+    <main>
+      <div class="eyebrow">{{ post.eyebrow }}</div>
+      <h1 class="title">{{ post.title }}</h1>
+      <p class="subtitle">{{ post.subtitle }}</p>
+    </main>
+    <div class="badge">{{ post.badge }}</div>
+    <section class="facts">
+      {% for item in post.details[:4] %}
+      <div class="fact">
+        <div class="fact-label">{{ item.label }}</div>
+        <div class="fact-value">{{ item.value }}</div>
+      </div>
+      {% endfor %}
+    </section>
+    <footer>
+      <div class="contact">{{ post.contact }}</div>
+      <div class="cta">{{ post.cta }}</div>
+    </footer>
+    {% if concept_label %}<div class="sample-flag">{{ concept_label }}</div>{% endif %}
+  </article>
+</body>
+</html>

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Projects · Cricket Poster Studio{% endblock %}
+{% block content %}
+  <section class="intro">
+    <div>
+      <p class="kicker">HYBRID POSTER WORKFLOW</p>
+      <h1>Turn event details into one finished cricket poster.</h1>
+      <p>GPT-5.4 structures your copy, Ideogram creates text-free artwork, and the browser renders every protected fact exactly.</p>
+    </div>
+  </section>
+
+  <div class="dashboard-grid">
+    <section class="panel panel-primary">
+      <p class="kicker">NEW POSTER</p>
+      <h2>Paste your event or academy details</h2>
+      <form method="post" action="/projects/extract">
+        <label>
+          Brand
+          <select name="brand_id" required>
+            {% for brand in brands %}
+              <option value="{{ brand.id }}">{{ brand.name }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>
+          Source copy
+          <textarea name="source_text" rows="18" required placeholder="Paste the complete event details. Names, prices, phone numbers, dates, addresses, and punctuation will be protected."></textarea>
+        </label>
+        <button type="submit">Extract and review</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <p class="kicker">BRAND PROFILES</p>
+      <h2>Add a reusable brand</h2>
+      <form method="post" action="/brands" class="compact-form" enctype="multipart/form-data">
+        <label>Name <input name="name" required></label>
+        <label>Tagline <input name="tagline"></label>
+        <label>Location <input name="location"></label>
+        <label>Contact lines <textarea name="contact_lines" rows="3"></textarea></label>
+        <label>Logo <input type="file" name="logo" accept=".png,.jpg,.jpeg,.webp,.svg"></label>
+        <div class="color-grid">
+          <label>Ink <input type="color" name="ink" value="#071426"></label>
+          <label>Surface <input type="color" name="surface" value="#F6F1E6"></label>
+          <label>Accent <input type="color" name="accent" value="#FFD23F"></label>
+          <label>Highlight <input type="color" name="highlight" value="#21C7FF"></label>
+        </div>
+        <button type="submit" class="secondary">Save brand</button>
+      </form>
+      <div class="brand-list">
+        {% for brand in brands %}
+          <div><span class="swatch" style="--swatch: {{ brand.palette.accent }}"></span>{{ brand.name }}</div>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+
+  <section class="projects">
+    <div class="section-heading">
+      <div>
+        <p class="kicker">PROJECTS</p>
+        <h2>Recent posters</h2>
+      </div>
+      <span>{{ projects|length }} total</span>
+    </div>
+    <div class="project-grid">
+      {% for project in projects %}
+        <a class="project-card" href="/projects/{{ project.id }}">
+          {% if project.poster_path %}
+            <img src="/projects/{{ project.id }}/poster.png" alt="">
+          {% else %}
+            <div class="empty-preview">1080 × 1350</div>
+          {% endif %}
+          <div>
+            <strong>{{ project.content.title }}</strong>
+            <span class="status status-{{ project.status.value }}">{{ project.status.value|replace("_", " ") }}</span>
+          </div>
+        </a>
+      {% else %}
+        <p class="empty-state">No projects yet. Paste your first brief above.</p>
+      {% endfor %}
+    </div>
+  </section>
+{% endblock %}

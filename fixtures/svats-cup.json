@@ -1,0 +1,77 @@
+{
+  "content_type": "tournament",
+  "organization": "SVATS",
+  "organizer_tagline": "Your Technology Partner",
+  "title": "SVATS Cricket Cup 2026",
+  "short_name": "SCC-2026",
+  "schedule": {
+    "display_text": "July 25, 2026"
+  },
+  "location_lines": [
+    "Avery Park Dublin, 7401 Avery Rd, Dublin, OH 43017"
+  ],
+  "tagline": "One Dream. One Chance. One Champion.",
+  "categories": [
+    {
+      "name": "T7",
+      "registration_fee": "$150.00 per team",
+      "contacts": [
+        {"display_text": "Hari — +1 (248) 679-2806"},
+        {"display_text": "Sujith — +1 (612) 413-0983"}
+      ],
+      "prizes": [
+        {"label": "Winner", "value": "$1000"},
+        {"label": "Finalist", "value": "$700"},
+        {"label": "Semi Finalist", "value": "$200"}
+      ],
+      "awards_heading": "Individual Awards (Trophy)",
+      "awards": [
+        "Best Bowler",
+        "Best Bats(man)",
+        "MVP",
+        "Power Hitter",
+        "Economy"
+      ]
+    },
+    {
+      "name": "T7 40+",
+      "registration_fee": "$150.00 per team",
+      "contacts": [
+        {"display_text": "Venu — +1 (804) 873-6873"},
+        {"display_text": "Rama — +1 (303) 808-3700"}
+      ],
+      "prizes": [
+        {"label": "Winner", "value": "$1000"},
+        {"label": "Finalist", "value": "$700"},
+        {"label": "Semi Finalist", "value": "$200"}
+      ],
+      "awards_heading": "Individual Awards (Trophy)",
+      "awards": [
+        "Best Bowler",
+        "Best Bats(man)",
+        "Power Hitter",
+        "Economy"
+      ]
+    },
+    {
+      "name": "Kids",
+      "registration_fee": "$10.00 per player",
+      "contacts": [
+        {"display_text": "Raghu — +1 (425) 495-9221"}
+      ],
+      "prizes": [
+        {"label": "Winner Team (Individual Trophies)"},
+        {"label": "Runner-up Team (Individual Trophies)"}
+      ],
+      "awards_heading": "Individual Awards",
+      "awards": [
+        "Best Bowler",
+        "Best Batsman",
+        "MVP",
+        "Power Hitter (Most 6s)",
+        "Most Dot Balls"
+      ]
+    }
+  ],
+  "cta_lines": ["REGISTER NOW"]
+}

@@ -1,0 +1,25 @@
+{
+  "content_type": "lane_rental",
+  "organization": "BOUNDARY CRICKET",
+  "eyebrow": "BOOK · PRACTICE · REPEAT",
+  "title": "YOUR LANE. YOUR TIME.",
+  "subtitle": "Bookable indoor cricket lanes for solo practice, coaching, or team training.",
+  "price_line": "FROM $35 / HOUR",
+  "detail_lines": ["BATTING LANES", "BOWLING MACHINE", "TEAM BOOKINGS"],
+  "location_lines": ["NORTH DALLAS"],
+  "contacts": [
+    {"display_text": "(469) 555-0188"}
+  ],
+  "sections": [
+    {
+      "heading": "LANE FEATURES",
+      "items": [
+        "FULL-LENGTH RUN-UP",
+        "QUALITY PRACTICE SURFACES",
+        "FLEXIBLE HOURLY BOOKINGS",
+        "EQUIPMENT AVAILABLE"
+      ]
+    }
+  ],
+  "cta_lines": ["RESERVE A LANE"]
+}

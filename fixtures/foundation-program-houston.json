@@ -1,0 +1,69 @@
+{
+  "brand": {
+    "name": "22 YARDS HOUSTON CRICKET FACILITY",
+    "tagline": "",
+    "location": "Houston, TX 77082",
+    "contact_lines": [],
+    "logo_path": "C:\\Users\\pavan\\Desktop\\marketing-again\\output\\brand-assets\\7e658688154d4dabbd68b7c14bcf8a94\\logo.png",
+    "palette": {
+      "ink": "#071426",
+      "surface": "#F6F1E6",
+      "accent": "#FFD23F",
+      "highlight": "#21C7FF"
+    }
+  },
+  "content": {
+    "content_type": "coaching",
+    "organization": "22 YARDS",
+    "eyebrow": "HOUSTON\nCRICKET FACILITY",
+    "title": "FOUNDATION PROGRAM NOW OPEN!",
+    "subtitle": "BEGIN THEIR CRICKET JOURNEY WITH US!",
+    "tagline": "STRONG START. BRIGHT FUTURE.",
+    "detail_lines": [],
+    "location_lines": [
+      "22 Yards Houston Cricket Facility",
+      "14929 Westpark Dr, Suite 300",
+      "Houston, TX 77082"
+    ],
+    "contacts": [
+      {
+        "display_text": "+1 (713) 498-2155"
+      },
+      {
+        "display_text": "+1 (737) 323-0270"
+      }
+    ],
+    "sections": [
+      {
+        "heading": "",
+        "text": "We're excited to announce our Foundation Cricket Program for children starting from 5 years old!",
+        "items": []
+      },
+      {
+        "heading": "",
+        "text": "This program is designed to help young players build strong fundamentals, develop coordination, and learn the game in a fun and engaging environment.",
+        "items": []
+      },
+      {
+        "heading": "",
+        "text": "",
+        "items": [
+          "BUILD STRONG FUNDAMENTALS",
+          "IMPROVE COORDINATION",
+          "LEARN THE GAME THE RIGHT WAY",
+          "FUN & ENGAGING ENVIRONMENT"
+        ]
+      },
+      {
+        "heading": "LEARN. PLAY. GROW.",
+        "text": "LOVE THE GAME!",
+        "items": []
+      }
+    ],
+    "cta_lines": [
+      "VISIT US",
+      "22yardshouston.com/registrations",
+      "CALL OR TEXT"
+    ]
+  }
+}

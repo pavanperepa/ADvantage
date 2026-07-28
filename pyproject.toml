@@ -1,0 +1,41 @@
+[project]
+name = "cricket-post-studio"
+version = "0.1.0"
+description = "Hybrid AI + deterministic typography social post generator for cricket academies."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.116.0",
+    "httpx>=0.28.1",
+    "jinja2>=3.1.6",
+    "openai>=2.0.0",
+    "pillow>=11.3.0",
+    "playwright>=1.54.0",
+    "pydantic>=2.11.0",
+    "python-dotenv>=1.1.0",
+    "python-multipart>=0.0.20",
+    "requests>=2.32.0",
+    "uvicorn>=0.35.0",
+]
+
+[project.scripts]
+cricket-posts = "cricket_posts.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cricket_posts"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+markers = [
+    "live: uses paid external OpenAI or Ideogram APIs",
+]

@@ -1,0 +1,56 @@
+{
+  "brand": {
+    "name": "22 YARDS HOUSTON CRICKET FACILITY",
+    "tagline": "",
+    "location": "Houston, TX 77082",
+    "contact_lines": [],
+    "logo_path": "C:\\Users\\pavan\\Desktop\\marketing-again\\output\\brand-assets\\7e658688154d4dabbd68b7c14bcf8a94\\logo.png",
+    "palette": {
+      "ink": "#071426",
+      "surface": "#FFF9EA",
+      "accent": "#FFD23F",
+      "highlight": "#21C7FF"
+    }
+  },
+  "content": {
+    "content_type": "information",
+    "organization": "22 YARDS",
+    "eyebrow": "HOUSTON\nCRICKET FACILITY",
+    "title": "LET THEIR FIRST CRICKET EXPERIENCE FEEL LIKE PLAY",
+    "subtitle": "A relaxed, welcoming first experience for children ages 5+.",
+    "tagline": "NO PRESSURE. NO EXPERIENCE NEEDED.",
+    "detail_lines": [],
+    "location_lines": [
+      "22 Yards Houston Cricket Facility",
+      "14929 Westpark Dr, Suite 300",
+      "Houston, TX 77082"
+    ],
+    "contacts": [
+      {
+        "display_text": "+1 (713) 498-2155"
+      },
+      {
+        "display_text": "+1 (737) 323-0270"
+      }
+    ],
+    "sections": [
+      {
+        "heading": "WHAT YOUR CHILD WILL EXPERIENCE",
+        "text": "",
+        "items": [
+          "FRIENDLY COACHES WHO KEEP IT SIMPLE",
+          "PLAYFUL GAMES THAT TEACH THE BASICS",
+          "TRY BATTING & BOWLING AT THEIR OWN PACE",
+          "MOVE, LAUGH & BUILD COORDINATION",
+          "MAKE NEW FRIENDS & FEEL INCLUDED",
+          "LEAVE MORE COMFORTABLE, CONFIDENT & EXCITED TO PLAY AGAIN"
+        ]
+      }
+    ],
+    "cta_lines": [
+      "GIVE THEM A FUN FIRST START",
+      "22yardshouston.com/registrations",
+      "CALL OR TEXT"
+    ]
+  }
+}

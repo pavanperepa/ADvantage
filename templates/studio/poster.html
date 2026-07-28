@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1080, initial-scale=1">
+  <title>{{ content.title }}</title>
+  <link rel="stylesheet" href="{{ fonts_url }}">
+  <link rel="stylesheet" href="{{ stylesheet_url }}">
+  <style>
+    :root {
+      /* The legacy names are mapped onto resolved theme colours so every rule
+         written against them becomes theme-aware without being rewritten. */
+      --ink: {{ theme.colors.bg }};
+      --surface: {{ theme.colors.text }};
+      --accent: {{ theme.colors.accent }};
+      --highlight: {{ theme.colors.highlight }};
+
+      --theme-bg: {{ theme.colors.bg }};
+      --theme-panel: {{ theme.colors.panel }};
+      --theme-panel-border: {{ theme.colors.panel_border }};
+      --theme-text: {{ theme.colors.text }};
+      --theme-text-muted: {{ theme.colors.text_muted }};
+      --theme-heading: {{ theme.colors.heading }};
+      --theme-accent: {{ theme.colors.accent }};
+      --theme-accent-text: {{ theme.colors.accent_text }};
+      --theme-highlight-text: {{ theme.colors.highlight_text }};
+      --theme-frame: {{ theme.colors.frame }};
+      --radius: {{ theme.radius_px }}px;
+      --border-width: {{ theme.border_width_px }}px;
+      --accent-bar: {{ theme.accent_bar_px }}px;
+      --display-weight: {{ theme.display_weight }};
+      --display-tracking: {{ theme.display_tracking }}em;
+      --body-weight: {{ theme.body_weight }};
+      --shadow-strength: {{ theme.shadow_strength }};
+      --spacing-bias: {{ theme.spacing_bias }};
+
+      --title-scale: {{ design.tokens.title_scale }};
+      --body-scale: {{ design.tokens.body_scale }};
+      --panel-opacity: {{ design.tokens.panel_opacity }};
+      --spacing-scale: {{ design.tokens.spacing_scale }};
+      --art-x: {{ design.tokens.art_position_x }}%;
+      --art-y: {{ design.tokens.art_position_y }}%;
+      --safe-margin: {{ design.safe_margin_px }}px;
+      --font-display: {{ display_font }};
+      --font-body: {{ body_font }};
+    }
+  </style>
+</head>
+<body>
+  <main
+    id="poster"
+    class="poster family-{{ design.family.value }} density-{{ design.density.value }} composition-{{ design.composition.value }} theme-{{ design.color_mode.value }} font-{{ design.font_preset.value }} visual-{{ design.visual_treatment.value }} intent-{{ theme.intent.value }} decoration-{{ theme.decoration.value }}"
+    data-width="{{ design.width }}"
+    data-height="{{ design.height }}"
+  >
+    {% if design.visual_treatment.value == "hero" %}
+      <img
+        class="artwork"
+        src="{{ artwork_url }}"
+        alt=""
+        style="object-position: var(--art-x) var(--art-y)"
+        data-region="art"
+        data-art
+      >
+    {% else %}
+      <div class="vignette-shell" aria-hidden="true" data-region="art" data-art>
+        <img
+          class="intent-vignette"
+          src="{{ artwork_url }}"
+          alt=""
+          style="object-position: var(--art-x) var(--art-y)"
+        >
+      </div>
+    {% endif %}
+    <div class="art-overlay"></div>
+
+    <div class="poster-frame" data-safe data-audit data-field="poster content" data-region="frame">
+      <header class="brand-row" data-audit data-field="brand" data-region="header">
+        <div class="brand-lockup" data-region="header.lockup">
+          {% if logo_url %}
+            <img class="brand-logo" src="{{ logo_url }}" alt="" data-logo data-region="header.logo">
+          {% endif %}
+          <div>
+            <div class="brand-name" data-copy data-region="header.name">{{ content.organization or brand.name }}</div>
+            {% if brand.tagline %}
+              <div class="brand-tagline" data-copy data-region="header.tagline">{{ brand.tagline }}</div>
+            {% endif %}
+          </div>
+        </div>
+        {% if content.eyebrow %}
+          <div class="eyebrow-chip" data-copy data-region="header.eyebrow">{{ content.eyebrow }}</div>
+        {% endif %}
+      </header>
+
+      <section class="hero" data-audit data-field="title and introduction" data-region="hero">
+        {% if content.short_name is defined and content.short_name %}
+          <div class="short-name" data-copy data-region="hero.shortname">{{ content.short_name }}</div>
+        {% endif %}
+        <h1 data-copy data-region="hero.title">{{ content.title }}</h1>
+        {% if content.subtitle %}
+          <p class="subtitle" data-body data-copy data-region="hero.subtitle">{{ content.subtitle }}</p>
+        {% endif %}
+        {% if content.tagline %}
+          <p class="tagline" data-body data-copy data-region="hero.tagline">{{ content.tagline }}</p>
+        {% endif %}
+        {% if content.organizer_tagline is defined and content.organizer_tagline %}
+          <p class="organizer-tagline" data-body data-copy data-region="hero.organizer">{{ content.organizer_tagline }}</p>
+        {% endif %}
+        {% if content.schedule %}
+          <div class="schedule-strip" data-panel data-body data-copy data-region="hero.schedule">
+            {% if content.schedule.display_text %}
+              <span>{{ content.schedule.display_text }}</span>
+            {% else %}
+              {% if content.schedule.date %}<span>{{ content.schedule.date }}</span>{% endif %}
+              {% if content.schedule.days %}<span>{{ content.schedule.days }}</span>{% endif %}
+              {% if content.schedule.time %}<span>{{ content.schedule.time }}</span>{% endif %}
+            {% endif %}
+          </div>
+        {% endif %}
+        {% if content.program_info is defined and content.program_info %}
+          <div class="program-info" data-panel data-body data-copy data-region="hero.program">{{ content.program_info }}</div>
+        {% endif %}
+        {% if content.price_line is defined and content.price_line %}
+          <div class="price-line" data-panel data-body data-copy data-region="hero.price">{{ content.price_line }}</div>
+        {% endif %}
+        {% if content.detail_lines %}
+          <div class="detail-strip" data-panel data-region="hero.details">
+            {% for detail in content.detail_lines %}
+              <span data-body data-copy>{{ detail }}</span>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </section>
+
+      <section class="content-area" data-audit data-field="details" data-region="body">
+        {% if content.categories is defined and content.categories %}
+          <div class="category-grid" data-region="body.grid">
+            {% for category in content.categories %}
+              <article class="category-card" data-panel data-audit data-field="category: {{ category.name }}" data-region="body.card.{{ loop.index0 }}">
+                <div class="category-head">
+                  <h2 data-copy>{{ category.name }}</h2>
+                  {% if category.registration_fee %}
+                    <div class="fee" data-panel data-body data-copy>{{ category.registration_fee }}</div>
+                  {% endif %}
+                </div>
+                {% if category.prizes %}
+                  <div class="category-section">
+                    <h3>PRIZES</h3>
+                    <div class="inline-list">
+                      {% for prize in category.prizes %}
+                        <span data-body data-copy>{{ prize.display() }}</span>
+                      {% endfor %}
+                    </div>
+                  </div>
+                {% endif %}
+                {% if category.awards %}
+                  <div class="category-section">
+                    <h3 data-copy>{{ category.awards_heading }}</h3>
+                    <div class="inline-list">
+                      {% for award in category.awards %}
+                        <span data-body data-copy>{{ award }}</span>
+                      {% endfor %}
+                    </div>
+                  </div>
+                {% endif %}
+                {% if category.contacts %}
+                  <div class="category-contacts">
+                    {% for contact in category.contacts %}
+                      <span data-body data-copy>{{ contact.display() }}</span>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </article>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="section-grid" data-region="body.grid">
+            {% for section in content.sections %}
+              <article class="info-card" data-panel data-audit data-field="section: {{ section.heading or loop.index }}" data-region="body.card.{{ loop.index0 }}">
+                {% if section.heading %}<h2 data-copy>{{ section.heading }}</h2>{% endif %}
+                {% if section.text %}<p data-body data-copy>{{ section.text }}</p>{% endif %}
+                {% if section.items %}
+                  <ul>
+                    {% for item in section.items %}
+                      <li class="{{ 'has-intent-icon' if intent_icons.get(item) else '' }}" data-body data-copy>
+                        {% if intent_icons.get(item) %}
+                          <img class="intent-icon" src="{{ intent_icons[item] }}" alt="">
+                        {% endif %}
+                        <span>{{ item }}</span>
+                      </li>
+                    {% endfor %}
+                  </ul>
+                {% endif %}
+              </article>
+            {% endfor %}
+            {% if content.coach_heading is defined and content.coach_heading %}
+              <article class="info-card coach-card" data-panel data-audit data-field="coach" data-region="body.card.coach">
+                <h2 data-copy>{{ content.coach_heading }}</h2>
+                {% if content.coach_bio %}<p data-body data-copy>{{ content.coach_bio }}</p>{% endif %}
+              </article>
+            {% endif %}
+          </div>
+        {% endif %}
+      </section>
+
+      <footer class="poster-footer" data-panel data-audit data-field="call to action and contact" data-region="footer">
+        <div class="footer-copy" data-region="footer.contact">
+          {% for location in content.location_lines %}
+            <div data-body data-copy>{{ location }}</div>
+          {% endfor %}
+          {% for contact in content.contacts %}
+            <div data-body data-copy>{{ contact.display() }}</div>
+          {% endfor %}
+          {% for line in brand.contact_lines %}
+            <div data-body data-copy>{{ line }}</div>
+          {% endfor %}
+        </div>
+        {% if content.cta_lines %}
+          <div class="cta" data-region="footer.cta">
+            {% for cta in content.cta_lines %}
+              <span data-copy>{{ cta }}</span>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </footer>
+    </div>
+  </main>
+</body>
+</html>

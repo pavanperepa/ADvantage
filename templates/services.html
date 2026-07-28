@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <style>{% include "shared.css" %}</style>
+  <style>
+    .poster::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -3;
+      background:
+        linear-gradient(90deg, rgba(17,17,17,.3), rgba(17,17,17,.84) 55%, rgba(17,17,17,.98)),
+        linear-gradient(0deg, rgba(17,17,17,.98), transparent 50%);
+    }
+    .slash {
+      position: absolute;
+      z-index: -2;
+      top: -120px;
+      left: 432px;
+      width: 230px;
+      height: 1580px;
+      background: linear-gradient(180deg, rgba(255,92,53,.93), rgba(255,92,53,.62));
+      transform: rotate(9deg);
+      mix-blend-mode: multiply;
+    }
+    header {
+      position: absolute;
+      top: 57px;
+      left: 65px;
+      right: 65px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand img { filter: invert(1); }
+    .badge {
+      color: var(--ink);
+      background: var(--highlight);
+    }
+    main {
+      position: absolute;
+      top: 227px;
+      left: 65px;
+      right: 65px;
+    }
+    .eyebrow {
+      margin-bottom: 28px;
+      color: var(--highlight);
+    }
+    .title {
+      max-width: 760px;
+      color: white;
+      font-size: 112px;
+    }
+    .title::first-line { color: var(--accent); }
+    .subtitle {
+      max-width: 620px;
+      margin-top: 31px;
+      color: rgba(240,232,217,.86);
+    }
+    .service-list {
+      position: absolute;
+      top: 755px;
+      right: 65px;
+      width: 490px;
+      border-top: 1px solid rgba(255,255,255,.35);
+    }
+    .service {
+      display: grid;
+      grid-template-columns: 55px 1fr;
+      align-items: center;
+      min-height: 78px;
+      border-bottom: 1px solid rgba(255,255,255,.25);
+    }
+    .service-number {
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 900;
+    }
+    .service-name {
+      color: white;
+      font-family: "Arial Black", Arial, sans-serif;
+      font-size: 22px;
+      letter-spacing: .02em;
+    }
+    footer {
+      position: absolute;
+      left: 65px;
+      right: 65px;
+      bottom: 58px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .cta {
+      color: white;
+      background: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <article class="poster">
+    <img class="art" src="{{ background_url }}" alt="">
+    <div class="slash"></div>
+    <header>
+      <div class="brand"><img src="{{ logo_url }}" alt="">{{ academy }}</div>
+      <div class="badge">{{ post.badge }}</div>
+    </header>
+    <main>
+      <div class="eyebrow">{{ post.eyebrow }}</div>
+      <h1 class="title">{{ post.title }}</h1>
+      <p class="subtitle">{{ post.subtitle }}</p>
+    </main>
+    <section class="service-list">
+      {% for item in post.details[:4] %}
+      <div class="service">
+        <div class="service-number">{{ item.label }}</div>
+        <div class="service-name">{{ item.value }}</div>
+      </div>
+      {% endfor %}
+    </section>
+    <footer>
+      <div class="contact">{{ post.contact }}</div>
+      <div class="cta">{{ post.cta }}</div>
+    </footer>
+    {% if concept_label %}<div class="sample-flag">{{ concept_label }}</div>{% endif %}
+  </article>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#05152d"/>
+      <stop offset=".6" stop-color="#0d3970"/>
+      <stop offset="1" stop-color="#051326"/>
+    </linearGradient>
+    <radialGradient id="lamp"><stop stop-color="#fff"/><stop offset=".15" stop-color="#bcefff" stop-opacity=".8"/><stop offset="1" stop-color="#26d9ff" stop-opacity="0"/></radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff0a6"/><stop offset=".4" stop-color="#e9b949"/><stop offset="1" stop-color="#8f5a00"/></linearGradient>
+  </defs>
+  <rect width="1080" height="1350" fill="url(#sky)"/>
+  <g opacity=".85">
+    <circle cx="870" cy="135" r="260" fill="url(#lamp)"/>
+    <circle cx="620" cy="70" r="180" fill="url(#lamp)" opacity=".5"/>
+  </g>
+  <path d="M0 705Q220 595 440 705T880 705T1320 705V1000H0Z" fill="#07111f"/>
+  <g fill="#d9f6ff">
+    <circle cx="65" cy="635" r="4"/><circle cx="100" cy="620" r="3"/><circle cx="155" cy="650" r="4"/>
+    <circle cx="710" cy="620" r="4"/><circle cx="760" cy="650" r="3"/><circle cx="810" cy="623" r="4"/>
+    <circle cx="920" cy="650" r="3"/><circle cx="1000" cy="626" r="4"/>
+  </g>
+  <path d="M180 1350 470 730h330l220 620Z" fill="#1d603d" opacity=".8"/>
+  <path d="M415 1350 536 730h194l95 620Z" fill="#c9a874" opacity=".82"/>
+  <g transform="translate(745 470)">
+    <path d="M64 88c-67-2-91-53-85-109l50 4c-4 29 4 51 37 52M187 88c67-2 91-53 85-109l-50 4c4 29-4 51-37 52" fill="none" stroke="url(#gold)" stroke-width="24"/>
+    <path d="M36-45h180c-4 114-34 183-90 210C70 138 40 69 36-45Z" fill="url(#gold)"/>
+    <rect x="104" y="150" width="44" height="95" fill="url(#gold)"/>
+    <path d="M60 235h132l27 50H34Z" fill="url(#gold)"/>
+    <rect x="20" y="282" width="212" height="40" rx="8" fill="url(#gold)"/>
+    <path d="M67-10h118c-9 63-29 105-59 126-31-22-50-64-59-126Z" fill="#fff3bd" opacity=".32"/>
+  </g>
+</svg>
+

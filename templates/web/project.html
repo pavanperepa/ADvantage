@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% block title %}{{ project.content.title }} · Cricket Poster Studio{% endblock %}
+{% block content %}
+  <div class="project-heading">
+    <div>
+      <a class="back-link" href="/">← All projects</a>
+      <p class="kicker">{{ project.content.content_type.value|replace("_", " ") }}</p>
+      <h1>{{ project.content.title }}</h1>
+      <p>{{ brand.name }} · <span class="status status-{{ project.status.value }}">{{ project.status.value|replace("_", " ") }}</span></p>
+    </div>
+    {% if project.poster_path %}
+      <a class="button-link" href="/projects/{{ project.id }}/export">Download project ZIP</a>
+    {% endif %}
+  </div>
+
+  {% if project.error %}
+    <div class="alert">{{ project.error }}</div>
+  {% endif %}
+
+  <ol class="workflow-steps">
+    <li><b>1 · Review</b><span>Check the extracted words and edit anything that should change.</span></li>
+    <li><b>2 · Choose</b><span>Use Smart Hybrid for exact text, or Ideogram Full Poster for short copy.</span></li>
+    <li><b>3 · Generate</b><span>Inspect the result and validation report before publishing.</span></li>
+  </ol>
+
+  <div class="editor-grid">
+    <section class="preview-panel">
+      <div class="action-grid">
+        <div>
+          <p class="kicker">STEP 2 · CHOOSE AND GENERATE</p>
+          <h2>Generation method</h2>
+        </div>
+        <form method="post" action="/projects/{{ project.id }}/generate">
+          <input type="hidden" name="use_ideogram" value="true">
+          <div class="classification">
+            <span><b>Text load</b>{{ classification.recommended_density }}</span>
+            <span><b>Composition</b>{{ classification.recommended_composition|replace("_", " ") }}</span>
+            <span><b>Artwork</b>{{ classification.recommended_visual_treatment|replace("_", " ") }}</span>
+            <span><b>Copy</b>{{ classification.ideogram_only.line_count }} elements · {{ classification.ideogram_only.character_count }} characters</span>
+          </div>
+          <fieldset class="mode-selector">
+            <legend>Choose how this poster is made</legend>
+            <label class="mode-option">
+              <input type="radio" name="render_mode" value="hybrid" {{ 'checked' if project.render_mode.value == 'hybrid' else '' }}>
+              <span>
+                <strong>Smart Hybrid <em>Recommended</em></strong>
+                <small>Ideogram makes the artwork. The studio places exact text and automatically uses an art-forward, balanced, or information-dense composition.</small>
+              </span>
+            </label>
+            <label class="mode-option {{ 'disabled' if not classification.ideogram_only.eligible else '' }}">
+              <input type="radio" name="render_mode" value="ideogram_only" {{ 'checked' if project.render_mode.value == 'ideogram_only' else '' }} {{ 'disabled' if not classification.ideogram_only.eligible else '' }}>
+              <span>
+                <strong>Ideogram Full Poster</strong>
+                <small>Ideogram creates both artwork and typography. Best for light copy, but names, prices, dates, and phone numbers require manual review.</small>
+                {% if not classification.ideogram_only.eligible %}
+                  <small class="mode-reason">{{ classification.ideogram_only.reasons|join("; ") }}</small>
+                {% endif %}
+              </span>
+            </label>
+          </fieldset>
+          <div class="preference-grid">
+            <label>
+              Visual intent
+              <select name="style_intent">
+                {% for value, caption in style_intents %}
+                  <option value="{{ value }}" {{ 'selected' if project.design and project.design.style_intent.value == value else '' }}>{{ caption }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label>
+              Hybrid color
+              <select name="color_mode">
+                <option value="dark" {{ 'selected' if project.design and project.design.color_mode.value == 'dark' else '' }}>Dark</option>
+                <option value="light" {{ 'selected' if project.design and project.design.color_mode.value == 'light' else '' }}>Light</option>
+              </select>
+            </label>
+            <label>
+              Font family
+              <select name="font_preset">
+                {% for value, caption in font_presets %}
+                  <option value="{{ value }}" {{ 'selected' if project.design and project.design.font_preset.value == value else '' }}>{{ caption }}</option>
+                {% endfor %}
+              </select>
+            </label>
+          </div>
+          <p class="detected-intents">
+            Changing the visual intent re-picks the typeface for that mood. Choose a
+            font explicitly to keep it across intent changes.
+          </p>
+          {% if classification.detected_intents %}
+            <p class="detected-intents">
+              <b>Detected visual intents:</b>
+              {{ classification.detected_intents|map(attribute="kind")|join(", ") }}
+            </p>
+          {% endif %}
+          <label class="checkbox"><input type="checkbox" name="use_critic" value="true"> Run GPT visual critic on Smart Hybrid</label>
+          <button type="submit">Generate poster</button>
+        </form>
+        {% if project.artwork_path %}
+          {% if project.render_mode.value == 'hybrid' %}
+            <form method="post" action="/projects/{{ project.id }}/rerender">
+              <button type="submit" class="secondary">Rerender with current art</button>
+            </form>
+          {% endif %}
+          <form method="post" action="/projects/{{ project.id }}/regenerate-art">
+            <button type="submit" class="secondary">{{ "Regenerate full Ideogram poster" if project.render_mode.value == "ideogram_only" else "Regenerate artwork" }}</button>
+          </form>
+        {% endif %}
+      </div>
+      <div class="result-heading">
+        <p class="kicker">STEP 3 · RESULT</p>
+        <span>{{ project.render_mode.value|replace("_", " ") }}</span>
+      </div>
+      {% if project.poster_path %}
+        <img class="poster-preview" src="/projects/{{ project.id }}/poster.png?v={{ project.generation_metadata|length }}" alt="Generated poster">
+      {% else %}
+        <div class="poster-placeholder">Poster preview<br><small>Generate when the copy is ready.</small></div>
+      {% endif %}
+    </section>
+
+    <section class="panel editor-panel">
+      <p class="kicker">STEP 1 · REVIEW COPY</p>
+      <h2>Structured poster content</h2>
+      <p>Edit or remove fields here. Saving protects the updated values and replans the single-page layout without spending an artwork call.</p>
+      <form method="post" action="/projects/{{ project.id }}/content">
+        <textarea class="json-editor" name="content_json" rows="34" spellcheck="false">{{ content_json }}</textarea>
+        <button type="submit" class="secondary">Save copy and replan</button>
+      </form>
+    </section>
+  </div>
+
+  <section class="audit-panel">
+    <div class="section-heading">
+      <div>
+        <p class="kicker">VALIDATION</p>
+        <h2>One-page audit</h2>
+      </div>
+      {% if project.audit %}
+        <span class="audit-result {{ 'pass' if project.audit.valid else 'fail' }}">
+          {{ 'MANUAL COPY REVIEW' if project.render_mode.value == 'ideogram_only' and project.audit.valid else ('PASS' if project.audit.valid else 'NEEDS REVISION') }}
+        </span>
+      {% endif %}
+    </div>
+    {% if project.audit %}
+      <div class="check-grid">
+        {% for check, passed in project.audit.checks.items() %}
+          <div class="{{ 'pass' if passed else 'fail' }}"><b>{{ '✓' if passed else '×' }}</b>{{ check|replace("_", " ") }}</div>
+        {% endfor %}
+      </div>
+      {% if project.audit.issues %}
+        <div class="issue-list">
+          {% for issue in project.audit.issues %}
+            <article>
+              <strong>{{ issue.code|replace("_", " ") }}</strong>
+              <p>{{ issue.message }}</p>
+              {% if issue.value %}<code>{{ issue.value }}</code>{% endif %}
+            </article>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% else %}
+      <p>The render audit will check protected copy, overflow, safe margins, 24px body text, contrast, logo loading, and PNG dimensions.</p>
+    {% endif %}
+  </section>
+{% endblock %}
