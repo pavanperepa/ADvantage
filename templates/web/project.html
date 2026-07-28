@@ -19,7 +19,7 @@
 
   <ol class="workflow-steps">
     <li><b>1 · Review</b><span>Check the extracted words and edit anything that should change.</span></li>
-    <li><b>2 · Choose</b><span>Use Smart Hybrid for exact text, or Ideogram Full Poster for short copy.</span></li>
+    <li><b>2 · Choose</b><span>Pick the visual intent, colour mode and typeface for this poster.</span></li>
     <li><b>3 · Generate</b><span>Inspect the result and validation report before publishing.</span></li>
   </ol>
 
@@ -36,28 +36,8 @@
             <span><b>Text load</b>{{ classification.recommended_density }}</span>
             <span><b>Composition</b>{{ classification.recommended_composition|replace("_", " ") }}</span>
             <span><b>Artwork</b>{{ classification.recommended_visual_treatment|replace("_", " ") }}</span>
-            <span><b>Copy</b>{{ classification.ideogram_only.line_count }} elements · {{ classification.ideogram_only.character_count }} characters</span>
+            
           </div>
-          <fieldset class="mode-selector">
-            <legend>Choose how this poster is made</legend>
-            <label class="mode-option">
-              <input type="radio" name="render_mode" value="hybrid" {{ 'checked' if project.render_mode.value == 'hybrid' else '' }}>
-              <span>
-                <strong>Smart Hybrid <em>Recommended</em></strong>
-                <small>Ideogram makes the artwork. The studio places exact text and automatically uses an art-forward, balanced, or information-dense composition.</small>
-              </span>
-            </label>
-            <label class="mode-option {{ 'disabled' if not classification.ideogram_only.eligible else '' }}">
-              <input type="radio" name="render_mode" value="ideogram_only" {{ 'checked' if project.render_mode.value == 'ideogram_only' else '' }} {{ 'disabled' if not classification.ideogram_only.eligible else '' }}>
-              <span>
-                <strong>Ideogram Full Poster</strong>
-                <small>Ideogram creates both artwork and typography. Best for light copy, but names, prices, dates, and phone numbers require manual review.</small>
-                {% if not classification.ideogram_only.eligible %}
-                  <small class="mode-reason">{{ classification.ideogram_only.reasons|join("; ") }}</small>
-                {% endif %}
-              </span>
-            </label>
-          </fieldset>
           <div class="preference-grid">
             <label>
               Visual intent
@@ -103,7 +83,7 @@
             </form>
           {% endif %}
           <form method="post" action="/projects/{{ project.id }}/regenerate-art">
-            <button type="submit" class="secondary">{{ "Regenerate full Ideogram poster" if project.render_mode.value == "ideogram_only" else "Regenerate artwork" }}</button>
+            <button type="submit" class="secondary">Regenerate artwork</button>
           </form>
         {% endif %}
       </div>
@@ -137,7 +117,7 @@
       </div>
       {% if project.audit %}
         <span class="audit-result {{ 'pass' if project.audit.valid else 'fail' }}">
-          {{ 'MANUAL COPY REVIEW' if project.render_mode.value == 'ideogram_only' and project.audit.valid else ('PASS' if project.audit.valid else 'NEEDS REVISION') }}
+          {{ 'PASS' if project.audit.valid else 'NEEDS REVISION' }}
         </span>
       {% endif %}
     </div>

@@ -9,8 +9,8 @@ from typing import Any
 
 from PIL import Image
 
-from .ideogram import generate_full_poster, generate_studio_art
-from .layout import ideogram_only_assessment, layout_summary, plan_design
+from .ideogram import generate_studio_art
+from .layout import layout_summary, plan_design
 from .models import (
     AuditIssue,
     AuditSeverity,
@@ -126,8 +126,6 @@ class PosterStudio:
         project.status = ProjectStatus.READY
         project.html_path = None
         project.poster_path = None
-        if project.render_mode == GenerationMode.IDEOGRAM_ONLY:
-            project.artwork_path = None
         project.audit = None
         project.error = None
         return self.database.save_project(project)
@@ -234,48 +232,6 @@ class PosterStudio:
             project_dir.mkdir(parents=True, exist_ok=True)
             project.error = None
 
-            if project.render_mode == GenerationMode.IDEOGRAM_ONLY:
-                assessment = ideogram_only_assessment(project.content)
-                if not assessment["eligible"]:
-                    reasons = "; ".join(assessment["reasons"])
-                    project.status = ProjectStatus.NEEDS_REVISION
-                    project.error = (
-                        "Ideogram-only is limited to light copy because its typography is not "
-                        f"deterministic. Choose Smart Hybrid for this project. {reasons}."
-                    )
-                    return self.database.save_project(project)
-                if not use_ideogram:
-                    raise RuntimeError("Ideogram-only mode requires IDEOGRAM_API_KEY.")
-                poster_path = project_dir / "poster.png"
-                raw_path = Path(project.artwork_path) if project.artwork_path else None
-                if (
-                    regenerate_art
-                    or raw_path is None
-                    or not raw_path.exists()
-                    or not poster_path.exists()
-                ):
-                    project.status = ProjectStatus.GENERATING_ART
-                    self.database.save_project(project)
-                    result = generate_full_poster(
-                        project.content,
-                        brand,
-                        project_dir / "ideogram-full.png",
-                        poster_path,
-                    )
-                    raw_path = Path(result.path)
-                    project.generation_metadata["ideogram"] = result.model_dump(mode="json")
-                project.artwork_path = str(raw_path)
-                project.poster_path = str(poster_path)
-                project.html_path = None
-                project.audit = self._audit_ideogram_only(project)
-                project.status = (
-                    ProjectStatus.COMPLETE
-                    if project.audit.valid
-                    else ProjectStatus.NEEDS_REVISION
-                )
-                project.error = None if project.audit.valid else "Ideogram output has invalid dimensions."
-                return self.database.save_project(project)
-
             artwork_path = Path(project.artwork_path) if project.artwork_path else None
             if regenerate_art or artwork_path is None or not artwork_path.exists():
                 project.status = ProjectStatus.GENERATING_ART
@@ -372,16 +328,6 @@ class PosterStudio:
 
     def validate(self, project_id: str) -> PosterProject:
         project = self.database.get_project(project_id)
-        if project.render_mode == GenerationMode.IDEOGRAM_ONLY:
-            if not project.poster_path or not Path(project.poster_path).exists():
-                raise RuntimeError("Project has not been generated yet.")
-            project.audit = self._audit_ideogram_only(project)
-            project.status = (
-                ProjectStatus.COMPLETE
-                if project.audit.valid
-                else ProjectStatus.NEEDS_REVISION
-            )
-            return self.database.save_project(project)
         if not project.html_path or not project.poster_path or not project.artwork_path:
             raise RuntimeError("Project has not been rendered yet.")
         brand = self.database.get_brand(project.brand_id)
@@ -399,47 +345,6 @@ class PosterStudio:
             else ProjectStatus.NEEDS_REVISION
         )
         return self.database.save_project(project)
-
-    def _audit_ideogram_only(self, project: PosterProject) -> ValidationReport:
-        if not project.poster_path:
-            raise RuntimeError("Ideogram-only project has no poster.")
-        with Image.open(project.poster_path) as image:
-            dimensions = image.size
-        dimensions_valid = dimensions == (1080, 1350)
-        issues = [
-            AuditIssue(
-                code="manual_copy_review_required",
-                severity=AuditSeverity.WARNING,
-                message=(
-                    "Ideogram rendered the typography inside the image. Carefully review every "
-                    "name, date, price, phone number, address, and spelling before publishing."
-                ),
-            )
-        ]
-        if not dimensions_valid:
-            issues.append(
-                AuditIssue(
-                    code="wrong_png_dimensions",
-                    severity=AuditSeverity.ERROR,
-                    message=(
-                        f"PNG is {dimensions[0]}x{dimensions[1]}; expected 1080x1350."
-                    ),
-                )
-            )
-        return ValidationReport(
-            valid=dimensions_valid,
-            checks={
-                "ideogram_only_output": True,
-                "png_dimensions": dimensions_valid,
-                "protected_copy_machine_verified": False,
-            },
-            issues=issues,
-            measured={
-                "png_dimensions": list(dimensions),
-                "text_verification": "manual",
-            },
-            protected_copy_matches={},
-        )
 
     def export(self, project_id: str, destination: Path | None = None) -> Path:
         project = self.database.get_project(project_id)

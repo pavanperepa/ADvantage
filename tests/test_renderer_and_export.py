@@ -5,9 +5,7 @@ import zipfile
 from pathlib import Path
 
 import pytest
-from PIL import Image
 
-from cricket_posts.ideogram import IdeogramResult
 from cricket_posts.models import (
     AuditSeverity,
     ColorMode,
@@ -200,71 +198,6 @@ def test_export_zip_contains_editable_source_art_and_audit(tmp_path, load_conten
         project_payload = json.loads(archive.read("project.json"))
         assert project_payload["id"] == rendered.id
         assert project_payload["audit"]["valid"] is True
-
-
-def test_light_copy_can_generate_an_ideogram_only_poster(
-    tmp_path,
-    load_content,
-    monkeypatch,
-):
-    studio = PosterStudio(
-        database_path=tmp_path / "studio.db",
-        output_root=tmp_path / "projects",
-    )
-    brand = studio.ensure_default_brand()
-    project = studio.create_from_content(
-        load_content("information.json"),
-        brand.id,
-        use_ai_planner=False,
-    )
-
-    def fake_full_poster(content, brand, raw_destination, poster_destination):
-        raw_destination.parent.mkdir(parents=True, exist_ok=True)
-        image = Image.new("RGB", (1080, 1350), "#071426")
-        image.save(raw_destination)
-        image.save(poster_destination)
-        return IdeogramResult(
-            path=str(raw_destination),
-            resolution="1080x1350",
-            prompt="mock full poster",
-        )
-
-    monkeypatch.setattr("cricket_posts.studio.generate_full_poster", fake_full_poster)
-    rendered = studio.generate(
-        project.id,
-        render_mode=GenerationMode.IDEOGRAM_ONLY,
-    )
-
-    assert rendered.status == ProjectStatus.COMPLETE
-    assert rendered.render_mode == GenerationMode.IDEOGRAM_ONLY
-    assert rendered.html_path is None
-    assert rendered.audit is not None
-    assert rendered.audit.valid
-    assert any(
-        issue.code == "manual_copy_review_required"
-        for issue in rendered.audit.issues
-    )
-
-
-def test_text_heavy_copy_is_rejected_from_ideogram_only(tmp_path, load_content):
-    studio = PosterStudio(
-        database_path=tmp_path / "studio.db",
-        output_root=tmp_path / "projects",
-    )
-    brand = studio.ensure_default_brand()
-    project = studio.create_from_content(
-        load_content("svats-cup.json"),
-        brand.id,
-        use_ai_planner=False,
-    )
-    rendered = studio.generate(
-        project.id,
-        render_mode=GenerationMode.IDEOGRAM_ONLY,
-    )
-
-    assert rendered.status == ProjectStatus.NEEDS_REVISION
-    assert rendered.error is not None
-    assert "Choose Smart Hybrid" in rendered.error
 
 
 def test_light_vignette_render_creates_intent_pngs(tmp_path):

@@ -11,8 +11,6 @@ from typing import Any
 from dotenv import load_dotenv
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from .contact_sheet import create_contact_sheet
-from .ideogram import generate_art
 from .models import (
     AuditSeverity,
     BrandProfile,
@@ -22,41 +20,8 @@ from .models import (
     StyleIntent,
     parse_editable_content,
 )
-from .openai_content import generate_campaign
-from .renderer import ASSET_DIR, PROJECT_ROOT, TEMPLATE_DIR, render_campaign
-from .sample_data import SAMPLE_CAMPAIGN
+from .renderer import PROJECT_ROOT, TEMPLATE_DIR
 from .studio import PosterStudio
-
-
-def _backgrounds(mode: str) -> dict[str, Path]:
-    return {
-        name: ASSET_DIR / f"{name}-background.svg"
-        for name in ("information", "tournament", "services")
-    }
-
-
-def run_sample() -> None:
-    output_dir = PROJECT_ROOT / "output" / "sample"
-    images = render_campaign(SAMPLE_CAMPAIGN, output_dir, _backgrounds("sample"))
-    create_contact_sheet(images, output_dir / "all-templates.png")
-    print(f"Created {len(images)} sample posts in {output_dir}")
-
-
-def run_live(request: str, skip_art: bool) -> None:
-    campaign = generate_campaign(request)
-    output_dir = PROJECT_ROOT / "output" / "live"
-    backgrounds = _backgrounds("sample")
-    if not skip_art:
-        backgrounds = {}
-        for post in campaign.posts:
-            key = post.template_id.value
-            backgrounds[key] = generate_art(
-                post,
-                output_dir / "art" / f"{key}.png",
-            )
-    images = render_campaign(campaign, output_dir, backgrounds)
-    create_contact_sheet(images, output_dir / "all-templates.png")
-    print(f"Created {len(images)} live posts in {output_dir}")
 
 
 def run_serve(host: str, port: int, reload: bool) -> None:
@@ -80,13 +45,10 @@ def run_generate(
     *,
     offline: bool,
     critic: bool,
-    ideogram_only: bool,
     color_mode: ColorMode,
     font_preset: FontPreset | None,
     style_intent: StyleIntent | None = None,
 ) -> None:
-    if offline and ideogram_only:
-        raise ValueError("--ideogram-only cannot be combined with --offline.")
     payload = json.loads(input_path.read_text(encoding="utf-8"))
     studio = PosterStudio()
     brand_payload = payload.get("brand") if isinstance(payload, dict) else None
@@ -106,11 +68,7 @@ def run_generate(
         project.id,
         use_ideogram=not offline,
         use_critic=critic and not offline,
-        render_mode=(
-            GenerationMode.IDEOGRAM_ONLY
-            if ideogram_only
-            else GenerationMode.HYBRID
-        ),
+        render_mode=GenerationMode.HYBRID,
         color_mode=color_mode,
         font_preset=font_preset,
         style_intent=style_intent,
@@ -305,14 +263,6 @@ def run_export(project_id: str, output: Path | None) -> None:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Generate cricket academy social posts.")
     subparsers = parser.add_subparsers(dest="command", required=True)
-    subparsers.add_parser("sample", help="Render the included offline sample campaign.")
-    live = subparsers.add_parser("live", help="Generate copy and artwork through the APIs.")
-    live.add_argument("--request", required=True, help="Campaign request for GPT-5.4.")
-    live.add_argument(
-        "--skip-art",
-        action="store_true",
-        help="Use local artwork instead of calling Ideogram.",
-    )
     serve = subparsers.add_parser("serve", help="Run the local poster studio web app.")
     serve.add_argument("--host", default="127.0.0.1")
     serve.add_argument("--port", type=int, default=8000)
@@ -332,11 +282,6 @@ def build_parser() -> argparse.ArgumentParser:
         "--critic",
         action="store_true",
         help="Run up to two GPT-5.4 screenshot-critic passes.",
-    )
-    generate.add_argument(
-        "--ideogram-only",
-        action="store_true",
-        help="Let Ideogram render the complete poster; available only for light copy.",
     )
     generate.add_argument(
         "--theme",
@@ -406,18 +351,13 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> None:
     load_dotenv(PROJECT_ROOT / ".env")
     args = build_parser().parse_args()
-    if args.command == "sample":
-        run_sample()
-    elif args.command == "live":
-        run_live(args.request, args.skip_art)
-    elif args.command == "serve":
+    if args.command == "serve":
         run_serve(args.host, args.port, args.reload)
     elif args.command == "generate":
         run_generate(
             args.input,
             offline=args.offline,
             critic=args.critic,
-            ideogram_only=args.ideogram_only,
             color_mode=ColorMode(args.theme),
             font_preset=FontPreset(args.font) if args.font else None,
             style_intent=StyleIntent(args.intent) if args.intent else None,

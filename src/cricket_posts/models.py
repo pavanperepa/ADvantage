@@ -7,12 +7,6 @@ from uuid import uuid4
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, model_validator
 
 
-class TemplateId(str, Enum):
-    INFORMATION = "information"
-    TOURNAMENT = "tournament"
-    SERVICES = "services"
-
-
 class Palette(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -20,48 +14,6 @@ class Palette(BaseModel):
     surface: str = Field(pattern=r"^#[0-9A-Fa-f]{6}$")
     accent: str = Field(pattern=r"^#[0-9A-Fa-f]{6}$")
     highlight: str = Field(pattern=r"^#[0-9A-Fa-f]{6}$")
-
-
-class Detail(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    label: str = Field(min_length=1, max_length=18)
-    value: str = Field(min_length=1, max_length=52)
-
-
-class PostBrief(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    template_id: TemplateId
-    eyebrow: str = Field(min_length=1, max_length=32)
-    title: str = Field(min_length=3, max_length=52)
-    subtitle: str = Field(min_length=3, max_length=115)
-    details: list[Detail] = Field(min_length=2, max_length=5)
-    cta: str = Field(min_length=2, max_length=28)
-    contact: str = Field(min_length=3, max_length=48)
-    badge: str = Field(min_length=1, max_length=25)
-    art_prompt: str = Field(min_length=30, max_length=650)
-    palette: Palette
-
-
-class Campaign(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    academy_name: str = Field(min_length=2, max_length=42)
-    location: str = Field(min_length=2, max_length=45)
-    posts: list[PostBrief] = Field(min_length=3, max_length=3)
-
-    @model_validator(mode="after")
-    def requires_each_template(self) -> "Campaign":
-        expected = set(TemplateId)
-        actual = {post.template_id for post in self.posts}
-        if actual != expected:
-            raise ValueError("Campaign must contain exactly one post for each template.")
-        return self
-
-
-# Studio v1 models. The earlier Campaign/PostBrief models above are retained for
-# backwards-compatible sample and live commands.
 
 
 class ContentType(str, Enum):
@@ -95,7 +47,6 @@ class CompositionMode(str, Enum):
 
 class GenerationMode(str, Enum):
     HYBRID = "hybrid"
-    IDEOGRAM_ONLY = "ideogram_only"
 
 
 class ColorMode(str, Enum):

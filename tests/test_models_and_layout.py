@@ -10,7 +10,6 @@ from cricket_posts.layout import (
     choose_density,
     choose_layout,
     content_density_score,
-    ideogram_only_assessment,
     infer_visual_intents,
     plan_design,
 )
@@ -196,43 +195,6 @@ def test_flat_extraction_converts_to_domain_model_without_rewriting():
     assert content.schedule.time == "5pm to 630 pm - 16 classes"
     assert content.price_line == "250$ price"
     assert content.detail_lines == ["250$ price", "ages 8-18"]
-
-
-def test_light_program_selects_art_forward_and_allows_ideogram_only():
-    content = extraction_to_content(
-        ExtractedPosterContent(
-            content_type="camp",
-            title="winter training program",
-            price_line="250$ price",
-            schedule={
-                "display_text": "dec 1-30 mon to thrusday 5pm to 630 pm - 16 classes"
-            },
-            detail_lines=["ages 8-18"],
-            sections=[
-                {
-                    "text": "we are going to develop personliazed porgram that will get them to the next elvel"
-                },
-                {
-                    "text": "our classes will consist of all the performance boosting activiteis"
-                },
-            ],
-        )
-    )
-    design = plan_design(content, BrandProfile(name="22 Yards Houston"))
-    assessment = ideogram_only_assessment(content)
-
-    assert design.density == Density.SPACIOUS
-    assert design.composition == CompositionMode.ART_FORWARD
-    assert assessment["eligible"] is True
-    assert assessment["line_count"] <= 14
-
-
-def test_dense_tournament_disallows_ideogram_only(load_content):
-    content = load_content("svats-cup.json")
-    assessment = ideogram_only_assessment(content)
-    assert assessment["eligible"] is False
-    assert assessment["density"] == "dense"
-    assert any("multi-category" in reason for reason in assessment["reasons"])
 
 
 def test_critic_can_only_change_bounded_tokens(load_content):

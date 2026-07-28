@@ -189,29 +189,6 @@ def infer_visual_intents(content: PosterContent, *, limit: int = 8) -> list[Visu
     return intents
 
 
-def ideogram_only_assessment(content: PosterContent) -> dict[str, Any]:
-    lines = poster_copy_lines(content)
-    characters = sum(len(line) for line in lines)
-    reasons: list[str] = []
-    if len(lines) > 14:
-        reasons.append(f"{len(lines)} text elements exceeds the light-copy limit of 14")
-    if characters > 520:
-        reasons.append(f"{characters} characters exceeds the light-copy limit of 520")
-    if isinstance(content, TournamentContent) and len(content.categories) > 1:
-        reasons.append("multi-category tournaments require deterministic typography")
-    if sum(len(section.items) for section in content.sections) > 8:
-        reasons.append("long item lists require deterministic typography")
-    return {
-        "eligible": not reasons,
-        "reasons": reasons,
-        "line_count": len(lines),
-        "character_count": characters,
-        "density_score": content_density_score(content),
-        "density": choose_density(content).value,
-        "composition": choose_composition(content).value,
-    }
-
-
 def allowed_layouts(content: PosterContent) -> tuple[LayoutFamily, ...]:
     if isinstance(content, InformationContent):
         return (LayoutFamily.ANNOUNCEMENT_HERO,)
@@ -391,5 +368,4 @@ def layout_summary(content: PosterContent) -> dict[str, Any]:
             intent.model_dump(mode="json") for intent in infer_visual_intents(content)
         ],
     }
-    summary["ideogram_only"] = ideogram_only_assessment(content)
     return summary
