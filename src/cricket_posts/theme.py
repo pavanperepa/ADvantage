@@ -207,7 +207,14 @@ def build_theme(
     palette: Palette,
     color_mode: ColorMode = ColorMode.DARK,
     font_preset: FontPreset | None = None,
+    backdrop: str | None = None,
 ) -> ThemePack:
+    """Resolve a theme, optionally against a *measured* backdrop.
+
+    In the three-layer pipeline the copy sits directly on the art plate, not on
+    a panel, so the caller passes the colour actually sampled from the plate's
+    calm zone. Without it, cream body text lands on cream artwork.
+    """
     recipe = INTENT_RECIPES[intent]
     dark = color_mode == ColorMode.DARK
 
@@ -228,10 +235,12 @@ def build_theme(
         lighten(panel, 0.16) if dark else darken(panel, 0.14)
     )
 
-    text = ensure_contrast(opposite, panel, BODY_CONTRAST_FLOOR)
-    text_muted = ensure_contrast(
-        mix(text, panel, 0.32), panel, BODY_CONTRAST_FLOOR
-    )
+    # Copy is legible against whatever it is actually drawn on: the measured
+    # plate zone when there is one, the panel otherwise.
+    on = backdrop or panel
+    ink_side = readable_on(on, palette.ink, palette.surface)
+    text = ensure_contrast(ink_side, on, BODY_CONTRAST_FLOOR)
+    text_muted = ensure_contrast(mix(text, on, 0.32), on, BODY_CONTRAST_FLOOR)
     heading_source = accent if recipe.heading_uses_accent else text
     # A bright accent set as small type on a light surface has to be darkened so
     # far to clear the contrast floor that it turns muddy. Designers keep the
@@ -239,16 +248,16 @@ def build_theme(
     # rather than degrading the brand colour into olive.
     if (
         recipe.heading_uses_accent
-        and contrast_ratio(accent, panel) < HEADING_CONTRAST_FLOOR
+        and contrast_ratio(accent, on) < HEADING_CONTRAST_FLOOR
     ):
         heading_source = text
-    heading = ensure_contrast(heading_source, panel, HEADING_CONTRAST_FLOOR)
+    heading = ensure_contrast(heading_source, on, HEADING_CONTRAST_FLOOR)
     accent_text = ensure_contrast(
         readable_on(accent, palette.ink, palette.surface),
         accent,
         BODY_CONTRAST_FLOOR,
     )
-    highlight = ensure_contrast(palette.highlight, panel, HEADING_CONTRAST_FLOOR)
+    highlight = ensure_contrast(palette.highlight, on, HEADING_CONTRAST_FLOOR)
     highlight_text = ensure_contrast(
         readable_on(highlight, palette.ink, palette.surface),
         highlight,
@@ -270,6 +279,7 @@ def build_theme(
             highlight=highlight,
             highlight_text=highlight_text,
             frame=mix(bg, text, 0.88),
+            backdrop=on,
         ),
         display_weight=recipe.display_weight,
         display_tracking=recipe.display_tracking,
@@ -291,6 +301,7 @@ def theme_contrast_report(theme: ThemePack) -> dict[str, float]:
         "text_on_panel": contrast_ratio(colors.text, colors.panel),
         "muted_on_panel": contrast_ratio(colors.text_muted, colors.panel),
         "heading_on_panel": contrast_ratio(colors.heading, colors.panel),
+        "text_on_backdrop": contrast_ratio(colors.text, colors.backdrop),
         "text_on_bg": contrast_ratio(colors.text, colors.bg),
         "accent_text_on_accent": contrast_ratio(colors.accent_text, colors.accent),
     }

@@ -246,6 +246,78 @@ def run_score(
     print(f"Raw scores:    {output_dir / 'scores.json'}")
 
 
+def run_compose(
+    input_path: Path,
+    *,
+    intent: StyleIntent,
+    color_mode: ColorMode,
+    archetype: str | None,
+    logo: Path | None,
+    output: Path | None,
+) -> None:
+    from .archetypes import ArchetypeId
+    from .pipeline import PosterComposer
+
+    payload = json.loads(input_path.read_text(encoding="utf-8"))
+    brand = (
+        BrandProfile.model_validate(payload["brand"])
+        if isinstance(payload, dict) and "brand" in payload
+        else BrandProfile(name="Cricket Academy")
+    )
+    content = parse_editable_content(
+        payload.get("content", payload) if isinstance(payload, dict) else payload
+    )
+    destination = output or (
+        PROJECT_ROOT / "output" / "compose" / f"{input_path.stem}-{intent.value}.png"
+    )
+
+    composer = PosterComposer()
+    try:
+        result = composer.compose(
+            content,
+            brand,
+            destination,
+            intent=intent,
+            color_mode=color_mode,
+            archetype_id=ArchetypeId(archetype) if archetype else None,
+            logo_path=logo,
+        )
+    finally:
+        composer.renderer.close()
+
+    print(f"Poster    : {result.poster}")
+    print(f"Archetype : {result.archetype.id.value}   Plate: {result.plate.path.name}")
+    print(
+        f"Zone      : {result.zone.width:.0f}x{result.zone.height:.0f} "
+        f"at ({result.zone.left:.0f},{result.zone.top:.0f})"
+    )
+    print(
+        f"Fit       : fill {result.fit.fill:.1%}, {result.fit.iterations} moves, "
+        f"{'fits' if result.fit.fits else 'DOES NOT FIT'}"
+    )
+    if result.fit.history:
+        print(f"Moves     : {' -> '.join(result.fit.history)}")
+    if result.missing_copy:
+        print(f"MISSING COPY ({len(result.missing_copy)}):")
+        for value in result.missing_copy:
+            print(f"  {value!r}")
+    else:
+        print("Copy      : every value renders verbatim")
+
+
+def run_bank_index(kind: str) -> None:
+    if kind == "plates":
+        from .plates import index_plates
+
+        bank = index_plates()
+        print(f"Indexed {len(bank.entries)} plate(s)")
+    else:
+        from .subjects import index_subjects
+
+        bank = index_subjects()
+        print(f"Indexed {len(bank.entries)} subject(s)")
+
+
 def run_validate(project_id: str) -> None:
     project = PosterStudio().validate(project_id)
     print(f"Project: {project.id}")
@@ -333,6 +405,26 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
 
+    compose = subparsers.add_parser(
+        "compose",
+        help="Compose a poster from the plate bank, subjects and exact copy.",
+    )
+    compose.add_argument("--input", required=True, type=Path)
+    compose.add_argument(
+        "--intent",
+        choices=[intent.value for intent in StyleIntent],
+        default=StyleIntent.BOLD_ATTENTION.value,
+    )
+    compose.add_argument(
+        "--theme", choices=[mode.value for mode in ColorMode], default=ColorMode.DARK.value
+    )
+    compose.add_argument("--archetype", choices=["left_column", "bottom_third"])
+    compose.add_argument("--logo", type=Path)
+    compose.add_argument("--output", type=Path)
+
+    bank = subparsers.add_parser("bank", help="Rebuild an asset manifest.")
+    bank.add_argument("kind", choices=["plates", "subjects"])
+
     validate = subparsers.add_parser(
         "validate",
         help="Rerun the deterministic audit for a project.",
@@ -374,6 +466,17 @@ def main() -> None:
                 if value.strip()
             ]
         run_score(args.fixtures, args.output, selected, ColorMode(args.theme))
+    elif args.command == "compose":
+        run_compose(
+            args.input,
+            intent=StyleIntent(args.intent),
+            color_mode=ColorMode(args.theme),
+            archetype=args.archetype,
+            logo=args.logo,
+            output=args.output,
+        )
+    elif args.command == "bank":
+        run_bank_index(args.kind)
     elif args.command == "validate":
         run_validate(args.project)
     elif args.command == "export":

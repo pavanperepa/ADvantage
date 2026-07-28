@@ -107,6 +107,9 @@ class ThemeColors(BaseModel):
     # Photo-mount colour for the vignette, always opposed to the background so
     # the frame stays visible in both light and dark modes.
     frame: str = Field(pattern=r"^#[0-9A-Fa-f]{6}$")
+    #: The surface the body copy was contrast-solved against. Equals `panel`
+    #: unless a measured plate zone was supplied.
+    backdrop: str = Field(default="#000000", pattern=r"^#[0-9A-Fa-f]{6}$")
 
 
 class ThemePack(BaseModel):

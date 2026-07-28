@@ -1,0 +1,89 @@
+{% import "components.html" as c %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ content.title }}</title>
+  <link rel="stylesheet" href="{{ fonts_url }}">
+  <link rel="stylesheet" href="{{ canvas_css_url }}">
+  <style>
+    :root {
+      --w: {{ width }}px;
+      --h: {{ height }}px;
+      --s: {{ scale }};
+      --fit: {{ fit.type_scale }};
+      --lead: {{ fit.leading }};
+      --gap: {{ fit.gap_px }}px;
+
+      --bg: {{ theme.colors.bg }};
+      --panel: {{ theme.colors.panel }};
+      --panel-border: {{ theme.colors.panel_border }};
+      --text: {{ theme.colors.text }};
+      --backdrop: {{ theme.colors.backdrop }};
+      --text-muted: {{ theme.colors.text_muted }};
+      --heading: {{ theme.colors.heading }};
+      --accent: {{ theme.colors.accent }};
+      --accent-text: {{ theme.colors.accent_text }};
+      --highlight: {{ theme.colors.highlight }};
+      --highlight-text: {{ theme.colors.highlight_text }};
+      --radius: {{ theme.radius_px }}px;
+      --border-w: {{ theme.border_width_px }}px;
+      --display-weight: {{ theme.display_weight }};
+      --display-tracking: {{ theme.display_tracking }}em;
+      --body-weight: {{ theme.body_weight }};
+      --shadow: {{ theme.shadow_strength }};
+      --font-display: {{ display_font }};
+      --font-body: {{ body_font }};
+
+      --copy-justify: {{ copy_justify }};
+      --zone-l: {{ zone.left }}px;
+      --zone-t: {{ zone.top }}px;
+      --zone-w: {{ zone.width }}px;
+      --zone-h: {{ zone.height }}px;
+    }
+  </style>
+</head>
+<body>
+  <main id="poster" class="canvas intent-{{ theme.intent.value }} arch-{{ archetype.id.value }}"
+        data-width="{{ width }}" data-height="{{ height }}">
+
+    {# layer 1 — background plate, never contains text #}
+    <img class="canvas__plate" src="{{ plate_url }}" alt="" data-region="art" data-art>
+
+    {# layer 2 — subject cut-outs, transparent PNGs from the bank #}
+    {% for subject in subjects %}
+      <img class="canvas__subject" src="{{ subject.url }}" alt=""
+           style="left:{{ subject.left }}px; top:{{ subject.top }}px; width:{{ subject.width }}px;">
+    {% endfor %}
+
+    {# layer 3 — copy, positioned inside the measured calm rectangle #}
+    <div class="canvas__copy {{ 'is-two-col' if archetype.columns > 1 }}"
+         data-region="copy" data-audit data-field="copy column">
+      <div class="canvas__stack" data-stack>
+      {% for block in blocks %}
+        {% if block.role.value == "lockup" %}{{ c.lockup(block, logo_url) }}
+        {% elif block.role.value == "headline" %}{{ c.headline(block) }}
+        {% elif block.role.value == "badge" %}{{ c.badge(block) }}
+        {% elif block.role.value == "schedule" %}{{ c.chip(block, "schedule") }}
+        {% elif block.role.value == "price" %}{{ c.chip(block, "price") }}
+        {% elif block.role.value == "paragraph" %}{{ c.paragraph(block) }}
+        {% elif block.role.value == "bullets" %}{{ c.bullets(block, dot_colors) }}
+        {% elif block.role.value == "category" %}{{ c.category(block) }}
+        {% elif block.role.value == "ribbon" %}{{ c.ribbon(block) }}
+        {% elif block.role.value == "stat_chips" %}{{ c.stat_chips(block) }}
+        {% endif %}
+      {% endfor %}
+      </div>
+    </div>
+
+    {% if info_cells %}
+      <div class="canvas__bar" data-region="footer" data-audit data-field="contact bar">
+        {{ c.info_bar(info_cells) }}
+      </div>
+    {% endif %}
+
+    {% if banner_block %}
+      <div class="canvas__banner" data-region="banner">{{ c.banner(banner_block) }}</div>
+    {% endif %}
+  </main>
+</body>
+</html>

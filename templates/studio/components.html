@@ -1,0 +1,105 @@
+{#
+  Component library. One macro per BlockRole.
+
+  Every macro tags its text with data-copy so the existing render audit can
+  verify the poster verbatim, and tags its outer element with data-block so the
+  fit engine can measure each block independently.
+
+  No macro ever transforms the case or wording of a value.
+#}
+
+{% macro _lines(value) %}{% for line in value.split("\n") %}{{ line }}{% if not loop.last %}<br>{% endif %}{% endfor %}{% endmacro %}
+
+{% macro lockup(block, logo_url) %}
+  <div class="c-lockup" data-block="lockup">
+    {% if logo_url %}<img class="c-lockup__mark" src="{{ logo_url }}" alt="" data-logo>{% endif %}
+    <div class="c-lockup__words">
+      {% for value in block.values %}
+        <div class="{{ 'c-lockup__name' if loop.first else 'c-lockup__sub' }}" data-copy>{{ _lines(value) }}</div>
+      {% endfor %}
+    </div>
+  </div>
+{% endmacro %}
+
+{% macro headline(block) %}
+  <h1 class="c-headline" data-block="headline" data-copy>{{ _lines(block.values[0]) }}</h1>
+{% endmacro %}
+
+{% macro badge(block) %}
+  <div class="c-badge" data-block="badge">
+    {% for value in block.values %}<span data-copy>{{ _lines(value) }}</span>{% endfor %}
+  </div>
+{% endmacro %}
+
+{% macro chip(block, role) %}
+  <div class="c-chip c-chip--{{ role }}" data-block="{{ role }}">
+    {% for value in block.values %}<span data-body data-copy>{{ value }}</span>{% endfor %}
+  </div>
+{% endmacro %}
+
+{% macro paragraph(block) %}
+  <div class="c-paragraph" data-block="paragraph">
+    {% if block.heading %}<h2 data-copy>{{ block.heading }}</h2>{% endif %}
+    {% for value in block.values %}<p data-body data-copy>{{ value }}</p>{% endfor %}
+  </div>
+{% endmacro %}
+
+{% macro bullets(block, dot_colors) %}
+  <div class="c-bullets" data-block="bullets">
+    {% if block.heading %}<h2 data-copy>{{ block.heading }}</h2>{% endif %}
+    <ul>
+      {% for value in block.values %}
+        <li data-body data-copy>
+          <span class="c-bullets__dot" style="background: {{ dot_colors[loop.index0 % dot_colors|length] }}"></span>
+          <span>{{ value }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endmacro %}
+
+{% macro category(block) %}
+  <article class="c-category" data-panel data-block="category">
+    {% if block.heading %}<h2 data-copy>{{ block.heading }}</h2>{% endif %}
+    {% for value in block.values %}<div data-body data-copy>{{ value }}</div>{% endfor %}
+  </article>
+{% endmacro %}
+
+{% macro ribbon(block) %}
+  <div class="c-ribbon" data-block="ribbon">
+    {% if block.heading %}<div class="c-ribbon__a" data-copy>{{ block.heading }}</div>{% endif %}
+    {% for value in block.values %}<div class="c-ribbon__b" data-copy>{{ value }}</div>{% endfor %}
+  </div>
+{% endmacro %}
+
+{% macro stat_chips(block) %}
+  <div class="c-stats" data-block="stat_chips">
+    {% for value in block.values %}<span class="c-stats__chip" data-body data-copy>{{ value }}</span>{% endfor %}
+  </div>
+{% endmacro %}
+
+{#
+  The information bar. This is the component that exists because Ideogram
+  cannot be trusted with a phone number: every value is composited.
+#}
+{% macro info_bar(cells) %}
+  <div class="c-infobar" data-block="info_bar">
+    {% for cell in cells %}
+      <div class="c-infobar__cell">
+        <span class="c-infobar__icon c-infobar__icon--{{ cell.icon }}">{{ cell.svg }}</span>
+        <div>
+          {% if cell.label %}<div class="c-infobar__label" data-copy>{{ cell.label }}</div>{% endif %}
+          {% for value in cell.lines %}
+            <div class="c-infobar__value {{ 'is-strong' if loop.first and not cell.label }}" data-body data-copy>{{ value }}</div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endmacro %}
+
+{% macro banner(block) %}
+  <div class="c-banner" data-block="banner">
+    {% for value in block.values %}<span data-copy>{{ value }}</span>{% endfor %}
+  </div>
+{% endmacro %}

@@ -1,0 +1,285 @@
+/* Canvas stylesheet for the three-layer pipeline.
+   All sizing is expressed against --s (canvas scale) and --fit (the type scale
+   the fit engine is currently trying), so one stylesheet serves every render
+   pass without regeneration. */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* The canvas is a fixed-size artboard: without explicit dimensions every
+   absolutely positioned layer collapses and the screenshot comes out blank. */
+html, body {
+  width: var(--w);
+  height: var(--h);
+  overflow: hidden;
+}
+
+body {
+  color: var(--text);
+  font-family: var(--font-body);
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+}
+
+.canvas {
+  position: relative;
+  width: var(--w);
+  height: var(--h);
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.canvas__plate,
+.canvas__subject { position: absolute; }
+
+.canvas__plate {
+  z-index: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.canvas__subject {
+  z-index: 1;
+  height: auto;
+  object-fit: contain;
+}
+
+/* --- copy column -------------------------------------------------------- */
+
+.canvas__copy {
+  position: absolute;
+  z-index: 2;
+  left: var(--zone-l);
+  top: var(--zone-t);
+  display: flex;
+  width: var(--zone-w);
+  height: var(--zone-h);
+  flex-direction: column;
+  justify-content: var(--copy-justify, flex-start);
+}
+
+/* The stack hugs its content so scrollHeight reports the copy height rather
+   than the zone height, which is what the fit engine measures against. */
+.canvas__stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.canvas__copy.is-two-col .canvas__stack {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  column-gap: calc(var(--gap) * 1.6);
+}
+
+/* --- components --------------------------------------------------------- */
+
+.c-lockup { display: flex; align-items: center; gap: calc(20px * var(--s)); }
+.c-lockup__mark {
+  width: calc(140px * var(--s));
+  height: calc(140px * var(--s));
+  object-fit: contain;
+}
+.c-lockup__name {
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: calc(40px * var(--s) * var(--fit));
+  font-weight: 700;
+  line-height: 1.06;
+}
+.c-lockup__sub {
+  color: var(--text-muted);
+  font-size: calc(21px * var(--s) * var(--fit));
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  line-height: 1.24;
+}
+
+.c-headline {
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: calc(100px * var(--s) * var(--fit));
+  font-weight: var(--display-weight);
+  letter-spacing: var(--display-tracking);
+  line-height: 0.92;
+  text-wrap: balance;
+}
+
+.c-badge {
+  display: inline-flex;
+  flex-direction: column;
+  align-self: flex-start;
+  padding: calc(16px * var(--s)) calc(26px * var(--s));
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--accent-text);
+  font-family: var(--font-body);
+  font-size: calc(30px * var(--s) * var(--fit));
+  font-weight: 700;
+  line-height: 1.14;
+}
+
+.c-chip {
+  align-self: flex-start;
+  padding: calc(13px * var(--s)) calc(20px * var(--s));
+  border-radius: var(--radius);
+  background: var(--text);
+  color: var(--backdrop);
+  font-size: calc(27px * var(--s) * var(--fit));
+  font-weight: 700;
+  line-height: 1.16;
+}
+.c-chip span + span { margin-left: calc(18px * var(--s)); }
+
+.c-paragraph h2,
+.c-bullets h2,
+.c-category h2 {
+  margin-bottom: calc(10px * var(--s));
+  color: var(--heading);
+  font-family: var(--font-display);
+  font-size: calc(38px * var(--s) * var(--fit));
+  font-weight: var(--display-weight);
+  letter-spacing: var(--display-tracking);
+  line-height: 1.04;
+}
+
+.c-paragraph p {
+  color: var(--text);
+  font-size: calc(28px * var(--s) * var(--fit));
+  font-weight: var(--body-weight);
+  line-height: var(--lead);
+}
+.c-paragraph p + p { margin-top: calc(10px * var(--s)); }
+
+.c-bullets ul { display: grid; gap: calc(11px * var(--s)); list-style: none; }
+.c-bullets li {
+  display: flex;
+  align-items: baseline;
+  gap: calc(14px * var(--s));
+  color: var(--text);
+  font-size: calc(26px * var(--s) * var(--fit));
+  font-weight: 700;
+  line-height: 1.24;
+}
+.c-bullets__dot {
+  flex: 0 0 auto;
+  width: calc(14px * var(--s));
+  height: calc(14px * var(--s));
+  border-radius: 50%;
+}
+
+.c-category {
+  padding: calc(18px * var(--s));
+  border: calc(3px * var(--s)) solid var(--accent);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--backdrop) 88%, var(--text));
+  box-shadow: 0 calc(14px * var(--s)) calc(34px * var(--s)) rgb(0 0 0 / var(--shadow));
+}
+.c-category div {
+  color: var(--text);
+  font-size: calc(24px * var(--s) * var(--fit));
+  line-height: 1.26;
+}
+
+.c-ribbon {
+  align-self: flex-start;
+  padding: calc(18px * var(--s)) calc(28px * var(--s));
+  border-radius: var(--radius);
+  background: var(--text);
+}
+.c-ribbon__a, .c-ribbon__b {
+  font-family: var(--font-display);
+  font-size: calc(42px * var(--s) * var(--fit));
+  font-weight: var(--display-weight);
+  letter-spacing: var(--display-tracking);
+  line-height: 1.04;
+}
+.c-ribbon__a { color: var(--backdrop); }
+.c-ribbon__b { color: var(--accent); }
+
+.c-stats { display: flex; flex-wrap: wrap; gap: calc(10px * var(--s)); }
+.c-stats__chip {
+  padding: calc(10px * var(--s)) calc(18px * var(--s));
+  border: calc(2px * var(--s)) solid var(--text);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  font-size: calc(24px * var(--s) * var(--fit));
+  font-weight: 700;
+}
+
+/* --- information bar ---------------------------------------------------- */
+
+.canvas__bar {
+  position: absolute;
+  z-index: 3;
+  right: calc(56px * var(--s));
+  bottom: calc(var(--banner-h, 0px) + 44px * var(--s));
+  left: calc(56px * var(--s));
+}
+
+.c-infobar {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  align-items: center;
+  gap: calc(20px * var(--s));
+  padding: calc(24px * var(--s)) calc(28px * var(--s));
+  border-radius: calc(24px * var(--s));
+  background: #FFFFFF;
+  box-shadow: 0 calc(16px * var(--s)) calc(44px * var(--s)) rgb(0 0 0 / 0.2);
+}
+.c-infobar__cell { display: flex; align-items: center; gap: calc(15px * var(--s)); min-width: 0; }
+.c-infobar__cell + .c-infobar__cell {
+  border-left: 1px solid #E4E7EC;
+  padding-left: calc(18px * var(--s));
+}
+.c-infobar__icon {
+  display: flex;
+  flex: 0 0 auto;
+  width: calc(52px * var(--s));
+  height: calc(52px * var(--s));
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+.c-infobar__icon svg { width: 54%; height: 54%; fill: #FFFFFF; }
+.c-infobar__icon--pin { background: #D92D20; }
+.c-infobar__icon--web { background: #1C7ED6; }
+.c-infobar__icon--call { background: #2F9E44; }
+.c-infobar__label {
+  color: #6B7280;
+  font-size: calc(18px * var(--s));
+  font-weight: 700;
+  letter-spacing: 0.09em;
+}
+.c-infobar__value {
+  color: #10233F;
+  font-size: calc(23px * var(--s));
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.c-infobar__value.is-strong { font-weight: 800; }
+
+/* --- banner ------------------------------------------------------------- */
+
+.canvas__banner {
+  position: absolute;
+  z-index: 3;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: calc(24px * var(--s)) 0;
+  background: var(--text);
+  text-align: center;
+}
+.c-banner span {
+  color: var(--backdrop);
+  font-family: var(--font-display);
+  font-size: calc(48px * var(--s) * var(--fit));
+  font-weight: var(--display-weight);
+  letter-spacing: var(--display-tracking);
+}
