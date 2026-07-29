@@ -357,6 +357,73 @@ def run_cutout(source: Path, tags: str, limit: int | None) -> None:
     print(f"Subject bank: {len(existing)} entr(ies)")
 
 
+def run_harvest(source: Path, name: str | None, max_passes: int, force: bool) -> None:
+    from PIL import Image
+
+    from .layerize import harvest
+    from .layouts import LAYOUT_DIR, LayoutBank, template_from_blocks
+
+    load_dotenv(PROJECT_ROOT / ".env")
+    label = name or source.stem
+    result = harvest(source, max_passes=max_passes)
+
+    print(f"Passes    : {result.passes}")
+    print(f"Blocks    : {len(result.blocks)}")
+    for block in result.blocks:
+        print(
+            f"  {block.role:<11} ({block.x:.0f},{block.y:.0f}) "
+            f"{block.width:.0f}x{block.height:.0f} {block.font_size:.0f}px "
+            f"{block.color} {block.text!r}"
+            + (f"   <- missed until pass {block.found_on_pass}" if block.found_on_pass > 1 else "")
+        )
+
+    if result.residue:
+        # The whole reason for the gate: a string we did not write, baked into
+        # the plate, would sit under our copy and never be audited.
+        print(f"\nREJECTED — text still on the plate after {result.passes} passes:")
+        for value in result.residue:
+            print(f"  {value!r}")
+        if not force:
+            print("Nothing banked. Re-generate the source, or raise --max-passes.")
+            return
+        print("Banking anyway because --force was given.")
+
+    LAYOUT_DIR.mkdir(parents=True, exist_ok=True)
+    plate_file = f"{label}.png"
+    (LAYOUT_DIR / plate_file).write_bytes(result.base_image)
+    with Image.open(LAYOUT_DIR / plate_file) as plate:
+        width, height = plate.size
+
+    template = template_from_blocks(
+        result.blocks,
+        name=label,
+        plate_file=plate_file,
+        width=width,
+        height=height,
+        note=f"Harvested from {source.name} in {result.passes} pass(es).",
+    )
+    LayoutBank.load().add(template).save()
+
+    print(f"\nPlate     : {LAYOUT_DIR / plate_file} ({width}x{height})")
+    print(f"Template  : {label} — {len(template.slots)} slot(s)")
+    for role, box in template.bands():
+        print(
+            f"  {role.value:<10} ({box.left:.0f},{box.top:.0f}) "
+            f"{box.width:.0f}x{box.height:.0f}"
+        )
+    suspect = template.suspect_slots()
+    if suspect:
+        print(
+            f"\nReview {len(suspect)} slot(s) the detector missed first time — "
+            "usually fragments of garbled type, not real components:"
+        )
+        for slot in suspect:
+            print(
+                f"  {slot.role.value} ({slot.box.left:.0f},{slot.box.top:.0f}) "
+                f"{slot.box.width:.0f}x{slot.box.height:.0f}"
+            )
+
+
 def run_validate(project_id: str) -> None:
     project = PosterStudio().validate(project_id)
     print(f"Project: {project.id}")
@@ -476,6 +543,24 @@ def build_parser() -> argparse.ArgumentParser:
     bank = subparsers.add_parser("bank", help="Rebuild an asset manifest.")
     bank.add_argument("kind", choices=["plates", "subjects"])
 
+    harvest = subparsers.add_parser(
+        "harvest",
+        help="Lift a reusable layout template off a generated poster.",
+    )
+    harvest.add_argument("--input", required=True, type=Path, help="Source poster image.")
+    harvest.add_argument("--name", help="Template name (defaults to the file stem).")
+    harvest.add_argument(
+        "--max-passes",
+        type=int,
+        default=4,
+        help="Erase passes allowed before the harvest is rejected.",
+    )
+    harvest.add_argument(
+        "--force",
+        action="store_true",
+        help="Bank even when text remains on the plate. Rarely what you want.",
+    )
+
     cutout = subparsers.add_parser(
         "cutout",
         help="Cut subjects out of photographs into the subject bank.",
@@ -540,6 +625,8 @@ def main() -> None:
         run_bank_index(args.kind)
     elif args.command == "cutout":
         run_cutout(args.input, args.tags, args.limit)
+    elif args.command == "harvest":
+        run_harvest(args.input, args.name, args.max_passes, args.force)
     elif args.command == "validate":
         run_validate(args.project)
     elif args.command == "export":

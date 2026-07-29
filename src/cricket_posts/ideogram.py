@@ -32,19 +32,33 @@ def _request_with_retries(
     files: dict[str, tuple[Any, ...]],
     attempts: int = 3,
     endpoint: str = ENDPOINT,
+    timeout: int = 180,
 ) -> requests.Response:
     response: requests.Response | None = None
+    failure: Exception | None = None
     for attempt in range(attempts):
-        response = requests.post(
-            endpoint,
-            headers=headers,
-            files=files,
-            timeout=180,
-        )
+        try:
+            response = requests.post(
+                endpoint,
+                headers=headers,
+                files=files,
+                timeout=timeout,
+            )
+        except (requests.ConnectionError, requests.Timeout) as exc:
+            # A dropped connection is as transient as a 503 and arrives far more
+            # often on the larger endpoints, where the upload is megabytes. The
+            # status-code check never sees it, so retry here too.
+            failure = exc
+            if attempt == attempts - 1:
+                raise
+            time.sleep(1.5 * (attempt + 1))
+            continue
         if response.status_code not in {429, 500, 502, 503, 504}:
             return response
         if attempt < attempts - 1:
             time.sleep(1.5 * (attempt + 1))
+    if response is None and failure is not None:  # pragma: no cover - defensive
+        raise failure
     assert response is not None
     return response
 

@@ -1,0 +1,336 @@
+{
+  "templates": [
+    {
+      "name": "foundation-collage",
+      "plate_file": "foundation-collage.png",
+      "width": 864,
+      "height": 1152,
+      "slots": [
+        {
+          "role": "badge",
+          "source_role": "subheading",
+          "box": {
+            "left": 136.0,
+            "top": 41.0,
+            "right": 234.0,
+            "bottom": 62.0
+          },
+          "font_family": "Outfit",
+          "font_size": 19.0,
+          "line_height": 1.2,
+          "color": "#000000",
+          "alignment": "left",
+          "order": 0,
+          "found_on_pass": 1
+        },
+        {
+          "role": "info_bar",
+          "source_role": "caption",
+          "box": {
+            "left": 136.0,
+            "top": 73.0,
+            "right": 294.0,
+            "bottom": 105.0
+          },
+          "font_family": "Outfit",
+          "font_size": 15.0,
+          "line_height": 1.07,
+          "color": "#020202",
+          "alignment": "left",
+          "order": 1,
+          "found_on_pass": 1
+        },
+        {
+          "role": "headline",
+          "source_role": "heading",
+          "box": {
+            "left": 50.0,
+            "top": 161.0,
+            "right": 422.0,
+            "bottom": 357.0
+          },
+          "font_family": "Archivo Narrow",
+          "font_size": 59.0,
+          "line_height": 1.11,
+          "color": "#071B39",
+          "alignment": "left",
+          "order": 2,
+          "found_on_pass": 1
+        },
+        {
+          "role": "badge",
+          "source_role": "subheading",
+          "box": {
+            "left": 561.0,
+            "top": 245.0,
+            "right": 788.0,
+            "bottom": 285.0
+          },
+          "font_family": "Outfit",
+          "font_size": 19.0,
+          "line_height": 1.05,
+          "color": "#0C1B34",
+          "alignment": "center",
+          "order": 3,
+          "found_on_pass": 1
+        },
+        {
+          "role": "headline",
+          "source_role": "heading",
+          "box": {
+            "left": 552.0,
+            "top": 309.0,
+            "right": 638.0,
+            "bottom": 354.0
+          },
+          "font_family": "Archivo Narrow",
+          "font_size": 53.0,
+          "line_height": 1.2,
+          "color": "#FFCC33",
+          "alignment": "left",
+          "order": 4,
+          "found_on_pass": 2
+        },
+        {
+          "role": "paragraph",
+          "source_role": "body",
+          "box": {
+            "left": 50.0,
+            "top": 380.0,
+            "right": 774.0,
+            "bottom": 421.0
+          },
+          "font_family": "Inter",
+          "font_size": 17.0,
+          "line_height": 1.21,
+          "color": "#020202",
+          "alignment": "left",
+          "order": 5,
+          "found_on_pass": 1
+        },
+        {
+          "role": "paragraph",
+          "source_role": "body",
+          "box": {
+            "left": 50.0,
+            "top": 434.0,
+            "right": 743.0,
+            "bottom": 475.0
+          },
+          "font_family": "Inter",
+          "font_size": 17.0,
+          "line_height": 1.21,
+          "color": "#020202",
+          "alignment": "left",
+          "order": 6,
+          "found_on_pass": 1
+        },
+        {
+          "role": "paragraph",
+          "source_role": "body",
+          "box": {
+            "left": 50.0,
+            "top": 491.0,
+            "right": 304.0,
+            "bottom": 508.0
+          },
+          "font_family": "Inter",
+          "font_size": 16.0,
+          "line_height": 1.2,
+          "color": "#000000",
+          "alignment": "left",
+          "order": 7,
+          "found_on_pass": 1
+        },
+        {
+          "role": "paragraph",
+          "source_role": "body",
+          "box": {
+            "left": 50.0,
+            "top": 526.0,
+            "right": 259.0,
+            "bottom": 542.0
+          },
+          "font_family": "Inter",
+          "font_size": 16.0,
+          "line_height": 1.2,
+          "color": "#000000",
+          "alignment": "left",
+          "order": 8,
+          "found_on_pass": 1
+        },
+        {
+          "role": "paragraph",
+          "source_role": "body",
+          "box": {
+            "left": 50.0,
+            "top": 561.0,
+            "right": 317.0,
+            "bottom": 577.0
+          },
+          "font_family": "Inter",
+          "font_size": 16.0,
+          "line_height": 1.2,
+          "color": "#000000",
+          "alignment": "left",
+          "order": 9,
+          "found_on_pass": 1
+        },
+        {
+          "role": "paragraph",
+          "source_role": "body",
+          "box": {
+            "left": 50.0,
+            "top": 595.0,
+            "right": 315.0,
+            "bottom": 611.0
+          },
+          "font_family": "Inter",
+          "font_size": 16.0,
+          "line_height": 1.2,
+          "color": "#000000",
+          "alignment": "left",
+          "order": 10,
+          "found_on_pass": 1
+        },
+        {
+          "role": "paragraph",
+          "source_role": "body",
+          "box": {
+            "left": 50.0,
+            "top": 630.0,
+            "right": 216.0,
+            "bottom": 646.0
+          },
+          "font_family": "Inter",
+          "font_size": 16.0,
+          "line_height": 1.2,
+          "color": "#000000",
+          "alignment": "left",
+          "order": 11,
+          "found_on_pass": 1
+        },
+        {
+          "role": "paragraph",
+          "source_role": "body",
+          "box": {
+            "left": 50.0,
+            "top": 662.0,
+            "right": 184.0,
+            "bottom": 678.0
+          },
+          "font_family": "Inter",
+          "font_size": 16.0,
+          "line_height": 1.2,
+          "color": "#000000",
+          "alignment": "left",
+          "order": 12,
+          "found_on_pass": 1
+        },
+        {
+          "role": "info_bar",
+          "source_role": "caption",
+          "box": {
+            "left": 86.0,
+            "top": 1040.0,
+            "right": 305.0,
+            "bottom": 1079.0
+          },
+          "font_family": "Outfit",
+          "font_size": 17.0,
+          "line_height": 1.03,
+          "color": "#020202",
+          "alignment": "left",
+          "order": 13,
+          "found_on_pass": 1
+        },
+        {
+          "role": "info_bar",
+          "source_role": "caption",
+          "box": {
+            "left": 345.0,
+            "top": 1040.0,
+            "right": 450.0,
+            "bottom": 1079.0
+          },
+          "font_family": "Outfit",
+          "font_size": 17.0,
+          "line_height": 1.03,
+          "color": "#000000",
+          "alignment": "left",
+          "order": 14,
+          "found_on_pass": 1
+        },
+        {
+          "role": "info_bar",
+          "source_role": "caption",
+          "box": {
+            "left": 468.0,
+            "top": 1040.0,
+            "right": 594.0,
+            "bottom": 1079.0
+          },
+          "font_family": "Outfit",
+          "font_size": 17.0,
+          "line_height": 1.03,
+          "color": "#000000",
+          "alignment": "left",
+          "order": 15,
+          "found_on_pass": 1
+        },
+        {
+          "role": "info_bar",
+          "source_role": "caption",
+          "box": {
+            "left": 634.0,
+            "top": 1040.0,
+            "right": 811.0,
+            "bottom": 1079.0
+          },
+          "font_family": "Outfit",
+          "font_size": 17.0,
+          "line_height": 1.03,
+          "color": "#020202",
+          "alignment": "left",
+          "order": 16,
+          "found_on_pass": 1
+        },
+        {
+          "role": "info_bar",
+          "source_role": "caption",
+          "box": {
+            "left": 360.0,
+            "top": 1086.0,
+            "right": 612.0,
+            "bottom": 1133.0
+          },
+          "font_family": "Outfit",
+          "font_size": 44.0,
+          "line_height": 1.2,
+          "color": "#020202",
+          "alignment": "left",
+          "order": 17,
+          "found_on_pass": 1
+        },
+        {
+          "role": "info_bar",
+          "source_role": "caption",
+          "box": {
+            "left": 649.0,
+            "top": 1086.0,
+            "right": 811.0,
+            "bottom": 1133.0
+          },
+          "font_family": "Outfit",
+          "font_size": 21.0,
+          "line_height": 1.12,
+          "color": "#020202",
+          "alignment": "left",
+          "order": 18,
+          "found_on_pass": 1
+        }
+      ],
+      "note": "Harvested from full.png in 3 pass(es)."
+    }
+  ]
+}
