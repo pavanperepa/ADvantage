@@ -84,6 +84,46 @@ def test_a_cut_out_stands_on_the_floor_of_its_slot(tmp_path):
     assert abs(placed[0]["left"] + placed[0]["width"] - slot.right) <= 2
 
 
+def test_a_second_figure_shares_the_floor_and_stands_shorter(tmp_path):
+    """Same feet line, less height: that is what reads as younger.
+
+    Shrinking a figure without re-seating it just makes it look further away.
+    """
+    for name in ("hero.png", "child.png"):
+        Image.new("RGBA", (300, 900), (255, 0, 0, 255)).save(tmp_path / name)
+    slot = Rect(left=400, top=100, right=1000, bottom=1200)
+
+    hero, child = place_subjects(
+        [SubjectEntry(file="hero.png"), SubjectEntry(file="child.png")],
+        slot,
+        root=tmp_path,
+    )
+
+    aspect = 300 / 900
+    assert child["width"] < hero["width"]
+    assert child["top"] > hero["top"]
+    for figure in (hero, child):
+        assert abs(figure["top"] + figure["width"] / aspect - slot.bottom) <= 2
+    # The hero keeps the outer edge; the companion tucks in beside it.
+    assert child["left"] < hero["left"]
+
+
+def test_naming_subjects_keeps_the_order_asked_for(tmp_path):
+    """The first name is the hero, so re-sorting would swap the figures."""
+    from cricket_posts.subjects import SubjectBank, SubjectSource
+
+    bank = SubjectBank(
+        entries=[
+            SubjectEntry(file="a.png", source=SubjectSource.PHOTO),
+            SubjectEntry(file="b.png", source=SubjectSource.GENERATED),
+        ]
+    )
+
+    chosen = bank.select(only_files=["b.png", "a.png"], root=tmp_path)
+
+    assert [entry.file for entry in chosen] == ["b.png", "a.png"]
+
+
 def test_no_slot_means_no_subject(tmp_path):
     Image.new("RGBA", (10, 10)).save(tmp_path / "figure.png")
 

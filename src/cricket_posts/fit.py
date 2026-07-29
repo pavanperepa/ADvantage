@@ -21,12 +21,16 @@ from typing import Callable, Protocol
 from .blocks import BlockPriority, ContentBlock
 
 #: Proportion of the zone height the copy should occupy. Below the floor the
-#: poster looks unfinished; above the ceiling it looks cramped.
-FILL_FLOOR = 0.78
+#: poster looks unfinished; above the ceiling it looks cramped. The floor sat
+#: at 0.78, which let the engine stop with a fifth of the column empty and copy
+#: smaller than it needed to be — legible on a desktop crop, not in a feed.
+FILL_FLOOR = 0.88
 FILL_CEILING = 0.97
 
 TYPE_SCALE_MIN = 0.78
-TYPE_SCALE_MAX = 1.28
+#: Raised alongside the floor: reaching a higher fill on a short brief needs
+#: headroom the old ceiling did not leave.
+TYPE_SCALE_MAX = 1.55
 LEADING_MIN = 1.12
 LEADING_MAX = 1.52
 GAP_MIN = 10

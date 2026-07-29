@@ -63,14 +63,17 @@ class SubjectBank(BaseModel):
         *,
         limit: int = 1,
         root: Path = SUBJECT_DIR,
-        only_file: str | None = None,
+        only_files: list[str] | None = None,
     ) -> list[SubjectEntry]:
         wanted = set(tags or [])
-        if only_file:
-            named = [entry for entry in self.entries if entry.file == only_file]
-            if not named:
-                raise LookupError(f"No subject named {only_file!r} in the bank")
-            return named[:limit]
+        if only_files:
+            # Caller order wins: the first name is the hero, and placement reads
+            # that order, so re-sorting here would silently swap the figures.
+            by_file = {entry.file: entry for entry in self.entries}
+            missing = [name for name in only_files if name not in by_file]
+            if missing:
+                raise LookupError(f"No subject named {missing!r} in the bank")
+            return [by_file[name] for name in only_files]
 
         def rank(entry: SubjectEntry) -> tuple[int, int]:
             # Photographs first, then by how many requested tags they match.

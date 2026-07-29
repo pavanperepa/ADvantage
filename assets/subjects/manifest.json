@@ -164,6 +164,18 @@
         "photo"
       ],
       "note": "Cut from AP7A4555.jpg"
+    },
+    {
+      "file": "young-starter-01.png",
+      "source": "generated",
+      "tags": [
+        "bold_attention",
+        "playful_fun",
+        "youthful_energetic",
+        "beginner",
+        "young"
+      ],
+      "note": "Ideogram v4 seed 566821098 at 1600x2560, studio sweep, cut with u2net. Stand-in for a 4-5 year old beginner."
     }
   ]
 }

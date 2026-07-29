@@ -75,32 +75,54 @@ _PHONE = re.compile(r"[+(]?\d[\d()\s\-]{6,}")
 _URL = re.compile(r"[\w.-]+\.(com|org|net|io|co)(/\S*)?", re.I)
 
 
+#: How tall each figure after the first stands relative to the one before it.
+#: They share a floor line, so height alone carries the age difference — which
+#: is the whole point of pairing a ten year old with a five year old.
+COMPANION_SCALE = 0.62
+
+
 def place_subjects(
     entries: list[SubjectEntry],
     slot: Rect | None,
     *,
     root: Path = SUBJECT_DIR,
+    companion_scale: float = COMPANION_SCALE,
 ) -> list[dict]:
     """Fit cut-outs into their slot, standing on its floor.
 
-    A figure is scaled to the largest size that fits the slot on both axes, then
-    anchored to the bottom and the outer edge. Bottom-anchoring matters: a
-    batter floating with clear air under both feet looks pasted on, and the
-    contact bar sits above the subject layer so the overlap reads as depth.
+    The first figure is the hero: scaled to the largest size that fits the slot
+    on both axes and anchored to the bottom outer corner. Bottom-anchoring
+    matters — a batter floating with clear air under both feet looks pasted on,
+    and the contact bar sits above the subject layer so the overlap reads as
+    depth rather than as a mistake.
+
+    Every later figure keeps that same floor line and steps down in height, then
+    anchors to the inner edge. Aligning the feet and varying only the height is
+    what makes one child read as younger than the other instead of simply
+    further away.
     """
     if slot is None or not entries:
         return []
 
     placed: list[dict] = []
-    for entry in entries:
+    hero_height = 0.0
+    for index, entry in enumerate(entries):
         path = entry.path(root)
         with Image.open(path) as image:
             aspect = image.width / image.height
-        width = min(slot.width, slot.height * aspect)
+
+        if index == 0:
+            width = min(slot.width, slot.height * aspect)
+            hero_height = width / aspect
+            left = slot.right - width
+        else:
+            height = min(hero_height * companion_scale**index, slot.height)
+            width = height * aspect
+            left = slot.left
         placed.append(
             {
                 "url": path.resolve().as_uri(),
-                "left": int(slot.right - width),
+                "left": int(left),
                 "top": int(slot.bottom - width / aspect),
                 "width": int(width),
             }
@@ -190,7 +212,7 @@ class PosterComposer:
         archetype_id: ArchetypeId | None = None,
         logo_path: Path | None = None,
         plate_file: str | None = None,
-        subject_file: str | None = None,
+        subject_files: list[str] | None = None,
     ) -> ComposeResult:
         blocks = derive_blocks(content, brand)
 
@@ -245,7 +267,7 @@ class PosterComposer:
 
         subjects = place_subjects(
             self.subject_bank.select(
-                tags=[intent.value], limit=1, only_file=subject_file
+                tags=[intent.value], limit=1, only_files=subject_files
             ),
             archetype.subject_slot(zone, width, height),
         )

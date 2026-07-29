@@ -258,6 +258,7 @@ def run_compose(
     plate: str | None = None,
     subject: str | None = None,
 ) -> None:
+    subjects = [name.strip() for name in (subject or "").split(",") if name.strip()]
     from .pipeline import PosterComposer
 
     payload = json.loads(input_path.read_text(encoding="utf-8"))
@@ -284,7 +285,7 @@ def run_compose(
             archetype_id=ArchetypeId(archetype) if archetype else None,
             logo_path=logo,
             plate_file=plate,
-            subject_file=subject,
+            subject_files=subjects or None,
         )
     finally:
         composer.renderer.close()
@@ -463,7 +464,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     compose.add_argument("--logo", type=Path)
     compose.add_argument("--plate", help="Use a specific plate file from the bank.")
-    compose.add_argument("--subject", help="Use a specific subject cut-out from the bank.")
+    compose.add_argument(
+        "--subject",
+        help=(
+            "Comma-separated subject cut-outs from the bank. The first is the "
+            "hero; later figures step down in height on the same floor line."
+        ),
+    )
     compose.add_argument("--output", type=Path)
 
     bank = subparsers.add_parser("bank", help="Rebuild an asset manifest.")
