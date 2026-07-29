@@ -70,6 +70,45 @@ class FreeSpaceMap(BaseModel):
     def largest(self) -> FreeZone | None:
         return self.zones[0] if self.zones else None
 
+    def tallest_within(self, left: float, right: float, top: float = 0.0) -> Rect | None:
+        """The deepest run of calm rows spanning every column in ``left..right``.
+
+        ``zones`` ranks rectangles by area, which favours wide-and-short ones.
+        That is the right answer to "where is there room at all", but once a
+        layout has committed to a column width the useful question changes to
+        "how far down does *this* column stay calm" — and on a plate whose
+        artwork cuts in diagonally the two answers differ by a lot of poster.
+        """
+        col0 = max(0, int(left // self.cell_px))
+        col1 = min(self.cols - 1, int((right - 1) // self.cell_px))
+        row_from = max(0, int(top // self.cell_px))
+        if col0 > col1 or not self.calm:
+            return None
+
+        best: tuple[int, int] | None = None
+        run_start: int | None = None
+        for row in range(row_from, self.rows + 1):
+            base = row * self.cols
+            clear = row < self.rows and all(
+                self.calm[base + col] for col in range(col0, col1 + 1)
+            )
+            if clear:
+                run_start = row if run_start is None else run_start
+                continue
+            if run_start is not None:
+                if best is None or (row - run_start) > (best[1] - best[0]):
+                    best = (run_start, row)
+                run_start = None
+        if best is None:
+            return None
+        return Rect(
+            left=col0 * self.cell_px,
+            top=best[0] * self.cell_px,
+            right=(col1 + 1) * self.cell_px,
+            bottom=best[1] * self.cell_px,
+        )
+
+
 
 def _cell_means(image: Image.Image, cols: int, rows: int) -> list[float]:
     """Mean value per cell, via a BOX downscale (an exact area average)."""

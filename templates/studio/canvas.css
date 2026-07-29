@@ -218,15 +218,30 @@ body {
   right: 0;
   bottom: 0;
   left: 0;
+  /* How far the contact bar drops onto the banner. One value drives both the
+     bar's negative margin and the banner's extra top padding, so the banner
+     always makes room for exactly the overlap and cannot end up with its
+     tagline hidden underneath the bar. */
+  --bar-drop: calc(46px * var(--s));
 }
 
+/* Centred and pushed right to the foot of the canvas, straddling the banner.
+   Stretching the bar edge to edge padded every cell with slack that read as
+   wasted space; hugging the content puts the details together. The negative
+   margin drops it onto the banner, so it needs its own stacking position or
+   the later-painted banner covers it. */
 .canvas__bar {
-  margin: 0 calc(56px * var(--s)) calc(30px * var(--s));
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  margin: 0 calc(40px * var(--s)) calc(-1 * var(--bar-drop));
 }
 
 .c-infobar {
   display: grid;
-  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-columns: max-content;
+  max-width: 100%;
   grid-auto-flow: column;
   align-items: center;
   gap: calc(20px * var(--s));
@@ -271,7 +286,7 @@ body {
 /* --- banner ------------------------------------------------------------- */
 
 .canvas__banner {
-  padding: calc(24px * var(--s)) 0;
+  padding: calc(24px * var(--s) + var(--bar-drop, 0px)) 0 calc(24px * var(--s));
   background: var(--text);
   text-align: center;
 }

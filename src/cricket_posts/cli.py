@@ -256,6 +256,7 @@ def run_compose(
     logo: Path | None,
     output: Path | None,
     plate: str | None = None,
+    subject: str | None = None,
 ) -> None:
     from .pipeline import PosterComposer
 
@@ -283,6 +284,7 @@ def run_compose(
             archetype_id=ArchetypeId(archetype) if archetype else None,
             logo_path=logo,
             plate_file=plate,
+            subject_file=subject,
         )
     finally:
         composer.renderer.close()
@@ -318,6 +320,36 @@ def run_bank_index(kind: str) -> None:
 
         bank = index_subjects()
         print(f"Indexed {len(bank.entries)} subject(s)")
+
+
+def run_cutout(source: Path, tags: str, limit: int | None) -> None:
+    from .subjects import SUBJECT_DIR, SubjectBank, SubjectEntry, SubjectSource, cut_out
+
+    photos = (
+        sorted(p for p in source.iterdir() if p.suffix.lower() in {".jpg", ".jpeg", ".png"})
+        if source.is_dir()
+        else [source]
+    )
+    if limit:
+        photos = photos[:limit]
+
+    wanted = [tag.strip() for tag in tags.split(",") if tag.strip()]
+    bank = SubjectBank.load()
+    existing = {entry.file: entry for entry in bank.entries}
+
+    for photo in photos:
+        destination = SUBJECT_DIR / f"{photo.stem}.png"
+        cut_out(photo, destination)
+        existing[destination.name] = SubjectEntry(
+            file=destination.name,
+            source=SubjectSource.PHOTO,
+            tags=wanted,
+            note=f"Cut from {photo.name}",
+        )
+        print(f"cut {photo.name} -> {destination.name}")
+
+    SubjectBank(entries=list(existing.values())).save()
+    print(f"Subject bank: {len(existing)} entr(ies)")
 
 
 def run_validate(project_id: str) -> None:
@@ -427,10 +459,19 @@ def build_parser() -> argparse.ArgumentParser:
     )
     compose.add_argument("--logo", type=Path)
     compose.add_argument("--plate", help="Use a specific plate file from the bank.")
+    compose.add_argument("--subject", help="Use a specific subject cut-out from the bank.")
     compose.add_argument("--output", type=Path)
 
     bank = subparsers.add_parser("bank", help="Rebuild an asset manifest.")
     bank.add_argument("kind", choices=["plates", "subjects"])
+
+    cutout = subparsers.add_parser(
+        "cutout",
+        help="Cut subjects out of photographs into the subject bank.",
+    )
+    cutout.add_argument("--input", required=True, type=Path, help="Photo file or directory.")
+    cutout.add_argument("--tags", default="", help="Comma-separated tags for selection.")
+    cutout.add_argument("--limit", type=int, help="Process only the first N photos.")
 
     validate = subparsers.add_parser(
         "validate",
@@ -482,9 +523,12 @@ def main() -> None:
             logo=args.logo,
             output=args.output,
             plate=args.plate,
+            subject=args.subject,
         )
     elif args.command == "bank":
         run_bank_index(args.kind)
+    elif args.command == "cutout":
+        run_cutout(args.input, args.tags, args.limit)
     elif args.command == "validate":
         run_validate(args.project)
     elif args.command == "export":

@@ -10,3 +10,11 @@ studio.db
 .mypy_cache/
 .pytest_cache/
 *.freespace.json
+
+# Student photography. Source frames (163MB) and the cut-outs derived from them
+# (36MB) stay out of history: they are large, they are regenerable with
+# `cricket-posts cutout --input real-photo`, and photographs of identifiable
+# children are not something to make permanent in a git history by default.
+# The manifest is tracked, so the bank stays described and reproducible.
+real-photo/
+assets/subjects/*.png

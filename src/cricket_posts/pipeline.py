@@ -47,7 +47,7 @@ from .models import (
 from .plates import PlateBank, PlateChoice, select_plate
 from .renderer import PROJECT_ROOT, TEMPLATE_DIR, find_browser
 from .studio_renderer import FONT_STACKS, PlaywrightRenderer, build_geometry, measure_backdrops
-from .subjects import SubjectBank
+from .subjects import SUBJECT_DIR, SubjectBank, SubjectEntry
 from .theme import build_theme
 
 STUDIO_DIR = TEMPLATE_DIR / "studio"
@@ -73,6 +73,39 @@ def sample_zone_color(plate: Path, zone: Rect) -> str:
 
 _PHONE = re.compile(r"[+(]?\d[\d()\s\-]{6,}")
 _URL = re.compile(r"[\w.-]+\.(com|org|net|io|co)(/\S*)?", re.I)
+
+
+def place_subjects(
+    entries: list[SubjectEntry],
+    slot: Rect | None,
+    *,
+    root: Path = SUBJECT_DIR,
+) -> list[dict]:
+    """Fit cut-outs into their slot, standing on its floor.
+
+    A figure is scaled to the largest size that fits the slot on both axes, then
+    anchored to the bottom and the outer edge. Bottom-anchoring matters: a
+    batter floating with clear air under both feet looks pasted on, and the
+    contact bar sits above the subject layer so the overlap reads as depth.
+    """
+    if slot is None or not entries:
+        return []
+
+    placed: list[dict] = []
+    for entry in entries:
+        path = entry.path(root)
+        with Image.open(path) as image:
+            aspect = image.width / image.height
+        width = min(slot.width, slot.height * aspect)
+        placed.append(
+            {
+                "url": path.resolve().as_uri(),
+                "left": int(slot.right - width),
+                "top": int(slot.bottom - width / aspect),
+                "width": int(width),
+            }
+        )
+    return placed
 
 
 @dataclass
@@ -155,6 +188,7 @@ class PosterComposer:
         archetype_id: ArchetypeId | None = None,
         logo_path: Path | None = None,
         plate_file: str | None = None,
+        subject_file: str | None = None,
     ) -> ComposeResult:
         blocks = derive_blocks(content, brand)
 
@@ -179,6 +213,18 @@ class PosterComposer:
         archetype, zone = chosen if chosen else (ARCHETYPES[ArchetypeId.LEFT_COLUMN], plate.zone)
 
         width, height = plate.freespace.width, plate.freespace.height
+        zone = archetype.shape_zone(zone, width, height)
+
+        # Narrowing the column to the archetype's proportions usually frees up
+        # depth: the plate's artwork cuts in diagonally, so a slimmer column
+        # stays calm much further down than the widest-area rectangle did.
+        # Without this the copy keeps the short zone and leaves a hole beneath.
+        deeper = plate.freespace.tallest_within(zone.left, zone.right, zone.top)
+        if deeper is not None:
+            zone.bottom = min(
+                max(zone.bottom, deeper.bottom),
+                archetype.region_rect(width, height).bottom,
+            )
         scale = width / 1728
 
         # Copy sits on the plate, so solve its colours against the colour the
@@ -195,15 +241,12 @@ class PosterComposer:
         banner_block = next((b for b in blocks if b.role is BlockRole.BANNER), None)
         column = [b for b in blocks if b.role not in {BlockRole.INFO_BAR, BlockRole.BANNER}]
 
-        subjects = [
-            {
-                "url": entry.path().resolve().as_uri(),
-                "left": int(width * 0.44),
-                "top": int(height * 0.30),
-                "width": int(width * 0.54),
-            }
-            for entry in self.subject_bank.select(limit=1)
-        ]
+        subjects = place_subjects(
+            self.subject_bank.select(
+                tags=[intent.value], limit=1, only_file=subject_file
+            ),
+            archetype.subject_slot(zone, width, height),
+        )
 
         html_path = destination.with_suffix(".html")
 

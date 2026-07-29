@@ -32,6 +32,13 @@ packages = ["src/cricket_posts"]
 dev = [
     "pytest>=8.4.0",
 ]
+# Background removal for turning photographs into transparent cut-outs. Kept out
+# of the base install because onnxruntime is a ~200MB dependency that only the
+# subject-bank restocking step needs; a pre-cut PNG needs none of it.
+photos = [
+    "onnxruntime>=1.17.0",
+    "numpy>=1.26.0",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

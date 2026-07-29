@@ -17,6 +17,7 @@ from enum import Enum
 
 from pydantic import BaseModel, ConfigDict
 
+from .freespace import MIN_ZONE_H, MIN_ZONE_W
 from .models import Rect
 
 
@@ -46,15 +47,70 @@ class Archetype(BaseModel):
     #: Centre the copy horizontally and set it ragged-centre. Suits announcement
     #: posters that carry no photography, where a left column looks lopsided.
     centered: bool = False
+    #: Where cut-outs may stand, as canvas fractions. `None` means the archetype
+    #: carries no photography — the copy owns the middle and a figure would
+    #: either cover it or crowd the frame.
+    subject_region: tuple[float, float, float, float] | None = None
 
     def region_rect(self, width: int, height: int) -> Rect:
-        left, top, right, bottom = self.expected_region
+        return self._rect(self.expected_region, width, height)
+
+    @staticmethod
+    def _rect(
+        fractions: tuple[float, float, float, float],
+        width: int,
+        height: int,
+    ) -> Rect:
+        left, top, right, bottom = fractions
         return Rect(
             left=left * width,
             top=top * height,
             right=right * width,
             bottom=bottom * height,
         )
+
+    def shape_zone(self, measured: Rect, width: int, height: int) -> Rect:
+        """Trim a measured calm rectangle to the proportions this layout wants.
+
+        Measurement answers "where may copy go", which is a safety question, and
+        it answers it generously — the largest calm rectangle on the plate. That
+        is not the same as "where should copy go". Handing the copy every
+        available pixel makes a column wide enough to leave a hole under it and
+        squeezes whatever shares the canvas, so the archetype narrows the zone
+        to its own proportions and the measurement stays a hard outer bound.
+
+        Falls back to the measured rectangle when trimming would leave too
+        little to work with: a poster laid out in the wrong proportions beats a
+        poster with nowhere to put the copy.
+        """
+        wanted = self.region_rect(width, height)
+        shaped = Rect(
+            left=max(measured.left, wanted.left),
+            top=max(measured.top, wanted.top),
+            right=min(measured.right, wanted.right),
+            bottom=min(measured.bottom, wanted.bottom),
+        )
+        if shaped.width < MIN_ZONE_W or shaped.height < MIN_ZONE_H:
+            return measured
+        return shaped
+
+    def subject_slot(self, zone: Rect, width: int, height: int) -> Rect | None:
+        """Where a cut-out can stand without covering the copy.
+
+        Clamped against the *measured* copy zone rather than the brief. The
+        plate decides where the calm rectangle actually landed, so the subject
+        has to take whatever is left over — pushing it clear along whichever
+        axis has more room keeps a figure off the type even when the zone
+        turns up somewhere the brief did not ask for.
+        """
+        if self.subject_region is None:
+            return None
+        slot = self._rect(self.subject_region, width, height)
+        if (width - zone.right) >= zone.top:
+            slot.left = max(slot.left, zone.right)
+        else:
+            slot.bottom = min(slot.bottom, zone.top)
+        return slot if slot.width > 0 and slot.height > 0 else None
 
     def match_score(self, zone: Rect, width: int, height: int) -> float:
         """Intersection over union of a discovered zone with the expectation."""
@@ -78,6 +134,9 @@ ARCHETYPES: dict[ArchetypeId, Archetype] = {
         ),
         expected_region=(0.03, 0.03, 0.42, 0.88),
         columns=1,
+        # Runs to the right edge on purpose: a figure cropped by the frame reads
+        # as deliberate, whereas one floating short of it reads as a mistake.
+        subject_region=(0.38, 0.06, 1.0, 0.97),
     ),
     ArchetypeId.CENTER_STAGE: Archetype(
         id=ArchetypeId.CENTER_STAGE,
@@ -105,6 +164,7 @@ ARCHETYPES: dict[ArchetypeId, Archetype] = {
         ),
         expected_region=(0.04, 0.52, 0.96, 0.88),
         columns=2,
+        subject_region=(0.06, 0.02, 0.94, 0.56),
     ),
 }
 
