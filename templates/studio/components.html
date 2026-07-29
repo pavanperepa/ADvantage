@@ -44,8 +44,8 @@
   </div>
 {% endmacro %}
 
-{% macro bullets(block, dot_colors) %}
-  <div class="c-bullets" data-block="bullets">
+{% macro bullets(block, dot_colors, feature=False) %}
+  <div class="c-bullets {{ 'is-feature' if feature }}" data-block="bullets">
     {% if block.heading %}<h2 data-copy>{{ block.heading }}</h2>{% endif %}
     <ul>
       {% for value in block.values %}

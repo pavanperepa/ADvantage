@@ -88,47 +88,35 @@ class ComposeResult:
     zone: Rect
 
 
-def _info_cells(block: ContentBlock) -> list[dict]:
-    """Split the contact block into location / web / phone columns.
+def _info_cells(blocks: list[ContentBlock]) -> list[dict]:
+    """One cell per INFO_BAR block, in source order.
 
-    Classification is by shape, not by rewriting: a value is only ever moved,
-    never altered.
+    Each block already carries its own label as the heading, so no value is
+    re-classified here and a label cannot drift onto the wrong column.
     """
-    labels = [v for v in block.values if v.isupper() and not _PHONE.match(v) and len(v) < 24]
-    phones = [v for v in block.values if _PHONE.fullmatch(v.strip())]
-    urls = [v for v in block.values if _URL.search(v) and " " not in v]
-    used = set(labels) | set(phones) | set(urls)
-    location = [v for v in block.values if v not in used]
-
     cells: list[dict] = []
-    if location:
-        cells.append({"icon": "pin", "label": "", "lines": location, "svg": Markup(ICON_SVG["pin"])})
-    if urls:
+    for block in blocks:
+        # A label with nothing under it is still copy — "REGISTER NOW" arrives
+        # this way when there is no link or phone for it to describe.
+        values = block.values or ([block.heading] if block.heading else [])
+        label = block.heading if block.values else ""
+        if not values:
+            continue
+        joined = " ".join(values)
+        if any(_PHONE.fullmatch(value.strip()) for value in block.values):
+            icon = "call"
+        elif "@" in joined or _URL.search(joined):
+            icon = "web"
+        else:
+            icon = "pin"
         cells.append(
             {
-                "icon": "web",
-                "label": labels[0] if labels else "",
-                "lines": urls,
-                "svg": Markup(ICON_SVG["web"]),
+                "icon": icon,
+                "label": label,
+                "lines": values,
+                "svg": Markup(ICON_SVG[icon]),
             }
         )
-    if phones:
-        cells.append(
-            {
-                "icon": "call",
-                "label": labels[1] if len(labels) > 1 else "",
-                "lines": phones,
-                "svg": Markup(ICON_SVG["call"]),
-            }
-        )
-    # Any label that found no column still has to appear somewhere.
-    placed = {value for cell in cells for value in cell["lines"]}
-    placed |= {cell["label"] for cell in cells if cell["label"]}
-    orphans = [v for v in block.values if v not in placed]
-    if orphans and cells:
-        cells[0]["lines"] = cells[0]["lines"] + orphans
-    elif orphans:
-        cells.append({"icon": "pin", "label": "", "lines": orphans, "svg": Markup(ICON_SVG["pin"])})
     return cells
 
 
@@ -203,7 +191,7 @@ class PosterComposer:
         )
         font_stack = FONT_STACKS[theme.font_preset.value]
 
-        bar_block = next((b for b in blocks if b.role is BlockRole.INFO_BAR), None)
+        bar_blocks = [b for b in blocks if b.role is BlockRole.INFO_BAR]
         banner_block = next((b for b in blocks if b.role is BlockRole.BANNER), None)
         column = [b for b in blocks if b.role not in {BlockRole.INFO_BAR, BlockRole.BANNER}]
 
@@ -227,7 +215,7 @@ class PosterComposer:
                 "archetype": archetype,
                 "blocks": active,
                 "banner_block": banner_block,
-                "info_cells": _info_cells(bar_block) if bar_block else [],
+                "info_cells": _info_cells(bar_blocks),
                 "subjects": subjects,
                 # When the growth ladder runs out, centring turns a hole at the
                 # bottom into balanced margins, which is what a designer does.
@@ -299,7 +287,7 @@ class PosterComposer:
             return re.sub(r"\s+", " ", value).strip()
 
         visible = norm(rendered_text)
-        expected = block_values([*result.blocks, *( [bar_block] if bar_block else [] )])
+        expected = block_values([*result.blocks, *bar_blocks])
         if banner_block and banner_block.order in result.state.promoted:
             expected += banner_block.display_values()
         missing = [value for value in expected if norm(value) not in visible]

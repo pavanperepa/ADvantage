@@ -25,6 +25,28 @@
       "intents": [],
       "seed": 1525146270,
       "note": "Corner-weighted frame, calm centre. For information-only announcements."
+    },
+    {
+      "file": "playful-center-frame-01.png",
+      "archetype": "center_stage",
+      "intents": [
+        "playful_fun",
+        "bright_vibrant",
+        "youthful_energetic"
+      ],
+      "seed": 203404945,
+      "note": "Soft blobs, confetti and arcs framing a calm cream centre. Warm, non-competitive."
+    },
+    {
+      "file": "kids-celebration-01.png",
+      "archetype": "center_stage",
+      "intents": [
+        "playful_fun",
+        "bright_vibrant",
+        "youthful_energetic"
+      ],
+      "seed": 1366081044,
+      "note": "Kids baked in along the bottom. Stand-in until real student cut-outs exist."
     }
   ]
 }

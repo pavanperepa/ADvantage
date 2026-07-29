@@ -66,7 +66,7 @@
         {% elif block.role.value == "schedule" %}{{ c.chip(block, "schedule") }}
         {% elif block.role.value == "price" %}{{ c.chip(block, "price") }}
         {% elif block.role.value == "paragraph" %}{{ c.paragraph(block) }}
-        {% elif block.role.value == "bullets" %}{{ c.bullets(block, dot_colors) }}
+        {% elif block.role.value == "bullets" %}{{ c.bullets(block, dot_colors, feature=block.values|length >= 3) }}
         {% elif block.role.value == "category" %}{{ c.category(block) }}
         {% elif block.role.value == "ribbon" %}{{ c.ribbon(block) }}
         {% elif block.role.value == "stat_chips" %}{{ c.stat_chips(block) }}

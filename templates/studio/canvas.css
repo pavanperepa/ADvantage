@@ -314,3 +314,36 @@ body {
 .arch-center_stage .c-bullets li { align-items: center; }
 
 .arch-center_stage .c-stats { justify-content: center; }
+
+/* --- feature tiles -------------------------------------------------------
+   Information-heavy posters read as a wall of text when the selling points are
+   a bulleted list. Three or more items become highlighted tiles instead: each
+   claim gets its own surface, and the set spreads across the column. */
+
+.c-bullets.is-feature ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: calc(12px * var(--s));
+}
+
+.c-bullets.is-feature li {
+  align-items: center;
+  padding: calc(16px * var(--s)) calc(18px * var(--s));
+  border-radius: calc(16px * var(--s));
+  background: color-mix(in srgb, var(--backdrop) 82%, var(--accent));
+  box-shadow: 0 calc(6px * var(--s)) calc(18px * var(--s)) rgb(0 0 0 / 0.07);
+  font-size: calc(23px * var(--s) * var(--fit));
+  line-height: 1.22;
+  text-align: left;
+}
+
+.c-bullets.is-feature .c-bullets__dot {
+  width: calc(20px * var(--s));
+  height: calc(20px * var(--s));
+}
+
+/* An odd final tile spans the full width rather than leaving a hole beside it. */
+.c-bullets.is-feature li:last-child:nth-child(odd) { grid-column: 1 / -1; }
+
+.arch-center_stage .c-bullets.is-feature ul { justify-content: stretch; }
+.arch-center_stage .c-bullets.is-feature li { text-align: left; }

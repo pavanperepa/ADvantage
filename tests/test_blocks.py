@@ -79,11 +79,23 @@ def test_optional_blocks_exist_to_fill_space():
 
 def test_contact_details_land_in_the_info_bar():
     content, brand = load("foundation-program-houston.json")
-    blocks = derive_blocks(content, brand)
-    bar = next(block for block in blocks if block.role is BlockRole.INFO_BAR)
+    bars = [b for b in derive_blocks(content, brand) if b.role is BlockRole.INFO_BAR]
+    values = [value for bar in bars for value in bar.values]
 
     for value in ("+1 (713) 498-2155", "+1 (737) 323-0270", "Houston, TX 77082"):
-        assert value in bar.values
+        assert value in values
+
+
+def test_a_label_stays_attached_to_the_value_it_describes():
+    """"CALL OR TEXT" over a website is misinformation, not a cosmetic slip."""
+    content, brand = load("foundation-fun-houston.json")
+    bars = [b for b in derive_blocks(content, brand) if b.role is BlockRole.INFO_BAR]
+    by_heading = {bar.heading: bar.values for bar in bars}
+
+    assert by_heading["CALL OR TEXT"] == ["+1 (713) 498-2155", "+1 (737) 323-0270"]
+    assert by_heading["GIVE THEM A FUN FIRST START"] == [
+        "22yardshouston.com/registrations"
+    ]
 
 
 def test_bullet_sections_keep_their_heading_and_items_together():

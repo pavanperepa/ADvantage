@@ -17,6 +17,8 @@ from __future__ import annotations
 
 from enum import Enum
 
+import re
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from .models import (
@@ -25,6 +27,9 @@ from .models import (
     PosterContent,
     TournamentContent,
 )
+
+
+_DOMAIN = re.compile(r"[\w-]+\.(com|org|net|io|co)", re.I)
 
 
 class BlockRole(str, Enum):
@@ -66,6 +71,11 @@ class ContentBlock(BaseModel):
 
     def display_values(self) -> list[str]:
         return [value for value in ([self.heading] + self.values) if value.strip()]
+
+
+def _looks_like_link(value: str) -> bool:
+    """A URL or an email: something the reader clicks rather than reads."""
+    return " " not in value and ("@" in value or _DOMAIN.search(value) is not None)
 
 
 def _clean(*values: str) -> list[str]:
@@ -195,14 +205,35 @@ def derive_blocks(
             )
 
     # --- contact -----------------------------------------------------------
-    info: list[str] = list(_clean(*content.location_lines))
-    if not info and brand and brand.location:
-        info += _clean(brand.location)
-    info += [contact.display() for contact in content.contacts if contact.display()]
-    info += _clean(*content.cta_lines)
+    # Emitted as separate blocks rather than one flat list. Re-deriving which
+    # label belongs to which value from string shape put "CALL OR TEXT" above a
+    # website; the source order already knows, so carry it.
+    where = list(_clean(*content.location_lines))
+    if not where and brand and brand.location:
+        where = _clean(brand.location)
     if brand:
-        info += _clean(*brand.contact_lines)
-    add(BlockRole.INFO_BAR, BlockPriority.REQUIRED, info)
+        where += _clean(*brand.contact_lines)
+    add(BlockRole.INFO_BAR, BlockPriority.REQUIRED, where, heading="")
+
+    # A call-to-action line immediately before a link labels that link; the last
+    # unclaimed one labels the phone numbers. Anything still unclaimed becomes a
+    # chip rather than being dropped — an earlier version kept only the final
+    # label and silently lost "Contact Us Now To Register".
+    web_label, links, pending, spare = "", [], "", []
+    for line in _clean(*content.cta_lines):
+        if _looks_like_link(line):
+            links.append(line)
+            if pending:
+                web_label, pending = pending, ""
+        else:
+            if pending:
+                spare.append(pending)
+            pending = line
+    add(BlockRole.INFO_BAR, BlockPriority.REQUIRED, links, heading=web_label)
+
+    phones = [contact.display() for contact in content.contacts if contact.display()]
+    add(BlockRole.INFO_BAR, BlockPriority.REQUIRED, phones, heading=pending)
+    add(BlockRole.STAT_CHIPS, BlockPriority.REQUIRED, spare, mergeable=True)
 
     add(BlockRole.BANNER, BlockPriority.OPTIONAL, _clean(content.tagline))
     return blocks
