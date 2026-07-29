@@ -307,6 +307,10 @@ def run_compose(
             print(f"  {value!r}")
     else:
         print("Copy      : every value renders verbatim")
+    if result.clipped_copy:
+        print(f"CLIPPED ({len(result.clipped_copy)}) — cropped or off-canvas:")
+        for value in result.clipped_copy:
+            print(f"  {value!r}")
 
 
 def run_bank_index(kind: str) -> None:

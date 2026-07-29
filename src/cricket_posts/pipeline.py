@@ -117,6 +117,8 @@ class ComposeResult:
     plate: PlateChoice
     theme: ThemePack
     missing_copy: list[str]
+    #: Copy present in the DOM but cropped or pushed off the canvas edge.
+    clipped_copy: list[str]
     score_total: float
     zone: Rect
 
@@ -323,6 +325,45 @@ class PosterComposer:
                 clip={"x": 0, "y": 0, "width": width, "height": height},
             )
             rendered_text = page.evaluate("() => document.body.innerText")
+            # innerText reports what is in the DOM, not what survived to the
+            # pixels. Contact values are `nowrap`, so an over-wide bar crops
+            # them mid-string and the verbatim check still passes — a phone
+            # number missing its last digits is worse than one left out.
+            clipped = page.evaluate(
+                """
+                () => {
+                  const out = [];
+                  const frame = document.querySelector('.canvas').getBoundingClientRect();
+                  // Leaf text nodes only: reporting ancestors as well just
+                  // repeats the same string at every level of the tree.
+                  document.querySelectorAll('[data-audit] *').forEach(el => {
+                    if (el.children.length) return;
+                    const text = (el.textContent || '').trim();
+                    if (!text) return;
+                    const box = el.getBoundingClientRect();
+                    // Off the artboard is always lost: .canvas hides overflow.
+                    if (box.left < frame.left - 1 || box.right > frame.right + 1
+                        || box.top < frame.top - 1 || box.bottom > frame.bottom + 1) {
+                      out.push(text);
+                      return;
+                    }
+                    // Otherwise only an ancestor that actually crops counts.
+                    // Spilling out of a box with visible overflow is how the
+                    // display type is meant to sit against the plate.
+                    for (let node = el; node && node !== document.body; node = node.parentElement) {
+                      const style = getComputedStyle(node);
+                      const crops = style.overflowX !== 'visible' || style.overflowY !== 'visible';
+                      if (crops && (node.scrollWidth > node.clientWidth + 1
+                                    || node.scrollHeight > node.clientHeight + 1)) {
+                        out.push(text);
+                        return;
+                      }
+                    }
+                  });
+                  return [...new Set(out)];
+                }
+                """
+            )
         finally:
             page.close()
 
@@ -343,6 +384,7 @@ class PosterComposer:
             plate=plate,
             theme=theme,
             missing_copy=missing,
+            clipped_copy=clipped,
             score_total=0.0,
             zone=zone,
         )

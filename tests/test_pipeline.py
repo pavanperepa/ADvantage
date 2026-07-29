@@ -46,6 +46,32 @@ def test_every_fixture_composes_with_verbatim_copy(name, composer, tmp_path):
     assert result.fit.fits, f"overlong: {result.fit.overlong_fields}"
 
 
+def test_every_fixture_renders_its_contact_details_uncropped(composer, tmp_path):
+    """The bar sets its values `nowrap`, so overflow crops rather than reflows."""
+    content, brand = load("foundation-program-houston.json")
+
+    result = composer.compose(content, brand, tmp_path / "clean.png")
+
+    assert result.clipped_copy == [], f"cropped: {result.clipped_copy}"
+
+
+def test_a_contact_value_too_wide_for_the_canvas_is_reported(composer, tmp_path):
+    """A phone number cropped mid-string is worse than one left out entirely.
+
+    innerText still reports it in full, so the verbatim check cannot see this;
+    without a geometry check it fails silently.
+    """
+    content, brand = load("foundation-program-houston.json")
+    content.location_lines = [
+        "22 Yards Houston Cricket Facility at " + "Westpark " * 30
+    ]
+
+    result = composer.compose(content, brand, tmp_path / "wide.png")
+
+    assert result.missing_copy == []
+    assert result.clipped_copy, "an over-wide contact value went unreported"
+
+
 def test_poster_matches_the_plate_dimensions(composer, tmp_path):
     from PIL import Image
 

@@ -235,7 +235,7 @@ body {
   z-index: 1;
   display: flex;
   justify-content: center;
-  margin: 0 calc(40px * var(--s)) calc(-1 * var(--bar-drop));
+  margin: 0 calc(24px * var(--s)) calc(-1 * var(--bar-drop));
 }
 
 .c-infobar {
@@ -244,22 +244,22 @@ body {
   max-width: 100%;
   grid-auto-flow: column;
   align-items: center;
-  gap: calc(20px * var(--s));
-  padding: calc(24px * var(--s)) calc(28px * var(--s));
-  border-radius: calc(24px * var(--s));
+  gap: calc(26px * var(--s));
+  padding: calc(32px * var(--s)) calc(38px * var(--s));
+  border-radius: calc(28px * var(--s));
   background: #FFFFFF;
   box-shadow: 0 calc(16px * var(--s)) calc(44px * var(--s)) rgb(0 0 0 / 0.2);
 }
-.c-infobar__cell { display: flex; align-items: center; gap: calc(15px * var(--s)); min-width: 0; }
+.c-infobar__cell { display: flex; align-items: center; gap: calc(19px * var(--s)); min-width: 0; }
 .c-infobar__cell + .c-infobar__cell {
   border-left: 1px solid #E4E7EC;
-  padding-left: calc(18px * var(--s));
+  padding-left: calc(26px * var(--s));
 }
 .c-infobar__icon {
   display: flex;
   flex: 0 0 auto;
-  width: calc(52px * var(--s));
-  height: calc(52px * var(--s));
+  width: calc(66px * var(--s));
+  height: calc(66px * var(--s));
   align-items: center;
   justify-content: center;
   border-radius: 50%;
@@ -270,13 +270,13 @@ body {
 .c-infobar__icon--call { background: #2F9E44; }
 .c-infobar__label {
   color: #6B7280;
-  font-size: calc(18px * var(--s));
+  font-size: calc(23px * var(--s));
   font-weight: 700;
   letter-spacing: 0.09em;
 }
 .c-infobar__value {
   color: #10233F;
-  font-size: calc(23px * var(--s));
+  font-size: calc(30px * var(--s));
   font-weight: 600;
   line-height: 1.3;
   white-space: nowrap;
