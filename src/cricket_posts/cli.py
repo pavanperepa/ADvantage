@@ -359,6 +359,70 @@ def run_cutout(source: Path, tags: str, limit: int | None) -> None:
     print(f"Subject bank: {len(existing)} entr(ies)")
 
 
+def run_variants(input_path: Path, count: int, logo: Path | None, output: Path | None) -> None:
+    from PIL import Image, ImageDraw
+
+    from .pipeline import PosterComposer
+
+    payload = json.loads(input_path.read_text(encoding="utf-8"))
+    brand = (
+        BrandProfile.model_validate(payload["brand"])
+        if isinstance(payload, dict) and "brand" in payload
+        else BrandProfile(name="Cricket Academy")
+    )
+    content = parse_editable_content(
+        payload.get("content", payload) if isinstance(payload, dict) else payload
+    )
+    out_dir = output or (PROJECT_ROOT / "output" / "variants" / input_path.stem)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    composer = PosterComposer()
+    try:
+        results = composer.compose_variants(
+            content, brand, out_dir, count=count, logo_path=logo
+        )
+    finally:
+        composer.renderer.close()
+
+    if not results:
+        print("No variants produced. Is the plate bank empty?")
+        return
+
+    for index, (spec, result) in enumerate(results, 1):
+        flags = []
+        if result.missing_copy:
+            flags.append(f"MISSING {len(result.missing_copy)}")
+        if result.clipped_copy:
+            flags.append(f"CLIPPED {len(result.clipped_copy)}")
+        print(
+            f"{index:2}. {spec.plate_file:<30} {spec.intent.value:<20} "
+            f"{spec.color_mode.value:<6} {spec.bullets:<8} "
+            f"fill {result.fit.fill:.0%} {' '.join(flags)}"
+        )
+
+    # One sheet so the whole set can be judged at a glance, which is the entire
+    # point of offering options rather than one answer.
+    columns = min(3, len(results))
+    rows = (len(results) + columns - 1) // columns
+    cell = 520
+    sheet = Image.new("RGB", (columns * cell, rows * (cell + 26)), "#111318")
+    painter = ImageDraw.Draw(sheet)
+    for index, (spec, result) in enumerate(results):
+        with Image.open(result.poster) as poster:
+            thumb = poster.convert("RGB")
+        thumb.thumbnail((cell - 16, cell - 16))
+        x, y = (index % columns) * cell, (index // columns) * (cell + 26)
+        sheet.paste(thumb, (x + (cell - thumb.width) // 2, y + 8))
+        painter.text(
+            (x + 10, y + cell + 6),
+            f"{index + 1}. {spec.intent.value} / {spec.color_mode.value} / {spec.bullets}",
+            fill="#E8ECF4",
+        )
+    sheet_path = out_dir / "contact-sheet.png"
+    sheet.save(sheet_path)
+    print(f"\nSheet     : {sheet_path}")
+
+
 def run_harvest(source: Path, name: str | None, max_passes: int, force: bool) -> None:
     from PIL import Image
 
@@ -551,6 +615,15 @@ def build_parser() -> argparse.ArgumentParser:
     bank = subparsers.add_parser("bank", help="Rebuild an asset manifest.")
     bank.add_argument("kind", choices=["plates", "subjects"])
 
+    variants = subparsers.add_parser(
+        "variants",
+        help="Render several meaningfully different posters from one content file.",
+    )
+    variants.add_argument("--input", required=True, type=Path)
+    variants.add_argument("--count", type=int, default=6)
+    variants.add_argument("--logo", type=Path)
+    variants.add_argument("--output", type=Path, help="Directory for the set.")
+
     harvest = subparsers.add_parser(
         "harvest",
         help="Lift a reusable layout template off a generated poster.",
@@ -636,6 +709,8 @@ def main() -> None:
         run_cutout(args.input, args.tags, args.limit)
     elif args.command == "harvest":
         run_harvest(args.input, args.name, args.max_passes, args.force)
+    elif args.command == "variants":
+        run_variants(args.input, args.count, args.logo, args.output)
     elif args.command == "validate":
         run_validate(args.project)
     elif args.command == "export":

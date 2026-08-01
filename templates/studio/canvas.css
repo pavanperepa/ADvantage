@@ -271,11 +271,16 @@ body {
   margin: 0 calc(24px * var(--s)) calc(-1 * var(--bar-drop));
 }
 
+/* Wraps rather than overflows. The values are `nowrap` so that a phone number
+   never breaks mid-digit, which means a row too wide for the canvas gets
+   *cropped* instead — losing the last digits of a number while still reporting
+   the full string in the DOM. Wrapping onto a second line keeps every cell
+   whole at any canvas width. */
 .c-infobar {
-  display: grid;
-  grid-auto-columns: max-content;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   max-width: 100%;
-  grid-auto-flow: column;
   align-items: center;
   gap: calc(26px * var(--s));
   padding: calc(32px * var(--s)) calc(38px * var(--s));

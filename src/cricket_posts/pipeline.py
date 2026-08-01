@@ -157,6 +157,72 @@ def place_subjects(
     return placed
 
 
+#: How much each axis contributes to two variants looking different. A change
+#: of plate rebuilds the whole picture; a change of bullet treatment restyles
+#: one block. Weighting them equally produces six posters that differ only in
+#: details a viewer never notices.
+AXIS_WEIGHTS = {"plate_file": 3.0, "intent": 2.0, "color_mode": 1.5, "bullets": 1.0}
+
+
+@dataclass(frozen=True)
+class VariantSpec:
+    """One point in the space of posters this content could become."""
+
+    plate_file: str
+    intent: StyleIntent
+    color_mode: ColorMode
+    bullets: str
+
+    def distance(self, other: "VariantSpec") -> float:
+        return sum(
+            weight
+            for axis, weight in AXIS_WEIGHTS.items()
+            if getattr(self, axis) != getattr(other, axis)
+        )
+
+
+def variant_specs(
+    bank: PlateBank,
+    *,
+    count: int = 6,
+    intents: list[StyleIntent] | None = None,
+    bullets: list[str] | None = None,
+    modes: list[ColorMode] | None = None,
+) -> list[VariantSpec]:
+    """Pick `count` specs that are as unlike each other as possible.
+
+    Rendering the whole product would be hundreds of posters to throw away, so
+    the choosing happens on the descriptors and only the survivors get drawn.
+
+    Greedy farthest-point selection: take an obvious first, then repeatedly add
+    whichever candidate is furthest from everything chosen so far. Taking the
+    first N of a shuffled list instead gives six posters that by chance share a
+    plate, which is exactly the sameness this exists to avoid. Deterministic,
+    so the same content and bank always offer the same set.
+    """
+    plates = [entry.file for entry in bank.entries if entry.path().exists()]
+    if not plates:
+        return []
+
+    candidates = [
+        VariantSpec(plate_file=plate, intent=intent, color_mode=mode, bullets=style)
+        for plate in plates
+        for intent in (intents or list(StyleIntent))
+        for mode in (modes or [ColorMode.DARK, ColorMode.LIGHT])
+        for style in (bullets or ["auto", "rules", "feature"])
+    ]
+
+    chosen = [candidates[0]]
+    remaining = candidates[1:]
+    while remaining and len(chosen) < count:
+        furthest = max(
+            remaining, key=lambda spec: min(spec.distance(taken) for taken in chosen)
+        )
+        remaining.remove(furthest)
+        chosen.append(furthest)
+    return chosen
+
+
 @dataclass
 class ComposeResult:
     poster: Path
@@ -222,6 +288,46 @@ class PosterComposer:
             autoescape=select_autoescape(("html", "xml")),
         )
         self.environment.globals["price_parts"] = split_price
+
+    def compose_variants(
+        self,
+        content: PosterContent,
+        brand: BrandProfile,
+        destination_dir: Path,
+        *,
+        count: int = 6,
+        logo_path: Path | None = None,
+    ) -> list[tuple[VariantSpec, ComposeResult]]:
+        """Render several meaningfully different posters from one content file.
+
+        The point of showing options is that choosing between rendered posters
+        takes a person five seconds, whereas describing the trade-offs takes
+        paragraphs — and it removes the need to know which plate to name, which
+        is the thing currently standing between this engine and anyone using it
+        without help.
+        """
+        results: list[tuple[VariantSpec, ComposeResult]] = []
+        for index, spec in enumerate(variant_specs(self.plate_bank, count=count), 1):
+            destination = destination_dir / f"variant-{index:02d}.png"
+            try:
+                results.append(
+                    (
+                        spec,
+                        self.compose(
+                            content,
+                            brand,
+                            destination,
+                            intent=spec.intent,
+                            color_mode=spec.color_mode,
+                            logo_path=logo_path,
+                            plate_file=spec.plate_file,
+                            bullets_variant=spec.bullets,
+                        ),
+                    )
+                )
+            except Exception as exc:  # one bad plate must not lose the batch
+                print(f"  variant {index} failed on {spec.plate_file}: {exc}")
+        return results
 
     def _render_html(self, context: dict, destination: Path) -> Path:
         html = self.environment.get_template("canvas.html").render(**context)

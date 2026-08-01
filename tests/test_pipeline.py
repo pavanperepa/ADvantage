@@ -179,3 +179,48 @@ def test_every_bullet_variant_renders_the_same_points(variant, composer, tmp_pat
 
     assert result.missing_copy == [], f"copy lost: {result.missing_copy}"
     assert result.clipped_copy == [], f"cropped: {result.clipped_copy}"
+
+
+def test_variant_specs_spread_across_plates_rather_than_clustering():
+    """Six posters that share a plate are the sameness this exists to avoid."""
+    from cricket_posts.pipeline import variant_specs
+
+    specs = variant_specs(PlateBank.load(), count=6)
+
+    assert len(specs) == 6
+    assert len({spec.plate_file for spec in specs}) == 6
+
+
+def test_variant_specs_are_deterministic():
+    """Same content and bank must always offer the same set to choose from."""
+    from cricket_posts.pipeline import variant_specs
+
+    assert variant_specs(PlateBank.load(), count=5) == variant_specs(
+        PlateBank.load(), count=5
+    )
+
+
+def test_variant_specs_survive_a_bank_smaller_than_the_request():
+    from cricket_posts.plates import PlateBank as Bank
+    from cricket_posts.pipeline import variant_specs
+
+    assert variant_specs(Bank(), count=6) == []
+
+
+def test_a_narrow_canvas_wraps_the_contact_bar_instead_of_cropping_it(
+    composer, tmp_path
+):
+    """The 1080 plates could not fit the bar on one row and cropped the phones.
+
+    Values are `nowrap` so a number never breaks mid-digit, which means an
+    over-wide row loses its last digits while still reporting the full string
+    in the DOM. Wrapping keeps every cell whole at any canvas width.
+    """
+    content, brand = load("lane-rental-houston.json")
+
+    result = composer.compose(
+        content, brand, tmp_path / "narrow.png", plate_file="austin-geometric-left-01.png"
+    )
+
+    assert result.plate.freespace.width == 1080
+    assert result.clipped_copy == [], f"cropped: {result.clipped_copy}"
