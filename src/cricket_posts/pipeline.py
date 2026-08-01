@@ -231,6 +231,7 @@ class PosterComposer:
         logo_path: Path | None = None,
         plate_file: str | None = None,
         subject_files: list[str] | None = None,
+        bullets_variant: str = "auto",
     ) -> ComposeResult:
         blocks = derive_blocks(content, brand)
 
@@ -323,6 +324,7 @@ class PosterComposer:
                 "display_font": font_stack["display"],
                 "body_font": font_stack["body"],
                 "dot_colors": DOT_COLORS,
+                "bullets_variant": bullets_variant,
             }
 
         session = self.renderer._session()

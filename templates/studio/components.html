@@ -55,13 +55,22 @@
   </div>
 {% endmacro %}
 
-{% macro bullets(block, dot_colors, feature=False) %}
-  <div class="c-bullets {{ 'is-feature' if feature }}" data-block="bullets">
+{# Selling points, three ways. "dots" is the plain list, "feature" gives each
+   claim its own tinted tile, "rules" sets them as an unboxed run separated by
+   hairlines. Same content, genuinely different structure — which is where
+   variety between posters has to come from, since colour alone just recolours
+   the same design. #}
+{% macro bullets(block, dot_colors, variant="dots") %}
+  <div class="c-bullets is-{{ variant }}" data-block="bullets">
     {% if block.heading %}<h2 data-copy>{{ block.heading }}</h2>{% endif %}
     <ul>
       {% for value in block.values %}
         <li data-body data-copy>
-          <span class="c-bullets__dot" style="background: {{ dot_colors[loop.index0 % dot_colors|length] }}"></span>
+          {% if variant == "rules" %}
+            <span class="c-bullets__mark"></span>
+          {% else %}
+            <span class="c-bullets__dot" style="background: {{ dot_colors[loop.index0 % dot_colors|length] }}"></span>
+          {% endif %}
           <span>{{ value }}</span>
         </li>
       {% endfor %}

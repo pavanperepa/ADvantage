@@ -257,6 +257,7 @@ def run_compose(
     output: Path | None,
     plate: str | None = None,
     subject: str | None = None,
+    bullets: str = "auto",
 ) -> None:
     subjects = [name.strip() for name in (subject or "").split(",") if name.strip()]
     from .pipeline import PosterComposer
@@ -286,6 +287,7 @@ def run_compose(
             logo_path=logo,
             plate_file=plate,
             subject_files=subjects or None,
+            bullets_variant=bullets,
         )
     finally:
         composer.renderer.close()
@@ -538,6 +540,12 @@ def build_parser() -> argparse.ArgumentParser:
             "hero; later figures step down in height on the same floor line."
         ),
     )
+    compose.add_argument(
+        "--bullets",
+        choices=["auto", "dots", "feature", "rules"],
+        default="auto",
+        help="How selling points are set. 'auto' tiles three or more, lists fewer.",
+    )
     compose.add_argument("--output", type=Path)
 
     bank = subparsers.add_parser("bank", help="Rebuild an asset manifest.")
@@ -620,6 +628,7 @@ def main() -> None:
             output=args.output,
             plate=args.plate,
             subject=args.subject,
+            bullets=args.bullets,
         )
     elif args.command == "bank":
         run_bank_index(args.kind)

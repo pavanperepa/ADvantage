@@ -166,3 +166,16 @@ def test_the_two_halves_of_a_price_rejoin_into_the_source_line(line):
     label, amount = split_price(line)
 
     assert " ".join(part for part in (label, amount) if part) == line
+
+
+@pytest.mark.parametrize("variant", ["dots", "feature", "rules"])
+def test_every_bullet_variant_renders_the_same_points(variant, composer, tmp_path):
+    """Variants change structure, never content — that is the whole point."""
+    content, brand = load("lane-rental-houston.json")
+
+    result = composer.compose(
+        content, brand, tmp_path / f"{variant}.png", bullets_variant=variant
+    )
+
+    assert result.missing_copy == [], f"copy lost: {result.missing_copy}"
+    assert result.clipped_copy == [], f"cropped: {result.clipped_copy}"

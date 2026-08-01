@@ -374,6 +374,30 @@ body {
   gap: calc(12px * var(--s));
 }
 
+/* --- ruled list ----------------------------------------------------------
+   No boxes: the points run down the column separated by hairlines, with a
+   short accent mark instead of a dot. Reads as editorial rather than as a
+   dashboard, and gives every claim the full column width. */
+
+.c-bullets.is-rules ul { display: grid; gap: 0; }
+.c-bullets.is-rules li {
+  align-items: center;
+  gap: calc(20px * var(--s));
+  padding: calc(17px * var(--s)) 0;
+  border-top: 1px solid color-mix(in srgb, var(--text) 24%, transparent);
+  font-weight: 600;
+}
+.c-bullets.is-rules li:last-child {
+  border-bottom: 1px solid color-mix(in srgb, var(--text) 24%, transparent);
+}
+.c-bullets__mark {
+  flex: 0 0 auto;
+  width: calc(7px * var(--s));
+  height: calc(32px * var(--s) * var(--fit));
+  border-radius: calc(4px * var(--s));
+  background: var(--accent);
+}
+
 .c-bullets.is-feature li {
   align-items: center;
   padding: calc(16px * var(--s)) calc(18px * var(--s));

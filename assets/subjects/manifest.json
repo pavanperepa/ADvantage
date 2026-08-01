@@ -176,6 +176,18 @@
         "young"
       ],
       "note": "Ideogram v4 seed 566821098 at 1600x2560, studio sweep, cut with u2net. Stand-in for a 4-5 year old beginner."
+    },
+    {
+      "file": "batsman-drive-01.png",
+      "source": "generated",
+      "tags": [
+        "bold_attention",
+        "professional_clean",
+        "modern_sleek",
+        "batting",
+        "adult"
+      ],
+      "note": "Ideogram v4 at 1728x2304, mid-grey sweep so the pale bat has an edge to be cut against. Shot from behind: no face to get wrong."
     }
   ]
 }
