@@ -49,9 +49,15 @@ def test_tallest_within_finds_depth_a_widest_rectangle_misses():
     # Texture over the lower right. The largest-area rectangle is the full-width
     # band above it, which stops at y=250; the narrow left column stays calm all
     # the way to the bottom edge.
+    #
+    # Coarse blocks, not a one-pixel checkerboard: single-pixel alternation is
+    # film grain, which the detector now deliberately blurs away because it is
+    # invisible at reading distance. Structure that actually threatens
+    # legibility is many pixels across.
     for x in range(150, 400):
         for y in range(250, 600):
-            plate.putpixel((x, y), (0, 0, 0) if (x + y) % 2 else (255, 255, 255))
+            dark = ((x // 10) + (y // 10)) % 2
+            plate.putpixel((x, y), (0, 0, 0) if dark else (255, 255, 255))
 
     result = analyze(plate, min_zone=(80, 80))
     widest = result.largest()

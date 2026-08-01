@@ -32,6 +32,13 @@ class PlateEntry(BaseModel):
     intents: list[StyleIntent] = Field(default_factory=list)
     seed: int | None = None
     note: str = ""
+    #: True when the artwork already contains its own figures. Such a plate is
+    #: a whole scene rather than a background: one generation settles the
+    #: perspective, scale and lighting between the people and the room, which
+    #: compositing cut-outs has to reconstruct by hand. The cost is that it is
+    #: no longer reusable — the cast is baked in — so the pipeline must not add
+    #: a subject layer on top and end up with two batters in one lane.
+    has_subjects: bool = False
 
     def path(self, root: Path = PLATE_DIR) -> Path:
         return root / self.file

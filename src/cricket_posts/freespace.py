@@ -49,11 +49,19 @@ class FreeZone(BaseModel):
         return self.box.area
 
 
+#: Bumped whenever the measurement changes shape. Caches sit beside the plate
+#: and are keyed on the plate's mtime, so tuning the detector would otherwise
+#: leave every existing plate carrying the answer the old code gave — which is
+#: exactly how a fix gets made and then silently not applied.
+ALGORITHM_VERSION = 2
+
+
 class FreeSpaceMap(BaseModel):
     """Per-cell calmness for one plate, plus the usable rectangles."""
 
     model_config = ConfigDict(extra="forbid")
 
+    version: int = 1
     source: str = ""
     width: int
     height: int
@@ -116,13 +124,24 @@ def _cell_means(image: Image.Image, cols: int, rows: int) -> list[float]:
     return [float(value) for value in small.getdata()]
 
 
+#: Radius of the de-grain blur applied before measuring, in pixels.
+#: Photographic plates carry film grain: high-frequency, low-amplitude noise
+#: that is invisible at reading distance but lights up an edge filter. Left in,
+#: it speckles an otherwise flat field with failing cells and no all-calm
+#: rectangle survives — a plate with half its area a plain navy panel measured
+#: as having nowhere at all to put copy. Grain is not a legibility hazard, so
+#: it is removed before the question is asked. Real structure — subject
+#: outlines, netting, decorative marks — is far coarser and survives this.
+GRAIN_BLUR_PX = 1.4
+
+
 def _measure(
     image: Image.Image,
     cell_px: int,
 ) -> tuple[int, int, list[float], list[float], list[float]]:
     cols = max(1, image.width // cell_px)
     rows = max(1, image.height // cell_px)
-    grey = image.convert("L")
+    grey = image.convert("L").filter(ImageFilter.GaussianBlur(GRAIN_BLUR_PX))
 
     edges = grey.filter(ImageFilter.FIND_EDGES)
     # A smooth but steep gradient produces almost no edges yet still destroys
@@ -223,6 +242,7 @@ def analyze(
             working[index] = False
 
     return FreeSpaceMap(
+        version=ALGORITHM_VERSION,
         source=name,
         width=image.width,
         height=image.height,
@@ -242,7 +262,9 @@ def load_or_analyze(plate: Path, **kwargs) -> FreeSpaceMap:
     """Analysis is deterministic, so cache it beside the plate."""
     cached = cache_path(plate)
     if cached.exists() and cached.stat().st_mtime >= plate.stat().st_mtime:
-        return FreeSpaceMap.model_validate_json(cached.read_text(encoding="utf-8"))
+        stored = FreeSpaceMap.model_validate_json(cached.read_text(encoding="utf-8"))
+        if stored.version == ALGORITHM_VERSION:
+            return stored
     result = analyze(plate, **kwargs)
     cached.write_text(result.model_dump_json(), encoding="utf-8")
     return result

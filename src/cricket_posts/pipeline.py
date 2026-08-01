@@ -294,11 +294,17 @@ class PosterComposer:
         banner_block = next((b for b in blocks if b.role is BlockRole.BANNER), None)
         column = [b for b in blocks if b.role not in {BlockRole.INFO_BAR, BlockRole.BANNER}]
 
-        subjects = place_subjects(
-            self.subject_bank.select(
-                tags=[intent.value], limit=1, only_files=subject_files
-            ),
-            archetype.subject_slot(zone, width, height),
+        # A scene plate brought its own cast; adding a cut-out on top of it puts
+        # two batters in one lane.
+        subjects = (
+            []
+            if plate.entry.has_subjects
+            else place_subjects(
+                self.subject_bank.select(
+                    tags=[intent.value], limit=1, only_files=subject_files
+                ),
+                archetype.subject_slot(zone, width, height),
+            )
         )
 
         html_path = destination.with_suffix(".html")

@@ -115,3 +115,43 @@ def test_grid_matches_the_declared_cell_size():
 
     assert (result.cols, result.rows) == (108, 135)
     assert len(result.calm) == 108 * 135
+
+
+def test_film_grain_does_not_hide_a_usable_zone():
+    """Photographic plates carry grain that lights up an edge filter.
+
+    Untreated it speckles a flat field with failing cells until no all-calm
+    rectangle survives, and a plate that is half plain navy panel measures as
+    having nowhere at all to put copy.
+    """
+    import random
+
+    from cricket_posts.freespace import analyze
+
+    random.seed(7)
+    plate = Image.new("RGB", (400, 400), (12, 38, 94))
+    for x in range(400):
+        for y in range(400):
+            n = random.randint(-14, 14)
+            plate.putpixel((x, y), (12 + n, 38 + n, 94 + n))
+
+    result = analyze(plate, min_zone=(150, 150))
+
+    assert result.largest() is not None, "grain swallowed an otherwise flat field"
+    assert result.calm_fraction > 0.8
+
+
+def test_a_cached_map_from_an_older_algorithm_is_recomputed(tmp_path):
+    """Caches key on the plate's mtime, so a detector fix would not reach them."""
+    import json
+
+    from cricket_posts.freespace import ALGORITHM_VERSION, cache_path, load_or_analyze
+
+    plate = tmp_path / "plate.png"
+    Image.new("RGB", (300, 300), "white").save(plate)
+    stale = load_or_analyze(plate).model_dump(mode="json")
+    stale["version"] = ALGORITHM_VERSION - 1
+    stale["zones"] = []
+    cache_path(plate).write_text(json.dumps(stale), encoding="utf-8")
+
+    assert load_or_analyze(plate).version == ALGORITHM_VERSION
