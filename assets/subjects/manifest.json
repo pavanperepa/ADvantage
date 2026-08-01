@@ -9,7 +9,10 @@
         "batting",
         "photo"
       ],
-      "note": "Cut from AP7A4429.jpg"
+      "note": "Cut from AP7A4429.jpg",
+      "scale": null,
+      "lift": 0.0,
+      "at_x": null
     },
     {
       "file": "AP7A4431.png",
@@ -20,7 +23,10 @@
         "batting",
         "photo"
       ],
-      "note": "Cut from AP7A4431.jpg"
+      "note": "Cut from AP7A4431.jpg",
+      "scale": null,
+      "lift": 0.0,
+      "at_x": null
     },
     {
       "file": "AP7A4458.png",
@@ -31,7 +37,10 @@
         "batting",
         "photo"
       ],
-      "note": "Cut from AP7A4458.jpg"
+      "note": "Cut from AP7A4458.jpg",
+      "scale": null,
+      "lift": 0.0,
+      "at_x": null
     },
     {
       "file": "AP7A4470.png",
@@ -42,7 +51,10 @@
         "batting",
         "photo"
       ],
-      "note": "Cut from AP7A4470.jpg"
+      "note": "Cut from AP7A4470.jpg",
+      "scale": null,
+      "lift": 0.0,
+      "at_x": null
     },
     {
       "file": "AP7A4473.png",
@@ -53,7 +65,10 @@
         "batting",
         "photo"
       ],
-      "note": "Cut from AP7A4473.jpg"
+      "note": "Cut from AP7A4473.jpg",
+      "scale": null,
+      "lift": 0.0,
+      "at_x": null
     },
     {
       "file": "AP7A4505.png",
@@ -64,7 +79,10 @@
         "batting",
         "photo"
       ],
-      "note": "Cut from AP7A4505.jpg"
+      "note": "Cut from AP7A4505.jpg",
+      "scale": null,
+      "lift": 0.0,
+      "at_x": null
     },
     {
       "file": "AP7A4518.png",
@@ -75,7 +93,10 @@
         "batting",
         "photo"
       ],
-      "note": "Cut from AP7A4518.jpg"
+      "note": "Cut from AP7A4518.jpg",
+      "scale": null,
+      "lift": 0.0,
+      "at_x": null
     },
     {
       "file": "AP7A4528.png",
@@ -86,7 +107,10 @@
         "batting",
         "photo"
       ],
-      "note": "Cut from AP7A4528.jpg"
+      "note": "Cut from AP7A4528.jpg",
+      "scale": null,
+      "lift": 0.0,
+      "at_x": null
     },
     {
       "file": "AP7A4531.png",
@@ -97,7 +121,10 @@
         "batting",
         "photo"
       ],
-      "note": "Cut from AP7A4531.jpg"
+      "note": "Cut from AP7A4531.jpg",
+      "scale": null,
+      "lift": 0.0,
+      "at_x": null
     },
     {
       "file": "AP7A4533.png",
@@ -108,7 +135,10 @@
         "batting",
         "photo"
       ],
-      "note": "Cut from AP7A4533.jpg"
+      "note": "Cut from AP7A4533.jpg",
+      "scale": null,
+      "lift": 0.0,
+      "at_x": null
     },
     {
       "file": "AP7A4535.png",
@@ -119,7 +149,10 @@
         "batting",
         "photo"
       ],
-      "note": "Cut from AP7A4535.jpg"
+      "note": "Cut from AP7A4535.jpg",
+      "scale": null,
+      "lift": 0.0,
+      "at_x": null
     },
     {
       "file": "AP7A4540.png",
@@ -130,7 +163,10 @@
         "batting",
         "photo"
       ],
-      "note": "Cut from AP7A4540.jpg"
+      "note": "Cut from AP7A4540.jpg",
+      "scale": null,
+      "lift": 0.0,
+      "at_x": null
     },
     {
       "file": "AP7A4545.png",
@@ -141,7 +177,10 @@
         "batting",
         "photo"
       ],
-      "note": "Cut from AP7A4545.jpg"
+      "note": "Cut from AP7A4545.jpg",
+      "scale": null,
+      "lift": 0.0,
+      "at_x": null
     },
     {
       "file": "AP7A4546.png",
@@ -152,7 +191,10 @@
         "batting",
         "photo"
       ],
-      "note": "Cut from AP7A4546.jpg"
+      "note": "Cut from AP7A4546.jpg",
+      "scale": null,
+      "lift": 0.0,
+      "at_x": null
     },
     {
       "file": "AP7A4555.png",
@@ -163,7 +205,10 @@
         "batting",
         "photo"
       ],
-      "note": "Cut from AP7A4555.jpg"
+      "note": "Cut from AP7A4555.jpg",
+      "scale": null,
+      "lift": 0.0,
+      "at_x": null
     },
     {
       "file": "young-starter-01.png",
@@ -175,7 +220,10 @@
         "beginner",
         "young"
       ],
-      "note": "Ideogram v4 seed 566821098 at 1600x2560, studio sweep, cut with u2net. Stand-in for a 4-5 year old beginner."
+      "note": "Ideogram v4 seed 566821098 at 1600x2560, studio sweep, cut with u2net. Stand-in for a 4-5 year old beginner.",
+      "scale": null,
+      "lift": 0.0,
+      "at_x": null
     },
     {
       "file": "batsman-drive-01.png",
@@ -187,7 +235,24 @@
         "batting",
         "adult"
       ],
-      "note": "Ideogram v4 at 1728x2304, mid-grey sweep so the pale bat has an edge to be cut against. Shot from behind: no face to get wrong."
+      "note": "Ideogram v4 at 1728x2304, mid-grey sweep so the pale bat has an edge to be cut against. Shot from behind: no face to get wrong.",
+      "scale": null,
+      "lift": 0.0,
+      "at_x": null
+    },
+    {
+      "file": "bowling-machine-01.png",
+      "source": "generated",
+      "tags": [
+        "bold_attention",
+        "professional_clean",
+        "equipment",
+        "prop"
+      ],
+      "note": "Ideogram v4 seed 1934689702. Scene prop: sits down the lane behind the batter, so it is scaled and lifted rather than stood on the front floor line.",
+      "scale": 0.24,
+      "lift": 0.4,
+      "at_x": 0.54
     }
   ]
 }

@@ -37,6 +37,21 @@ class SubjectEntry(BaseModel):
     tags: list[str] = Field(default_factory=list)
     note: str = ""
 
+    # --- scene placement ---------------------------------------------------
+    # Not every cut-out is a figure standing at the front of the shot. A prop
+    # further down a receding lane is smaller *and* its base sits higher in the
+    # frame, and only the bank knows which subject is which. Describing that
+    # here keeps it data rather than a coordinate hardcoded per poster.
+    #: Height as a fraction of the hero's height. None falls back to the
+    #: automatic step-down applied to each successive figure.
+    scale: float | None = None
+    #: How far the base sits above the slot floor, as a fraction of slot
+    #: height. 0 stands it on the same ground line as the hero.
+    lift: float = 0.0
+    #: Horizontal centre as a fraction of the slot width. None anchors to the
+    #: outer edge for the hero and the inner edge for anything after it.
+    at_x: float | None = None
+
     def path(self, root: Path = SUBJECT_DIR) -> Path:
         return root / self.file
 

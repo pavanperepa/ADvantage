@@ -128,19 +128,29 @@ def place_subjects(
         with Image.open(path) as image:
             aspect = image.width / image.height
 
-        if index == 0:
+        if index == 0 and entry.scale is None:
             width = min(slot.width, slot.height * aspect)
             hero_height = width / aspect
+        else:
+            reference = hero_height or slot.height
+            factor = entry.scale if entry.scale is not None else companion_scale**index
+            height = min(reference * factor, slot.height)
+            width = height * aspect
+            hero_height = hero_height or height
+
+        height = width / aspect
+        if entry.at_x is not None:
+            left = slot.left + slot.width * entry.at_x - width / 2
+        elif index == 0:
             left = slot.right - width
         else:
-            height = min(hero_height * companion_scale**index, slot.height)
-            width = height * aspect
             left = slot.left
+
         placed.append(
             {
                 "url": path.resolve().as_uri(),
                 "left": int(left),
-                "top": int(slot.bottom - width / aspect),
+                "top": int(slot.bottom - entry.lift * slot.height - height),
                 "width": int(width),
             }
         )

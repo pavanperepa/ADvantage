@@ -128,3 +128,45 @@ def test_no_slot_means_no_subject(tmp_path):
     Image.new("RGBA", (10, 10)).save(tmp_path / "figure.png")
 
     assert place_subjects([SubjectEntry(file="figure.png")], None, root=tmp_path) == []
+
+
+def test_a_prop_can_sit_further_back_than_the_hero(tmp_path):
+    """A bowling machine down the lane is smaller AND its base is higher.
+
+    Scaling alone would leave it standing on the batter's ground line, which
+    reads as a small machine beside him rather than a normal one behind him.
+    """
+    for name in ("hero.png", "prop.png"):
+        Image.new("RGBA", (300, 900), (255, 0, 0, 255)).save(tmp_path / name)
+    slot = Rect(left=400, top=100, right=1000, bottom=1200)
+
+    hero, prop = place_subjects(
+        [
+            SubjectEntry(file="hero.png"),
+            SubjectEntry(file="prop.png", scale=0.25, lift=0.4, at_x=0.5),
+        ],
+        slot,
+        root=tmp_path,
+    )
+
+    assert prop["width"] < hero["width"] / 3
+    # Base lifted off the hero's floor line by 40% of the slot height.
+    prop_bottom = prop["top"] + prop["width"] / (300 / 900)
+    assert abs(prop_bottom - (slot.bottom - 0.4 * slot.height)) <= 2
+    # Centred on the slot rather than pinned to an edge.
+    assert abs(prop["left"] + prop["width"] / 2 - (slot.left + slot.width / 2)) <= 2
+
+
+def test_placement_defaults_leave_the_existing_behaviour_alone(tmp_path):
+    for name in ("a.png", "b.png"):
+        Image.new("RGBA", (300, 900), (0, 0, 255, 255)).save(tmp_path / name)
+    slot = Rect(left=400, top=100, right=1000, bottom=1200)
+
+    hero, second = place_subjects(
+        [SubjectEntry(file="a.png"), SubjectEntry(file="b.png")], slot, root=tmp_path
+    )
+
+    assert abs(hero["left"] + hero["width"] - slot.right) <= 2
+    assert second["left"] == int(slot.left)
+    for figure in (hero, second):
+        assert abs(figure["top"] + figure["width"] / (300 / 900) - slot.bottom) <= 2
