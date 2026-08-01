@@ -64,7 +64,10 @@
         {% elif block.role.value == "headline" %}{{ c.headline(block) }}
         {% elif block.role.value == "badge" %}{{ c.badge(block) }}
         {% elif block.role.value == "schedule" %}{{ c.chip(block, "schedule") }}
-        {% elif block.role.value == "price" %}{{ c.chip(block, "price") }}
+        {% elif block.role.value == "price" %}
+          {% set parts = price_parts(block.values[0]) if block.values|length == 1 else None %}
+          {% if parts %}{{ c.price_card(block, parts[1], parts[0]) }}
+          {% else %}{{ c.chip(block, "price") }}{% endif %}
         {% elif block.role.value == "paragraph" %}{{ c.paragraph(block) }}
         {% elif block.role.value == "bullets" %}{{ c.bullets(block, dot_colors, feature=block.values|length >= 3) }}
         {% elif block.role.value == "category" %}{{ c.category(block) }}

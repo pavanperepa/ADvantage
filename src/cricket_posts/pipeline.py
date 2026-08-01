@@ -73,6 +73,23 @@ def sample_zone_color(plate: Path, zone: Rect) -> str:
 
 _PHONE = re.compile(r"[+(]?\d[\d()\s\-]{6,}")
 _URL = re.compile(r"[\w.-]+\.(com|org|net|io|co)(/\S*)?", re.I)
+_AMOUNT = re.compile(r"[$£€]\s?\d[\d,]*(?:\.\d{1,2})?")
+
+
+def split_price(value: str) -> tuple[str, str] | None:
+    """Split a price line into the words before the figure, and the figure.
+
+    Only ever a split, never a rewrite: the two halves are contiguous slices of
+    the source in their original order, so the rendered text still reads back as
+    the line that was written. Returns None when there is no currency figure,
+    and the caller falls back to the plain chip.
+    """
+    found = _AMOUNT.search(value)
+    if not found:
+        return None
+    label = value[: found.start()].strip()
+    amount = value[found.start() :].strip()
+    return (label, amount) if amount else None
 
 
 #: How tall each figure after the first stands relative to the one before it.
@@ -194,6 +211,7 @@ class PosterComposer:
             loader=FileSystemLoader(STUDIO_DIR),
             autoescape=select_autoescape(("html", "xml")),
         )
+        self.environment.globals["price_parts"] = split_price
 
     def _render_html(self, context: dict, destination: Path) -> Path:
         html = self.environment.get_template("canvas.html").render(**context)

@@ -1,0 +1,49 @@
+{
+  "brand": {
+    "name": "22 YARDS HOUSTON CRICKET FACILITY",
+    "tagline": "",
+    "location": "Houston, TX 77082",
+    "contact_lines": [],
+    "palette": {
+      "ink": "#08265E",
+      "surface": "#F4F7FF",
+      "accent": "#FFC629",
+      "highlight": "#2E7BFF"
+    }
+  },
+  "content": {
+    "content_type": "lane_rental",
+    "organization": "22 YARDS",
+    "eyebrow": "HOUSTON\nCRICKET FACILITY",
+    "title": "BAT EVERY DAY. RAIN OR SHINE.",
+    "subtitle": "UNLIMITED INDOOR LANE ACCESS ON ONE MONTHLY PASS",
+    "tagline": "STOP WAITING FOR GOOD WEATHER.",
+    "price_line": "MONTHLY PASS $125",
+    "detail_lines": [],
+    "location_lines": [
+      "22 Yards Houston Cricket Facility",
+      "14929 Westpark Dr, Suite 300",
+      "Houston, TX 77082"
+    ],
+    "contacts": [
+      { "display_text": "+1 (713) 498-2155" },
+      { "display_text": "+1 (737) 323-0270" }
+    ],
+    "sections": [
+      {
+        "heading": "",
+        "text": "",
+        "items": [
+          "UNLIMITED PRACTICE SESSIONS",
+          "FULL-LENGTH INDOOR LANES",
+          "CLIMATE CONTROLLED, OPEN YEAR-ROUND",
+          "BOOK SOLO, WITH A COACH, OR AS A TEAM"
+        ]
+      }
+    ],
+    "cta_lines": [
+      "REGISTER NOW",
+      "22yardshouston.com/registrations"
+    ]
+  }
+}

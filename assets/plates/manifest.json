@@ -1,13 +1,6 @@
 {
   "entries": [
     {
-      "file": "collage-left-column-01.png",
-      "archetype": "left_column",
-      "intents": [],
-      "seed": 1932308921,
-      "note": "Seed plate. Subjects are baked in; background-only plates supersede it."
-    },
-    {
       "file": "austin-geometric-left-01.png",
       "archetype": "left_column",
       "intents": [
@@ -20,22 +13,18 @@
       "note": "Background-only geometric plate, brand palette locked at generation."
     },
     {
+      "file": "collage-left-column-01.png",
+      "archetype": "left_column",
+      "intents": [],
+      "seed": 1932308921,
+      "note": "Seed plate. Subjects are baked in; background-only plates supersede it."
+    },
+    {
       "file": "geometric-center-frame-01.png",
       "archetype": "center_stage",
       "intents": [],
       "seed": 1525146270,
       "note": "Corner-weighted frame, calm centre. For information-only announcements."
-    },
-    {
-      "file": "playful-center-frame-01.png",
-      "archetype": "center_stage",
-      "intents": [
-        "playful_fun",
-        "bright_vibrant",
-        "youthful_energetic"
-      ],
-      "seed": 203404945,
-      "note": "Soft blobs, confetti and arcs framing a calm cream centre. Warm, non-competitive."
     },
     {
       "file": "kids-celebration-01.png",
@@ -47,6 +36,28 @@
       ],
       "seed": 1366081044,
       "note": "Kids baked in along the bottom. Stand-in until real student cut-outs exist."
+    },
+    {
+      "file": "lane-square-navy-01.png",
+      "archetype": "left_column",
+      "intents": [
+        "bold_attention",
+        "professional_clean",
+        "modern_sleek"
+      ],
+      "seed": 1244884500,
+      "note": "Square 2048. Calm navy left for copy, photographic indoor lane right. No text, no people."
+    },
+    {
+      "file": "playful-center-frame-01.png",
+      "archetype": "center_stage",
+      "intents": [
+        "playful_fun",
+        "bright_vibrant",
+        "youthful_energetic"
+      ],
+      "seed": 203404945,
+      "note": "Soft blobs, confetti and arcs framing a calm cream centre. Warm, non-competitive."
     }
   ]
 }

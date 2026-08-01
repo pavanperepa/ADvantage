@@ -138,3 +138,31 @@ def test_blocks_and_render_agree_on_what_should_appear(composer, tmp_path):
 
     rendered_roles = {block.role for block in result.fit.blocks}
     assert rendered_roles.issubset({block.role for block in blocks})
+
+
+@pytest.mark.parametrize(
+    ("line", "expected"),
+    [
+        ("MONTHLY PASS $125", ("MONTHLY PASS", "$125")),
+        ("FROM $35 / HOUR", ("FROM", "$35 / HOUR")),
+        ("$1,250.00", ("", "$1,250.00")),
+        ("EARLY BIRD PRICING", None),
+        ("", None),
+    ],
+)
+def test_a_price_splits_without_being_rewritten(line, expected):
+    from cricket_posts.pipeline import split_price
+
+    assert split_price(line) == expected
+
+
+@pytest.mark.parametrize(
+    "line", ["MONTHLY PASS $125", "FROM $35 / HOUR", "SUMMER CAMP $499 PER CHILD"]
+)
+def test_the_two_halves_of_a_price_rejoin_into_the_source_line(line):
+    """The card sizes the figure differently; it must not alter the words."""
+    from cricket_posts.pipeline import split_price
+
+    label, amount = split_price(line)
+
+    assert " ".join(part for part in (label, amount) if part) == line

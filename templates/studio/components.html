@@ -37,6 +37,17 @@
   </div>
 {% endmacro %}
 
+{# A price is the hook on an offer poster, so it gets a treatment of its own
+   rather than the same chip every other short fact uses. The amount is split
+   out only for sizing: both halves are the source string, unaltered and in
+   order, so the rendered text still reads back identically. #}
+{% macro price_card(block, amount, label) %}
+  <div class="c-price" data-block="price">
+    {% if label %}<span class="c-price__label" data-copy>{{ label }}</span>{% endif %}
+    <span class="c-price__amount" data-copy>{{ amount }}</span>
+  </div>
+{% endmacro %}
+
 {% macro paragraph(block) %}
   <div class="c-paragraph" data-block="paragraph">
     {% if block.heading %}<h2 data-copy>{{ block.heading }}</h2>{% endif %}

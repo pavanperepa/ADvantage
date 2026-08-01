@@ -133,6 +133,39 @@ body {
 }
 .c-chip span + span { margin-left: calc(18px * var(--s)); }
 
+/* On an offer poster the price is the thing that converts, so it gets a card
+   rather than the chip every other short fact shares. Same inversion as the
+   chip — filled with the text colour, lettered in the backdrop — so it stays
+   readable whatever the plate underneath turns out to be. */
+.c-price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  align-self: flex-start;
+  gap: calc(8px * var(--s));
+  padding: calc(20px * var(--s)) calc(34px * var(--s)) calc(24px * var(--s));
+  border-radius: var(--radius);
+  background: var(--text);
+  color: var(--backdrop);
+  box-shadow: 0 calc(14px * var(--s)) calc(38px * var(--s)) rgb(0 0 0 / 0.28);
+}
+.c-price__label {
+  padding: calc(6px * var(--s)) calc(15px * var(--s));
+  border-radius: calc(9px * var(--s));
+  background: var(--accent);
+  color: var(--accent-text);
+  font-size: calc(25px * var(--s) * var(--fit));
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+.c-price__amount {
+  font-family: var(--font-display);
+  font-size: calc(96px * var(--s) * var(--fit));
+  font-weight: var(--display-weight);
+  letter-spacing: var(--display-tracking);
+  line-height: 0.94;
+}
+
 .c-paragraph h2,
 .c-bullets h2,
 .c-category h2 {
