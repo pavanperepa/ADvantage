@@ -249,7 +249,7 @@
         "equipment",
         "prop"
       ],
-      "note": "Ideogram v4 seed 1934689702. Scene prop: sits down the lane behind the batter, so it is scaled and lifted rather than stood on the front floor line.",
+      "note": "Ideogram v4 seed 127008421. Fourth attempt: the model gets either a convincing head or a correct three-leg tripod, rarely both. Scene prop: scaled and lifted to sit down the lane.",
       "scale": 0.24,
       "lift": 0.4,
       "at_x": 0.54
