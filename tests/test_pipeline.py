@@ -224,3 +224,34 @@ def test_a_narrow_canvas_wraps_the_contact_bar_instead_of_cropping_it(
 
     assert result.plate.freespace.width == 1080
     assert result.clipped_copy == [], f"cropped: {result.clipped_copy}"
+
+
+def test_a_lane_rental_never_lands_on_a_childrens_plate():
+    """Wrong artwork is a worse failure than repetitive artwork.
+
+    Intent tags are not enough on their own: a confetti-and-balloons plate is
+    legitimately "bright_vibrant", and matching on mood alone put an adult
+    offer on a children's party.
+    """
+    from cricket_posts.models import ContentType
+    from cricket_posts.pipeline import variant_specs
+
+    bank = PlateBank.load()
+    kids = {
+        entry.file
+        for entry in bank.entries
+        if entry.content_types and ContentType.LANE_RENTAL not in entry.content_types
+    }
+    assert kids, "expected some plates to be restricted away from lane rentals"
+
+    specs = variant_specs(bank, count=6, content_type=ContentType.LANE_RENTAL)
+
+    assert {spec.plate_file for spec in specs}.isdisjoint(kids)
+
+
+def test_content_type_filtering_outranks_mood():
+    """Relaxing archetype or intent is fine; relaxing content type is not."""
+    from cricket_posts.models import ContentType
+
+    for entry in PlateBank.load().candidates(content_type=ContentType.LANE_RENTAL):
+        assert not entry.content_types or ContentType.LANE_RENTAL in entry.content_types

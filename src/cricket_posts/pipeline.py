@@ -27,6 +27,7 @@ from .archetypes import ARCHETYPES, Archetype, ArchetypeId, select_archetype
 from .blocks import BlockRole, ContentBlock, block_values, derive_blocks
 from dataclasses import replace
 
+from .freespace import FreeSpaceMap, _largest_rectangle
 from .fit import (
     FILL_FLOOR,
     FitResult,
@@ -39,6 +40,7 @@ from .layout_score import score_layout
 from .models import (
     BrandProfile,
     ColorMode,
+    ContentType,
     PosterContent,
     Rect,
     StyleIntent,
@@ -157,6 +159,65 @@ def place_subjects(
     return placed
 
 
+@dataclass
+class DeadSpace:
+    """The largest region of canvas that is neither copy nor interesting art."""
+
+    box: Rect | None
+    fraction: float
+
+    @property
+    def ok(self) -> bool:
+        return self.fraction < DEAD_SPACE_LIMIT
+
+
+#: Share of the canvas one contiguous dead region may occupy before the poster
+#: reads as unfinished. Judged by eye against the foundation poster, whose
+#: bottom-left hole ran to roughly a sixth of the canvas.
+DEAD_SPACE_LIMIT = 0.11
+
+
+def dead_space(freespace: FreeSpaceMap, occupied: list[Rect]) -> DeadSpace:
+    """Find the biggest hole in a finished poster.
+
+    The fit engine measures fill *inside the copy zone*, which is blind to the
+    thing it was built to prevent: the foundation poster reported 80% fill and
+    "fits" while a third of the canvas sat empty, because the hole was outside
+    the zone entirely. This asks the whole-canvas question instead.
+
+    A cell is dead when the plate there is calm *and* nothing was drawn on it.
+    Both halves matter — calm artwork with copy on it is a working column, and
+    busy artwork with no copy is the photograph. Only their intersection is a
+    hole.
+    """
+    cells = list(freespace.calm)
+    cell_px = freespace.cell_px
+    for box in occupied:
+        for row in range(
+            max(0, int(box.top // cell_px)),
+            min(freespace.rows, int(box.bottom // cell_px) + 1),
+        ):
+            base = row * freespace.cols
+            for col in range(
+                max(0, int(box.left // cell_px)),
+                min(freespace.cols, int(box.right // cell_px) + 1),
+            ):
+                cells[base + col] = False
+
+    found = _largest_rectangle(cells, freespace.cols, freespace.rows)
+    if found is None:
+        return DeadSpace(box=None, fraction=0.0)
+    col0, row0, col1, row1 = found
+    box = Rect(
+        left=col0 * cell_px,
+        top=row0 * cell_px,
+        right=(col1 + 1) * cell_px,
+        bottom=(row1 + 1) * cell_px,
+    )
+    canvas = float(freespace.width * freespace.height)
+    return DeadSpace(box=box, fraction=box.area / canvas if canvas else 0.0)
+
+
 #: How much each axis contributes to two variants looking different. A change
 #: of plate rebuilds the whole picture; a change of bullet treatment restyles
 #: one block. Weighting them equally produces six posters that differ only in
@@ -188,6 +249,7 @@ def variant_specs(
     intents: list[StyleIntent] | None = None,
     bullets: list[str] | None = None,
     modes: list[ColorMode] | None = None,
+    content_type: ContentType | None = None,
 ) -> list[VariantSpec]:
     """Pick `count` specs that are as unlike each other as possible.
 
@@ -200,7 +262,11 @@ def variant_specs(
     plate, which is exactly the sameness this exists to avoid. Deterministic,
     so the same content and bank always offer the same set.
     """
-    plates = [entry.file for entry in bank.entries if entry.path().exists()]
+    plates = [
+        entry.file
+        for entry in bank.candidates(content_type=content_type)
+        if entry.path().exists()
+    ]
     if not plates:
         return []
 
@@ -234,6 +300,8 @@ class ComposeResult:
     missing_copy: list[str]
     #: Copy present in the DOM but cropped or pushed off the canvas edge.
     clipped_copy: list[str]
+    #: Largest region of canvas that is neither copy nor interesting artwork.
+    dead: DeadSpace
     score_total: float
     zone: Rect
 
@@ -307,7 +375,10 @@ class PosterComposer:
         without help.
         """
         results: list[tuple[VariantSpec, ComposeResult]] = []
-        for index, spec in enumerate(variant_specs(self.plate_bank, count=count), 1):
+        specs = variant_specs(
+            self.plate_bank, count=count, content_type=content.content_type
+        )
+        for index, spec in enumerate(specs, 1):
             destination = destination_dir / f"variant-{index:02d}.png"
             try:
                 results.append(
@@ -356,6 +427,7 @@ class PosterComposer:
             archetype_id or ArchetypeId.LEFT_COLUMN,
             intent,
             only_file=plate_file,
+            content_type=content.content_type,
         )
         if plate is None:
             raise RuntimeError(
@@ -493,6 +565,26 @@ class PosterComposer:
             # pixels. Contact values are `nowrap`, so an over-wide bar crops
             # them mid-string and the verbatim check still passes — a phone
             # number missing its last digits is worse than one left out.
+            drawn = page.evaluate(
+                """
+                () => {
+                  const frame = document.querySelector('.canvas').getBoundingClientRect();
+                  const boxes = [];
+                  document.querySelectorAll(
+                    '[data-block], .canvas__bottom, .canvas__subject'
+                  ).forEach(el => {
+                    const b = el.getBoundingClientRect();
+                    if (b.width > 0 && b.height > 0) {
+                      boxes.push({
+                        left: b.left - frame.left, top: b.top - frame.top,
+                        right: b.right - frame.left, bottom: b.bottom - frame.top,
+                      });
+                    }
+                  });
+                  return boxes;
+                }
+                """
+            )
             clipped = page.evaluate(
                 """
                 () => {
@@ -549,6 +641,9 @@ class PosterComposer:
             theme=theme,
             missing_copy=missing,
             clipped_copy=clipped,
+            dead=dead_space(
+                plate.freespace, [Rect(**box) for box in drawn]
+            ),
             score_total=0.0,
             zone=zone,
         )

@@ -310,6 +310,13 @@ def run_compose(
             print(f"  {value!r}")
     else:
         print("Copy      : every value renders verbatim")
+    if result.dead.box is not None:
+        box = result.dead.box
+        print(
+            f"Dead space: {result.dead.fraction:.1%} of canvas "
+            f"({box.width:.0f}x{box.height:.0f} at {box.left:.0f},{box.top:.0f})"
+            f"{'' if result.dead.ok else '  <- HOLE'}"
+        )
     if result.clipped_copy:
         print(f"CLIPPED ({len(result.clipped_copy)}) — cropped or off-canvas:")
         for value in result.clipped_copy:
@@ -397,7 +404,8 @@ def run_variants(input_path: Path, count: int, logo: Path | None, output: Path |
         print(
             f"{index:2}. {spec.plate_file:<30} {spec.intent.value:<20} "
             f"{spec.color_mode.value:<6} {spec.bullets:<8} "
-            f"fill {result.fit.fill:.0%} {' '.join(flags)}"
+            f"fill {result.fit.fill:.0%} dead {result.dead.fraction:4.1%}"
+            f"{'' if result.dead.ok else ' HOLE'} {' '.join(flags)}"
         )
 
     # One sheet so the whole set can be judged at a glance, which is the entire

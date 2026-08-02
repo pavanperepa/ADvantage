@@ -155,3 +155,65 @@ def test_a_cached_map_from_an_older_algorithm_is_recomputed(tmp_path):
     cache_path(plate).write_text(json.dumps(stale), encoding="utf-8")
 
     assert load_or_analyze(plate).version == ALGORITHM_VERSION
+
+
+def _calm_map(width, height, cell=10, busy=None):
+    """A FreeSpaceMap that is calm everywhere except the given boxes."""
+    from cricket_posts.freespace import ALGORITHM_VERSION, FreeSpaceMap
+
+    cols, rows = width // cell, height // cell
+    calm = [True] * (cols * rows)
+    for left, top, right, bottom in busy or []:
+        for row in range(top // cell, bottom // cell):
+            for col in range(left // cell, right // cell):
+                calm[row * cols + col] = False
+    return FreeSpaceMap(
+        version=ALGORITHM_VERSION,
+        width=width,
+        height=height,
+        cell_px=cell,
+        cols=cols,
+        rows=rows,
+        calm=calm,
+    )
+
+
+def test_dead_space_finds_a_hole_the_fill_metric_cannot_see():
+    """Copy filling its column says nothing about the canvas around it.
+
+    The foundation poster reported 80% fill and "fits" while a third of the
+    canvas sat empty, because the hole was outside the copy zone entirely.
+    """
+    from cricket_posts.models import Rect
+    from cricket_posts.pipeline import dead_space
+
+    # A 1080x1350 canvas, artwork down the right half, copy filling only the
+    # top of the left column — exactly the shape that left the hole.
+    plate = _calm_map(1080, 1350, busy=[(540, 0, 1080, 1350)])
+    copy = [Rect(left=30, top=30, right=520, bottom=700)]
+
+    result = dead_space(plate, copy)
+
+    assert result.box is not None
+    assert not result.ok, f"a hole this size should fail: {result.fraction:.1%}"
+    assert result.box.top >= 690, "the hole is the empty band beneath the copy"
+
+
+def test_a_column_filled_to_the_floor_leaves_no_hole():
+    from cricket_posts.models import Rect
+    from cricket_posts.pipeline import dead_space
+
+    plate = _calm_map(1080, 1350, busy=[(540, 0, 1080, 1350)])
+    copy = [Rect(left=30, top=30, right=520, bottom=1320)]
+
+    assert dead_space(plate, copy).ok
+
+
+def test_busy_artwork_with_no_copy_on_it_is_not_a_hole():
+    """The photograph half of a poster is doing its job, not sitting empty."""
+    from cricket_posts.models import Rect
+    from cricket_posts.pipeline import dead_space
+
+    plate = _calm_map(1080, 1350, busy=[(0, 0, 1080, 1350)])
+
+    assert dead_space(plate, [Rect(left=0, top=0, right=10, bottom=10)]).box is None

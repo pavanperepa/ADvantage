@@ -17,7 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from .archetypes import ArchetypeId
 from .freespace import FreeSpaceMap, load_or_analyze
-from .models import Rect, StyleIntent
+from .models import ContentType, Rect, StyleIntent
 from .renderer import ASSET_DIR
 
 PLATE_DIR = ASSET_DIR / "plates"
@@ -32,6 +32,12 @@ class PlateEntry(BaseModel):
     intents: list[StyleIntent] = Field(default_factory=list)
     seed: int | None = None
     note: str = ""
+    #: Which kinds of post this artwork suits. Empty means it suits any.
+    #: Intent tags describe a *mood* and are not enough on their own: a
+    #: confetti-and-balloons plate is legitimately "bright_vibrant", and
+    #: matching on that alone puts an adult lane-rental offer on a children's
+    #: party. Wrong artwork is a worse failure than repetitive artwork.
+    content_types: list[ContentType] = Field(default_factory=list)
     #: True when the artwork already contains its own figures. Such a plate is
     #: a whole scene rather than a background: one generation settles the
     #: perspective, scale and lighting between the people and the room, which
@@ -64,16 +70,29 @@ class PlateBank(BaseModel):
         self,
         archetype: ArchetypeId | None = None,
         intent: StyleIntent | None = None,
+        content_type: ContentType | None = None,
     ) -> list[PlateEntry]:
-        found = [
+        # Content type is applied first and separately, because it is the only
+        # one of the three where a mismatch is *wrong* rather than merely
+        # suboptimal. Relaxing archetype or mood gives an awkward poster;
+        # relaxing this gives a lane-rental offer on a children's party plate.
+        suitable = [
             entry
             for entry in self.entries
+            if content_type is None
+            or not entry.content_types
+            or content_type in entry.content_types
+        ]
+        found = [
+            entry
+            for entry in suitable
             if (archetype is None or entry.archetype == archetype)
             and (intent is None or not entry.intents or intent in entry.intents)
         ]
         # Never leave the caller with nothing: any plate beats no poster, and the
-        # free-space check downstream still gates whether it is usable.
-        return found or list(self.entries)
+        # free-space check downstream still gates whether it is usable. Falling
+        # back within `suitable` first keeps the content-type promise intact.
+        return found or suitable or list(self.entries)
 
 
 class PlateChoice(BaseModel):
@@ -95,13 +114,14 @@ def select_plate(
     root: Path = PLATE_DIR,
     min_zone_area: float = 260_000.0,
     only_file: str | None = None,
+    content_type: ContentType | None = None,
 ) -> PlateChoice | None:
     """Pick the plate whose measured calm rectangle best suits the archetype."""
     from .archetypes import ARCHETYPES
 
     expectation = ARCHETYPES[archetype]
     best: tuple[float, PlateChoice] | None = None
-    entries = bank.candidates(archetype, intent)
+    entries = bank.candidates(archetype, intent, content_type)
     if only_file:
         entries = [entry for entry in bank.entries if entry.file == only_file]
         if not entries:
