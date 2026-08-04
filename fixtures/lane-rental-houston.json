@@ -9,7 +9,8 @@
       "surface": "#F4F7FF",
       "accent": "#FFC629",
       "highlight": "#2E7BFF"
-    }
+    },
+    "logo_path": "assets/brand/22yards-houston.png"
   },
   "content": {
     "content_type": "lane_rental",
@@ -26,8 +27,12 @@
       "Houston, TX 77082"
     ],
     "contacts": [
-      { "display_text": "+1 (713) 498-2155" },
-      { "display_text": "+1 (737) 323-0270" }
+      {
+        "display_text": "+1 (713) 498-2155"
+      },
+      {
+        "display_text": "+1 (737) 323-0270"
+      }
     ],
     "sections": [
       {

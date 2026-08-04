@@ -77,9 +77,14 @@ body {
 /* --- components --------------------------------------------------------- */
 
 .c-lockup { display: flex; align-items: center; gap: calc(20px * var(--s)); }
+/* Sized by height, not into a square. A crest is taller than it is wide, and
+   fitting one inside a square box shrinks it to the box's height anyway while
+   reserving width it never uses — so the mark reads smaller than the space it
+   occupies. Capping the width keeps a wide wordmark from running away. */
 .c-lockup__mark {
-  width: calc(140px * var(--s));
   height: calc(140px * var(--s));
+  width: auto;
+  max-width: calc(260px * var(--s));
   object-fit: contain;
 }
 .c-lockup__name {
@@ -344,8 +349,9 @@ body {
 
 .arch-center_stage .c-lockup { flex-direction: column; gap: calc(12px * var(--s)); }
 .arch-center_stage .c-lockup__mark {
-  width: calc(190px * var(--s));
   height: calc(190px * var(--s));
+  width: auto;
+  max-width: calc(340px * var(--s));
 }
 .arch-center_stage .c-lockup__words { text-align: center; }
 

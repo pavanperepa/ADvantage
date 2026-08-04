@@ -255,3 +255,22 @@ def test_content_type_filtering_outranks_mood():
 
     for entry in PlateBank.load().candidates(content_type=ContentType.LANE_RENTAL):
         assert not entry.content_types or ContentType.LANE_RENTAL in entry.content_types
+
+
+def test_a_poster_gets_the_brand_logo_without_being_asked(composer, tmp_path):
+    """Correct branding must not depend on remembering a flag."""
+    content, brand = load("lane-rental-houston.json")
+    assert brand.logo_path, "the Houston fixture should carry its own mark"
+
+    result = composer.compose(content, brand, tmp_path / "logo.png")
+
+    html = result.html.read_text(encoding="utf-8")
+    assert "22yards-houston.png" in html
+
+
+def test_a_logo_path_that_no_longer_resolves_is_dropped_not_fatal():
+    """A missing file must not break the render, and must not draw a stranger."""
+    from cricket_posts.pipeline import brand_logo
+
+    assert brand_logo(BrandProfile(name="x", logo_path="assets/brand/gone.png")) is None
+    assert brand_logo(BrandProfile(name="x")) is None

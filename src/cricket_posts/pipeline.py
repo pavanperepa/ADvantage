@@ -159,6 +159,23 @@ def place_subjects(
     return placed
 
 
+def brand_logo(brand: BrandProfile) -> Path | None:
+    """The brand's own mark, resolved and existence-checked.
+
+    A poster carrying the wrong academy's crest is worse than one carrying
+    none, so a path that no longer resolves returns nothing rather than
+    breaking the render — and the brand's logo is the default precisely so
+    that producing a correctly-branded poster does not depend on remembering
+    a flag.
+    """
+    if not brand.logo_path:
+        return None
+    path = Path(brand.logo_path)
+    if not path.is_absolute():
+        path = PROJECT_ROOT / path
+    return path if path.exists() else None
+
+
 @dataclass
 class DeadSpace:
     """The largest region of canvas that is neither copy nor interesting art."""
@@ -421,6 +438,7 @@ class PosterComposer:
         bullets_variant: str = "auto",
     ) -> ComposeResult:
         blocks = derive_blocks(content, brand)
+        logo_path = logo_path or brand_logo(brand)
 
         plate = select_plate(
             self.plate_bank,

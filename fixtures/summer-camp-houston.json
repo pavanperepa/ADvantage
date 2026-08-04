@@ -9,7 +9,8 @@
       "surface": "#F5F7FF",
       "accent": "#FFC629",
       "highlight": "#1B6BE0"
-    }
+    },
+    "logo_path": "assets/brand/22yards-houston.png"
   },
   "content": {
     "content_type": "camp",
@@ -19,7 +20,7 @@
     "subtitle": "Give their summer a real season.",
     "tagline": "STRUCTURED DAYS. BRIGHTER SUMMERS.",
     "schedule": {
-      "display_text": "MAY 25 – AUGUST 7  ·  MON–FRI  ·  9 AM – 1 PM"
+      "display_text": "MAY 25 \u2013 AUGUST 7  \u00b7  MON\u2013FRI  \u00b7  9 AM \u2013 1 PM"
     },
     "program_info": "EXTENDED CARE UNTIL 4 PM",
     "detail_lines": [
@@ -31,8 +32,12 @@
       "Houston, TX 77082"
     ],
     "contacts": [
-      { "display_text": "+1 (713) 498-2155" },
-      { "display_text": "+1 (737) 323-0270" }
+      {
+        "display_text": "+1 (713) 498-2155"
+      },
+      {
+        "display_text": "+1 (737) 323-0270"
+      }
     ],
     "sections": [
       {
