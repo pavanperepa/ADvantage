@@ -92,10 +92,15 @@ def test_a_label_stays_attached_to_the_value_it_describes():
     bars = [b for b in derive_blocks(content, brand) if b.role is BlockRole.INFO_BAR]
     by_heading = {bar.heading: bar.values for bar in bars}
 
-    assert by_heading["CALL OR TEXT"] == ["+1 (713) 498-2155", "+1 (737) 323-0270"]
-    assert by_heading["GIVE THEM A FUN FIRST START"] == [
-        "22yardshouston.com/registrations"
+    assert by_heading["CALL OR TEXT"] == [
+        contact.display_text for contact in content.contacts
     ]
+    # Read the link from the fixture rather than pinning it: the invariant is
+    # that a label keeps the value it describes, not that the value is any
+    # particular URL. Hardcoding it made a routine link change look like a
+    # regression in label handling.
+    link = next(line for line in content.cta_lines if "//" in line or ".com" in line)
+    assert by_heading["GIVE THEM A FUN FIRST START"] == [link]
 
 
 def test_bullet_sections_keep_their_heading_and_items_together():
