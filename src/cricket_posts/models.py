@@ -192,6 +192,11 @@ class BrandProfile(BaseModel):
     location: str = Field(default="", max_length=180)
     contact_lines: list[str] = Field(default_factory=list, max_length=5)
     logo_path: str | None = None
+    #: Where a scan should land, in full — including any routing parameters.
+    #: Deliberately separate from the link printed on the poster: that one is
+    #: short so a person can type it, this one carries everything needed to
+    #: attribute a signup to the post that earned it.
+    registration_url: str | None = None
     palette: Palette = Field(
         default_factory=lambda: Palette(
             ink="#071426",

@@ -274,3 +274,30 @@ def test_a_logo_path_that_no_longer_resolves_is_dropped_not_fatal():
 
     assert brand_logo(BrandProfile(name="x", logo_path="assets/brand/gone.png")) is None
     assert brand_logo(BrandProfile(name="x")) is None
+
+
+def test_the_printed_link_and_the_scanned_link_differ_on_purpose(composer, tmp_path):
+    """Short enough to type; tagged enough to attribute. Both, not one."""
+    content, brand = load("foundation-program-houston.json")
+
+    result = composer.compose(
+        content, brand, tmp_path / "qr.png", campaign="aug", source="instagram"
+    )
+
+    printed = [line for line in content.cta_lines if "axon22yards" in line]
+    assert printed == ["axon22yards.com/join"], "printed link must stay typeable"
+    assert "utm_campaign=aug" in result.scan_url
+    assert "location=houston" in result.scan_url
+    # The tagged URL must never leak onto the poster itself.
+    assert "utm_campaign" not in result.html.read_text(encoding="utf-8").replace(
+        result.html.read_text(encoding="utf-8").split("data:image")[1].split('"')[0], ""
+    )
+
+
+def test_no_campaign_still_renders_and_still_carries_the_destination(composer, tmp_path):
+    content, brand = load("foundation-program-houston.json")
+
+    result = composer.compose(content, brand, tmp_path / "plain.png")
+
+    assert result.scan_url == brand.registration_url
+    assert result.missing_copy == []

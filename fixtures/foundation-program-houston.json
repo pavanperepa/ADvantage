@@ -10,7 +10,8 @@
       "surface": "#F6F1E6",
       "accent": "#FFD23F",
       "highlight": "#21C7FF"
-    }
+    },
+    "registration_url": "https://axon22yards.com/join?location=houston"
   },
   "content": {
     "content_type": "coaching",
@@ -62,7 +63,7 @@
     ],
     "cta_lines": [
       "VISIT US",
-      "https://axon22yards.com/join?location=houston",
+      "axon22yards.com/join",
       "CALL OR TEXT"
     ]
   }

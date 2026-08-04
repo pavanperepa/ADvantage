@@ -326,6 +326,22 @@ body {
 }
 .c-infobar__value.is-strong { font-weight: 800; }
 
+/* --- QR ------------------------------------------------------------------
+   Sized so it still scans after the poster has been screenshotted, resized and
+   compressed on the way through a feed. A QR much below this reads fine on a
+   desktop monitor and fails on the phone that is actually pointed at it.
+   White plate behind it because a QR on a coloured or photographic background
+   loses its quiet zone and stops being detectable. */
+
+.c-qr {
+  align-self: flex-start;
+  box-sizing: content-box;
+  padding: calc(10px * var(--s));
+  border-radius: calc(10px * var(--s));
+  background: #FFFFFF;
+}
+.arch-center_stage .c-qr { align-self: center; }
+
 /* --- banner ------------------------------------------------------------- */
 
 .canvas__banner {

@@ -258,6 +258,8 @@ def run_compose(
     plate: str | None = None,
     subject: str | None = None,
     bullets: str = "auto",
+    campaign: str | None = None,
+    source: str | None = None,
 ) -> None:
     subjects = [name.strip() for name in (subject or "").split(",") if name.strip()]
     from .pipeline import PosterComposer
@@ -288,6 +290,8 @@ def run_compose(
             plate_file=plate,
             subject_files=subjects or None,
             bullets_variant=bullets,
+            campaign=campaign,
+            source=source,
         )
     finally:
         composer.renderer.close()
@@ -310,6 +314,10 @@ def run_compose(
             print(f"  {value!r}")
     else:
         print("Copy      : every value renders verbatim")
+    if result.scan_url:
+        # Printed because it belongs in the caption and the link-in-bio too,
+        # not only inside the QR — a scan-only tag misses everyone who taps.
+        print(f"Scan/link : {result.scan_url}")
     if result.dead.box is not None:
         box = result.dead.box
         print(
@@ -613,6 +621,14 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     compose.add_argument(
+        "--campaign",
+        help="Campaign tag for the QR link, e.g. foundation-aug. Enables attribution.",
+    )
+    compose.add_argument(
+        "--source",
+        help="Where the post goes, e.g. instagram. Becomes utm_source.",
+    )
+    compose.add_argument(
         "--bullets",
         choices=["auto", "dots", "feature", "rules"],
         default="auto",
@@ -710,6 +726,8 @@ def main() -> None:
             plate=args.plate,
             subject=args.subject,
             bullets=args.bullets,
+            campaign=args.campaign,
+            source=args.source,
         )
     elif args.command == "bank":
         run_bank_index(args.kind)

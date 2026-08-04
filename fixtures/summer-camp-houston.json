@@ -10,7 +10,8 @@
       "accent": "#FFC629",
       "highlight": "#1B6BE0"
     },
-    "logo_path": "assets/brand/22yards-houston.png"
+    "logo_path": "assets/brand/22yards-houston.png",
+    "registration_url": "https://axon22yards.com/join?location=houston"
   },
   "content": {
     "content_type": "camp",
@@ -53,7 +54,7 @@
     ],
     "cta_lines": [
       "VISIT US",
-      "https://axon22yards.com/join?location=houston",
+      "axon22yards.com/join",
       "CALL OR TEXT"
     ]
   }

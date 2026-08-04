@@ -78,6 +78,10 @@
         {% elif block.role.value == "stat_chips" %}{{ c.stat_chips(block) }}
         {% endif %}
       {% endfor %}
+      {# Inside the stack, so the fit engine measures it like any other block
+         rather than having it overlap whatever the engine settled on. #}
+      {% if qr_uri %}<img class="c-qr" src="{{ qr_uri }}" alt="" data-qr
+           style="width:{{ qr_px }}px; height:{{ qr_px }}px;">{% endif %}
       </div>
     </div>
 

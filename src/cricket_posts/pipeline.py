@@ -51,6 +51,7 @@ from .renderer import PROJECT_ROOT, TEMPLATE_DIR, find_browser
 from .studio_renderer import FONT_STACKS, PlaywrightRenderer, build_geometry, measure_backdrops
 from .subjects import SUBJECT_DIR, SubjectBank, SubjectEntry
 from .theme import build_theme
+from .tracking import qr_code, tracked_url
 
 STUDIO_DIR = TEMPLATE_DIR / "studio"
 DOT_COLORS = ["#4CAF50", "#F59E0B", "#1C7ED6", "#7C3AED", "#E8590C", "#0CA678"]
@@ -319,6 +320,9 @@ class ComposeResult:
     clipped_copy: list[str]
     #: Largest region of canvas that is neither copy nor interesting artwork.
     dead: DeadSpace
+    #: The tagged destination encoded in the QR — also what to put in the
+    #: caption, since the poster itself shows the short human-typeable link.
+    scan_url: str
     score_total: float
     zone: Rect
 
@@ -436,9 +440,15 @@ class PosterComposer:
         plate_file: str | None = None,
         subject_files: list[str] | None = None,
         bullets_variant: str = "auto",
+        campaign: str | None = None,
+        source: str | None = None,
     ) -> ComposeResult:
         blocks = derive_blocks(content, brand)
         logo_path = logo_path or brand_logo(brand)
+        scan_url = tracked_url(
+            brand.registration_url or "", campaign=campaign, source=source
+        )
+        qr = qr_code(scan_url)
 
         plate = select_plate(
             self.plate_bank,
@@ -537,6 +547,11 @@ class PosterComposer:
                 "body_font": font_stack["body"],
                 "dot_colors": DOT_COLORS,
                 "bullets_variant": bullets_variant,
+                "qr_uri": qr.data_uri if qr else None,
+                # Absolute pixels, deliberately outside the --s design scale:
+                # whether a code scans is a property of real pixels, not of how
+                # large the artboard happens to be.
+                "qr_px": qr.rendered_px() if qr else 0,
             }
 
         session = self.renderer._session()
@@ -662,6 +677,7 @@ class PosterComposer:
             dead=dead_space(
                 plate.freespace, [Rect(**box) for box in drawn]
             ),
+            scan_url=scan_url,
             score_total=0.0,
             zone=zone,
         )
