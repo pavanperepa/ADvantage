@@ -144,6 +144,102 @@ uv run cricket-posts sample
 uv run cricket-posts live --request "Create three July posts for our academy."
 ```
 
+## Composing posters
+
+`compose` is the current pipeline and the one to reach for. It builds a poster
+from three layers — a background plate, transparent subject cut-outs, and exact
+copy — and **calls no API at all**. Plates are restocked occasionally; composing
+from them is local, free and repeatable.
+
+```powershell
+uv run cricket-posts compose --input fixtures/academy-u10-houston.json `
+  --archetype split_field --plate austin-geometric-left-01.png `
+  --intent bold_attention --bullets checks --info slab --headline outline
+```
+
+Read the printed report, not just the PNG. `Copy` must say every value renders
+verbatim, `CLIPPED` must be absent, `Fit` should land between 88% and 97%, and
+`Dead space` should stay under 11%. When a contact treatment paints straight
+onto the plate, a `Footer` line reports the worst contrast it has against the
+artwork underneath and tells you to switch treatments if it is unreadable.
+
+### Archetypes — where the copy goes
+
+| id | copy | artwork | plates from |
+|---|---|---|---|
+| `left_column` | left third | right half | generated |
+| `right_column` | right third | left half | `mirror`, or generated |
+| `top_band` | upper half, two columns | lower half | generated |
+| `bottom_third` | lower two fifths, two columns | upper half | generated |
+| `center_stage` | centred middle | outer margins | generated |
+| `split_field` | inside a CSS colour field | whatever the plate has | **any plate** |
+
+`split_field` paints its own field through a `clip-path`, so it takes its region
+outright instead of measuring for one — which is why it works on every plate in
+the bank and costs no generations.
+
+An archetype is never inferred freely. It comes from `--archetype`, or failing
+that from the plate's own manifest tag, so adding a layout cannot silently
+restyle posters that were already right.
+
+### Treatments — what the blocks wear
+
+```
+--bullets   auto | dots | feature | rules | checks
+--info      bar | stack | columns | buttons | icon_cards | slab
+--badge     block | stamp
+--headline  solid | outline
+```
+
+`stack` and `slab` change *where* the contact details sit, not just what they
+look like; that is where variety a reader notices comes from. `columns` and
+`buttons` have no surface of their own and paint onto the plate — legible only
+where the foot of that plate is dark enough, which the `Footer` line measures.
+`outline` acts on the line breaks already in the title, so a one-line title
+renders solid rather than being split on a guess.
+
+### Restocking the plate bank
+
+Mirroring is free and safe, because a plate carries no text and no crest by
+construction — the two things a horizontal flip ruins do not exist on one:
+
+```powershell
+uv run cricket-posts mirror --file austin-geometric-left-01.png
+```
+
+Generating costs money, so the machine gate runs before you look. Every
+candidate is measured against the archetype's own expectation and rejected if
+the calm space is in the wrong place or too small, which is the failure no CSS
+recovers from:
+
+```powershell
+uv run cricket-posts restock --archetype top_band --name top-band-turf `
+  --brand fixtures/academy-u7-houston.json --attempts 3 `
+  --scene "The lower half is a bright outdoor cricket ground ..."
+uv run cricket-posts accept --file top-band-turf-01.png --note "why this one"
+```
+
+Candidates land in `assets/plates/_incoming/` with a `.plate.json` sidecar
+carrying the seed, so a plate that turns out to be the good one can be
+re-rendered at `--speed QUALITY` rather than re-rolled. **Always look before
+accepting.** Measurement cannot see stray lettering, an invented crest, the
+wrong sport, or artwork inset in a box instead of bled to the edges — two
+attempts at automating that last one both failed, and the reasoning is recorded
+in `plate_studio.verify`.
+
+The Ideogram MCP server in `.mcp.json` is good for probing a brief
+conversationally. Restock over the CLI once the wording is settled, so the seed
+and the manifest entry come out complete.
+
+### Age-band fixtures
+
+`fixtures/academy-u{5,7,10,13}-houston.json` carry placeholder copy against the
+real brand block. There is no age-group model — the band is free text in
+`detail_lines`, the same way `after-school-houston.json` already carries
+`AGES 6-13`. Those lines are `OPTIONAL` blocks, so on a short copy zone the fit
+engine will drop them; if the age has to appear, keep the rest of the copy short
+enough to leave room for it.
+
 ## Layout families
 
 - `announcement_hero`
