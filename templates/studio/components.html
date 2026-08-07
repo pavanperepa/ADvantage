@@ -21,12 +21,28 @@
   </div>
 {% endmacro %}
 
-{% macro headline(block) %}
-  <h1 class="c-headline" data-block="headline" data-copy>{{ _lines(block.values[0]) }}</h1>
+{# `outline` strokes every line after the first rather than filling it, which is
+   how a headline holds its own over full-bleed photography (ref 155640). It
+   acts on the source line breaks, so a title written as one line simply renders
+   solid — a no-op, never a guess at where to split it. #}
+{% macro headline(block, variant="solid") %}
+  {% if variant == "outline" %}
+    <h1 class="c-headline is-outline" data-block="headline" data-copy>
+      {%- for line in block.values[0].split("\n") -%}
+        <span class="c-headline__line">{{ line }}</span>
+      {%- endfor -%}
+    </h1>
+  {% else %}
+    <h1 class="c-headline" data-block="headline" data-copy>{{ _lines(block.values[0]) }}</h1>
+  {% endif %}
 {% endmacro %}
 
-{% macro badge(block) %}
-  <div class="c-badge" data-block="badge">
+{# `stamp` is the circular seal the young-audience posters lean on (refs 155826,
+   094932). It is a fixed circle and it clips: a subtitle too long to fit gets
+   reported by the clipped-copy audit instead of quietly spilling past the ring,
+   which is the difference between a caught mistake and a shipped one. #}
+{% macro badge(block, variant="block") %}
+  <div class="c-badge {{ 'is-stamp' if variant == 'stamp' }}" data-block="badge">
     {% for value in block.values %}<span data-copy>{{ _lines(value) }}</span>{% endfor %}
   </div>
 {% endmacro %}
@@ -55,11 +71,17 @@
   </div>
 {% endmacro %}
 
-{# Selling points, three ways. "dots" is the plain list, "feature" gives each
+{% macro _check() %}<svg viewBox="0 0 24 24"><path d="M9.6 16.2 5.4 12l-1.4 1.4 5.6 5.6L20.4 7.8 19 6.4z"/></svg>{% endmacro %}
+
+{# Selling points, four ways. "dots" is the plain list, "feature" gives each
    claim its own tinted tile, "rules" sets them as an unboxed run separated by
-   hairlines. Same content, genuinely different structure — which is where
-   variety between posters has to come from, since colour alone just recolours
-   the same design. #}
+   hairlines, and "checks" boxes the whole list behind a headed pill. Same
+   content, genuinely different structure — which is where variety between
+   posters has to come from, since colour alone just recolours the same design.
+
+   "checks" is the coaching convention specifically: both football references
+   (155422, 155500) put "PROGRAM INCLUDES" on a pill straddling the top of a
+   bordered box. It is the treatment a parent reads as a syllabus. #}
 {% macro bullets(block, dot_colors, variant="dots") %}
   <div class="c-bullets is-{{ variant }}" data-block="bullets">
     {% if block.heading %}<h2 data-copy>{{ block.heading }}</h2>{% endif %}
@@ -68,6 +90,8 @@
         <li data-body data-copy>
           {% if variant == "rules" %}
             <span class="c-bullets__mark"></span>
+          {% elif variant == "checks" %}
+            <span class="c-bullets__check">{{ _check() }}</span>
           {% else %}
             <span class="c-bullets__dot" style="background: {{ dot_colors[loop.index0 % dot_colors|length] }}"></span>
           {% endif %}
@@ -99,15 +123,21 @@
 {% endmacro %}
 
 {#
-  Contact details, four ways. Same cells, same strings, different furniture and
+  Contact details, six ways. Same cells, same strings, different furniture and
   — for `stack` — a different place on the page entirely, since it sits inside
   the copy column rather than along the foot. One poster after another carrying
   the identical white pill is what made the set look like one design recoloured.
 
-    bar      a white pill along the foot            (the original)
-    stack    icon rows down the copy column         (ref 094932)
-    columns  headed columns on the plate, no pill   (refs 155442 / 155619)
-    buttons  a solid CTA beside an outlined link    (refs 155500 / 155619)
+    bar         a white pill along the foot            (the original)
+    stack       icon rows down the copy column         (ref 094932)
+    columns     headed columns on the plate, no pill   (refs 155442 / 155619)
+    buttons     a solid CTA beside an outlined link    (refs 155500 / 155619)
+    icon_cards  a row of separate white cards          (ref 155826)
+    slab        one solid band, edge to edge           (refs 155516 / 155826)
+
+  Every variant renders every cell. Demoting a detail to make a treatment fit
+  would drop copy the content file asked for, and INFO_BAR blocks are REQUIRED —
+  the verbatim audit exists precisely to catch that.
 #}
 {% macro info_stack(cells) %}
   <div class="c-infostack" data-block="info_bar">
@@ -149,6 +179,43 @@
           {% if cell.label %}<div class="c-infobtns__label" data-copy>{{ cell.label }}</div>{% endif %}
           {% for value in cell.lines %}
             <div class="c-infobtns__value" data-body data-copy>{{ value }}</div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endmacro %}
+
+{# Separate cards rather than one pill: the gaps between them are what make a
+   schedule read as three facts instead of one paragraph, which is the whole
+   point of the treatment on a poster aimed at a parent scanning a feed. #}
+{% macro info_cards(cells) %}
+  <div class="c-infocards" data-block="info_bar">
+    {% for cell in cells %}
+      <div class="c-infocards__card">
+        <span class="c-infocards__icon c-infobar__icon--{{ cell.icon }}">{{ cell.svg }}</span>
+        <div class="c-infocards__body">
+          {% if cell.label %}<div class="c-infocards__label" data-copy>{{ cell.label }}</div>{% endif %}
+          {% for value in cell.lines %}
+            <div class="c-infocards__value" data-body data-copy>{{ value }}</div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endmacro %}
+
+{% macro info_slab(cells) %}
+  <div class="c-infoslab" data-block="info_bar">
+    {% for cell in cells %}
+      {# The link is what the poster is asking for, so it leads the band. The
+         others still render — they are just set quieter beside it. #}
+      <div class="c-infoslab__cell {{ 'is-lead' if cell.icon == 'web' }}">
+        <span class="c-infoslab__icon">{{ cell.svg }}</span>
+        <div>
+          {% if cell.label %}<div class="c-infoslab__label" data-copy>{{ cell.label }}</div>{% endif %}
+          {% for value in cell.lines %}
+            <div class="c-infoslab__value" data-body data-copy>{{ value }}</div>
           {% endfor %}
         </div>
       </div>

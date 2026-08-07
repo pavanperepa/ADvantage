@@ -117,6 +117,17 @@ body {
   text-wrap: balance;
 }
 
+/* Every line after the first is stroked rather than filled, so the headline
+   keeps its shape over photography that is too busy for solid type. Kept as a
+   real stroke rather than a shadow because a stroke stays crisp when the poster
+   is downscaled into a feed. */
+.c-headline.is-outline { display: flex; flex-direction: column; }
+.c-headline.is-outline .c-headline__line:not(:first-child) {
+  color: transparent;
+  -webkit-text-stroke: calc(3.5px * var(--s)) var(--text);
+  paint-order: stroke fill;
+}
+
 .c-badge {
   display: inline-flex;
   flex-direction: column;
@@ -129,6 +140,34 @@ body {
   font-size: calc(30px * var(--s) * var(--fit));
   font-weight: 700;
   line-height: 1.14;
+}
+
+/* A fixed circle, deliberately. Sizing it to its content would let a long
+   subtitle quietly turn the seal into an oval; clipping instead makes the
+   overflow show up in the clipped-copy audit, where it can be fixed by
+   shortening the line or choosing the plain badge. */
+.c-badge.is-stamp {
+  display: flex;
+  width: calc(300px * var(--s));
+  aspect-ratio: 1;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: calc(30px * var(--s));
+  /* Solid disc with an inset ring, not a tinted one. A translucent accent over
+     a dark plate mixes to a muddy olive that belongs to neither colour — the
+     ring has to be drawn as a gap between two solid accents instead. */
+  border: calc(4px * var(--s)) solid var(--accent-text);
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 calc(9px * var(--s)) var(--accent);
+  color: var(--accent-text);
+  font-size: calc(29px * var(--s) * var(--fit));
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.14;
+  text-align: center;
+  transform: rotate(-7deg);
 }
 
 .c-chip {
@@ -554,3 +593,197 @@ body {
 
 .arch-center_stage .c-bullets.is-feature ul { justify-content: stretch; }
 .arch-center_stage .c-bullets.is-feature li { text-align: left; }
+
+/* --- checked list --------------------------------------------------------
+   The coaching convention: a headed pill straddling the top of a bordered box,
+   so the promise reads as one object — a syllabus — rather than as four loose
+   claims. The border is on the list rather than the wrapper so the pill can
+   overlap it with a negative margin instead of absolute positioning, which
+   keeps the block's measured height honest for the fit engine. */
+
+.c-bullets.is-checks { display: flex; flex-direction: column; }
+.c-bullets.is-checks h2 {
+  position: relative;
+  z-index: 1;
+  align-self: flex-start;
+  margin: 0 0 calc(-26px * var(--s)) calc(26px * var(--s));
+  padding: calc(9px * var(--s)) calc(22px * var(--s));
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-family: var(--font-body);
+  font-size: calc(26px * var(--s) * var(--fit));
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+/* Tinted as well as bordered. An accent hairline alone disappears whenever the
+   accent and the surface are close in value — yellow on cream reads as nothing
+   — and the box has to hold together on any plate the bank offers. */
+.c-bullets.is-checks ul {
+  gap: calc(13px * var(--s));
+  padding: calc(42px * var(--s)) calc(26px * var(--s)) calc(26px * var(--s));
+  border: calc(3px * var(--s)) solid var(--accent);
+  border-radius: calc(22px * var(--s));
+  background: color-mix(in srgb, var(--backdrop) 86%, var(--accent));
+}
+/* No heading means no pill to make room for. */
+.c-bullets.is-checks ul:first-child { padding-top: calc(26px * var(--s)); }
+.c-bullets.is-checks li { align-items: center; font-weight: 600; }
+
+/* The tick is drawn, never written. A ✓ character in the markup would land in
+   innerText and the verbatim audit would report it as copy the academy never
+   supplied. */
+.c-bullets__check {
+  display: flex;
+  flex: 0 0 auto;
+  width: calc(30px * var(--s));
+  height: calc(30px * var(--s));
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.c-bullets__check svg { width: 68%; height: 68%; fill: var(--accent-text); }
+
+/* --- contact as separate cards -------------------------------------------
+   The gaps between the cards are the point: three tiles read as three facts,
+   where one pill reads as a paragraph. White and navy are fixed here for the
+   same reason .c-infobar fixes them — a white card is a white card in both
+   colour modes, and theming it yields a tinted card that reads as a mistake.
+   No var(--fit) either: this sits in .canvas__bottom, which the fit engine
+   never measures, so scaling it by the type scale would size it against a
+   solve it took no part in. */
+
+.c-infocards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: calc(16px * var(--s));
+  padding: 0 calc(30px * var(--s));
+}
+.c-infocards__card {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: calc(15px * var(--s));
+  padding: calc(20px * var(--s)) calc(24px * var(--s));
+  border-radius: calc(22px * var(--s));
+  background: #FFFFFF;
+  box-shadow: 0 calc(12px * var(--s)) calc(32px * var(--s)) rgb(0 0 0 / 0.2);
+}
+.c-infocards__icon {
+  display: flex;
+  flex: 0 0 auto;
+  width: calc(54px * var(--s));
+  height: calc(54px * var(--s));
+  align-items: center;
+  justify-content: center;
+  border-radius: calc(15px * var(--s));
+}
+.c-infocards__icon svg { width: 54%; height: 54%; fill: #FFFFFF; }
+.c-infocards__body { min-width: 0; }
+.c-infocards__label {
+  color: #6B7280;
+  font-size: calc(21px * var(--s));
+  font-weight: 700;
+  letter-spacing: 0.09em;
+}
+/* Wraps inside its own card rather than pushing the card wider than the row.
+   The pill variant can set the values `nowrap` because it is one container;
+   here a long URL would drive its card off the canvas edge. */
+.c-infocards__value {
+  overflow-wrap: anywhere;
+  color: #10233F;
+  font-size: calc(27px * var(--s));
+  font-weight: 700;
+  line-height: 1.28;
+}
+
+/* --- contact as one solid band -------------------------------------------
+   Edge to edge, no card, no margin. The loudest of the six, and the one that
+   suits a poster whose whole job is "sign up here". */
+
+.canvas__bottom.is-slab .canvas__bar { margin: 0; }
+.c-infoslab {
+  display: flex;
+  width: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: calc(20px * var(--s)) calc(34px * var(--s));
+  padding: calc(30px * var(--s)) calc(40px * var(--s));
+  background: var(--accent);
+  color: var(--accent-text);
+}
+.c-infoslab__cell { display: flex; min-width: 0; align-items: center; gap: calc(14px * var(--s)); }
+.c-infoslab__icon { display: flex; flex: 0 0 auto; width: calc(38px * var(--s)); height: calc(38px * var(--s)); }
+.c-infoslab__icon svg { width: 100%; height: 100%; fill: currentColor; }
+.c-infoslab__label {
+  font-size: calc(19px * var(--s));
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  opacity: 0.72;
+}
+.c-infoslab__value {
+  overflow-wrap: anywhere;
+  font-size: calc(28px * var(--s));
+  font-weight: 800;
+  line-height: 1.24;
+}
+.c-infoslab__cell.is-lead .c-infoslab__value { font-size: calc(38px * var(--s)); }
+
+/* --- the archetype's own colour field ------------------------------------
+   Drawn here rather than asked for in a prompt. A clip-path gives a hard edge
+   in the exact brand hue on any plate in the bank; a generated arc gives a soft
+   one, in a colour nobody chose, and only on the plate it came with. Sits at
+   the subject layer's level and is emitted before it, so a cut-out still
+   stands in front. */
+
+.canvas__field {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background: var(--bg);
+}
+
+/* Percentages, never pixels: identical shape at 1080x1350 and 1792x2240. The
+   diagonal falls left to right, so the copy column keeps its full depth at the
+   left margin while the artwork opens up beneath the headline. */
+.arch-split_field .canvas__field { clip-path: polygon(0 0, 100% 0, 100% 30%, 0 78%); }
+
+/* The arc from ref 155422. One property, a second look — keyed off the intents
+   that already mean "soft", so it costs no new flag. */
+.arch-split_field.intent-playful_fun .canvas__field,
+.arch-split_field.intent-bright_vibrant .canvas__field {
+  clip-path: ellipse(120% 84% at 0% 0%);
+}
+
+/* --- copy on the right ---------------------------------------------------
+   A mirror, not a new design: the same components hung off the other edge.
+   Everything that was flex-start becomes flex-end, and the bullet rows reverse
+   so the mark stays outside the text rather than between it and the margin. */
+
+.arch-right_column .canvas__stack { align-items: flex-end; text-align: right; }
+.arch-right_column .c-lockup { flex-direction: row-reverse; }
+.arch-right_column .c-lockup__words { text-align: right; }
+.arch-right_column .c-badge,
+.arch-right_column .c-chip,
+.arch-right_column .c-price,
+.arch-right_column .c-ribbon,
+.arch-right_column .c-qr { align-self: flex-end; }
+.arch-right_column .c-price { align-items: flex-end; }
+.arch-right_column .c-stats { justify-content: flex-end; }
+.arch-right_column .c-paragraph p { text-align: right; }
+.arch-right_column .c-bullets li { flex-direction: row-reverse; }
+.arch-right_column .c-bullets.is-checks h2 { align-self: flex-end; margin: 0 calc(26px * var(--s)) calc(-26px * var(--s)) 0; }
+.arch-right_column .c-infostack__row { flex-direction: row-reverse; text-align: right; }
+
+/* --- copy across the top -------------------------------------------------
+   Two columns like bottom_third, but the identity and the headline span both.
+   A half-width masthead over a two-column body is what makes a poster read as
+   a form. Scoped to this archetype deliberately — widening them in
+   bottom_third too would move a poster that is already right. */
+
+.arch-top_band .canvas__stack { align-content: start; }
+.arch-top_band .c-lockup,
+.arch-top_band .c-headline { grid-column: 1 / -1; }

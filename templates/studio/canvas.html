@@ -49,6 +49,11 @@
     {# layer 1 — background plate, never contains text #}
     <img class="canvas__plate" src="{{ plate_url }}" alt="" data-region="art" data-art>
 
+    {# layer 1b — the archetype's own colour field, where it paints one. Emitted
+       before the subjects and at the same stacking level, so a cut-out still
+       stands in front of the field without renumbering the layers. #}
+    {% if archetype.owns_backdrop %}<div class="canvas__field"></div>{% endif %}
+
     {# layer 2 — subject cut-outs, transparent PNGs from the bank #}
     {% for subject in subjects %}
       <img class="canvas__subject" src="{{ subject.url }}" alt=""
@@ -61,8 +66,8 @@
       <div class="canvas__stack" data-stack>
       {% for block in blocks %}
         {% if block.role.value == "lockup" %}{{ c.lockup(block, logo_url) }}
-        {% elif block.role.value == "headline" %}{{ c.headline(block) }}
-        {% elif block.role.value == "badge" %}{{ c.badge(block) }}
+        {% elif block.role.value == "headline" %}{{ c.headline(block, headline_variant) }}
+        {% elif block.role.value == "badge" %}{{ c.badge(block, badge_variant) }}
         {% elif block.role.value == "schedule" %}{{ c.chip(block, "schedule") }}
         {% elif block.role.value == "price" %}
           {% set parts = price_parts(block.values[0]) if block.values|length == 1 else None %}
@@ -95,12 +100,15 @@
 
     {# Bar and banner share one bottom stack so their heights cannot disagree.
        Positioning the bar with a guessed banner offset hid it behind the banner. #}
-    <div class="canvas__bottom {{ 'is-bare' if info_variant != 'bar' }}">
+    <div class="canvas__bottom {{ 'is-bare' if info_variant != 'bar' }}
+                {{- ' is-slab' if info_variant == 'slab' }}">
       {% if info_cells and info_variant != "stack" %}
         <div class="canvas__bar"
              data-region="footer" data-audit data-field="contact bar">
           {% if info_variant == "columns" %}{{ c.info_columns(info_cells) }}
           {% elif info_variant == "buttons" %}{{ c.info_buttons(info_cells) }}
+          {% elif info_variant == "icon_cards" %}{{ c.info_cards(info_cells) }}
+          {% elif info_variant == "slab" %}{{ c.info_slab(info_cells) }}
           {% else %}{{ c.info_bar(info_cells) }}{% endif %}
         </div>
       {% endif %}

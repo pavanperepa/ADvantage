@@ -25,11 +25,31 @@ class ArchetypeId(str, Enum):
     LEFT_COLUMN = "left_column"
     BOTTOM_THIRD = "bottom_third"
     CENTER_STAGE = "center_stage"
+    RIGHT_COLUMN = "right_column"
+    TOP_BAND = "top_band"
+    SPLIT_FIELD = "split_field"
 
 
 class BarPosition(str, Enum):
     BOTTOM = "bottom"
     NONE = "none"
+
+
+class SubjectSide(str, Enum):
+    """Which side of the copy zone a cut-out gets pushed to.
+
+    `AUTO` keeps the original behaviour — whichever gap around the copy is
+    largest wins — which is right when the plate decides where the calm
+    rectangle landed. A mirrored layout cannot use it: the artwork is on a
+    specific side by construction, and letting the measurement pick would put
+    the figure on top of the column about half the time.
+    """
+
+    AUTO = "auto"
+    LEFT = "left"
+    RIGHT = "right"
+    ABOVE = "above"
+    BELOW = "below"
 
 
 class Archetype(BaseModel):
@@ -51,6 +71,19 @@ class Archetype(BaseModel):
     #: carries no photography — the copy owns the middle and a figure would
     #: either cover it or crowd the frame.
     subject_region: tuple[float, float, float, float] | None = None
+    subject_side: SubjectSide = SubjectSide.AUTO
+    #: The layout paints its own opaque field under the copy, so legibility is
+    #: settled by construction rather than by measurement. Measurement answers
+    #: "is copy readable on this plate"; when the layout supplies the surface
+    #: that question is already answered, and the archetype may take its own
+    #: region outright. Opt-in per archetype, never the default — everything
+    #: else still has to earn its zone from the pixels.
+    owns_backdrop: bool = False
+
+    @property
+    def subject_anchor(self) -> str:
+        """Which edge of the slot the hero figure bleeds off."""
+        return "left" if self.subject_side is SubjectSide.LEFT else "right"
 
     def region_rect(self, width: int, height: int) -> Rect:
         return self._rect(self.expected_region, width, height)
@@ -102,14 +135,32 @@ class Archetype(BaseModel):
         has to take whatever is left over — pushing it clear along whichever
         axis has more room keeps a figure off the type even when the zone
         turns up somewhere the brief did not ask for.
+
+        An archetype that knows which side its artwork lives on says so instead.
+        A mirrored layout has to: the widest gap around the copy is a fact about
+        the plate, and on a right-hand column it points straight back at the
+        column.
         """
         if self.subject_region is None:
             return None
         slot = self._rect(self.subject_region, width, height)
-        if (width - zone.right) >= zone.top:
+        gaps = {
+            SubjectSide.RIGHT: width - zone.right,
+            SubjectSide.LEFT: zone.left,
+            SubjectSide.ABOVE: zone.top,
+            SubjectSide.BELOW: height - zone.bottom,
+        }
+        side = self.subject_side
+        if side is SubjectSide.AUTO:
+            side = max(gaps, key=lambda key: gaps[key])
+        if side is SubjectSide.RIGHT:
             slot.left = max(slot.left, zone.right)
-        else:
+        elif side is SubjectSide.LEFT:
+            slot.right = min(slot.right, zone.left)
+        elif side is SubjectSide.ABOVE:
             slot.bottom = min(slot.bottom, zone.top)
+        else:
+            slot.top = max(slot.top, zone.bottom)
         return slot if slot.width > 0 and slot.height > 0 else None
 
     def match_score(self, zone: Rect, width: int, height: int) -> float:
@@ -153,6 +204,58 @@ ARCHETYPES: dict[ArchetypeId, Archetype] = {
         expected_region=(0.08, 0.09, 0.92, 0.80),
         columns=1,
         centered=True,
+    ),
+    ArchetypeId.RIGHT_COLUMN: Archetype(
+        id=ArchetypeId.RIGHT_COLUMN,
+        label="Copy right, subjects left",
+        negative_space_brief=(
+            "Keep the entire right third of the canvas and the lower sixth as calm, "
+            "near-flat background with no subjects, no brush strokes and no small "
+            "decorative marks. Concentrate all artwork and decoration in the left "
+            "half, and let it bleed off the left edge of the frame."
+        ),
+        expected_region=(0.58, 0.03, 0.97, 0.88),
+        columns=1,
+        subject_region=(0.0, 0.06, 0.62, 0.97),
+        subject_side=SubjectSide.LEFT,
+    ),
+    ArchetypeId.TOP_BAND: Archetype(
+        id=ArchetypeId.TOP_BAND,
+        label="Copy above, artwork below",
+        negative_space_brief=(
+            "Keep the entire upper half of the canvas as calm, near-flat background "
+            "with no subjects, no brush strokes and no small decorative marks. "
+            "Concentrate every figure, colour block and decorative mark in the lower "
+            "half, and let the artwork run off the bottom edge of the frame rather "
+            "than stopping short of it and leaving a strip of background beneath."
+        ),
+        expected_region=(0.05, 0.05, 0.95, 0.46),
+        columns=2,
+        # Runs to the bottom edge on purpose. A figure stopping short leaves a
+        # calm strip under the artwork, which measurement then offers to
+        # `bottom_third` as a second copy zone.
+        subject_region=(0.04, 0.36, 0.96, 1.0),
+        subject_side=SubjectSide.BELOW,
+    ),
+    ArchetypeId.SPLIT_FIELD: Archetype(
+        id=ArchetypeId.SPLIT_FIELD,
+        label="Hard-edged colour field over the artwork, copy inside it",
+        negative_space_brief=(
+            "Compose the artwork so it reads out of the lower right corner: put the "
+            "figure, the colour blocks and every decorative mark in the lower right "
+            "two thirds, bleeding off the right and bottom edges. Keep the upper left "
+            "half calm, near-flat background."
+        ),
+        expected_region=(0.06, 0.07, 0.56, 0.70),
+        columns=1,
+        subject_region=(0.44, 0.28, 1.0, 1.0),
+        subject_side=SubjectSide.RIGHT,
+        # The split is drawn in CSS, not requested from a prompt. A generated arc
+        # is soft, in a colour nobody chose, and arrives once per generation; a
+        # clip-path is hard-edged, in the exact brand hue, and works on every
+        # plate already in the bank. That is what lets this layout ship without
+        # spending a single generation.
+        owns_backdrop=True,
     ),
     ArchetypeId.BOTTOM_THIRD: Archetype(
         id=ArchetypeId.BOTTOM_THIRD,

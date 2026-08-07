@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "ideogram": {
+      "transport": "http",
+      "url": "https://mcp.ideogram.ai/mcp"
+    }
+  }
+}

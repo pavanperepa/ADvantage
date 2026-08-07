@@ -25,6 +25,7 @@ from PIL import Image
 
 from .archetypes import ARCHETYPES, Archetype, ArchetypeId, select_archetype
 from .blocks import BlockRole, ContentBlock, block_values, derive_blocks
+from .color import contrast_ratio
 from dataclasses import replace
 
 from .freespace import FreeSpaceMap, _largest_rectangle
@@ -107,6 +108,7 @@ def place_subjects(
     *,
     root: Path = SUBJECT_DIR,
     companion_scale: float = COMPANION_SCALE,
+    anchor: str = "right",
 ) -> list[dict]:
     """Fit cut-outs into their slot, standing on its floor.
 
@@ -120,6 +122,11 @@ def place_subjects(
     anchors to the inner edge. Aligning the feet and varying only the height is
     what makes one child read as younger than the other instead of simply
     further away.
+
+    `anchor` is which edge the hero bleeds off. It follows the archetype rather
+    than the slot, because on a mirrored layout the outer edge is the left one —
+    anchoring right there would stand the figure against the copy instead of
+    against the frame.
     """
     if slot is None or not entries:
         return []
@@ -145,9 +152,9 @@ def place_subjects(
         if entry.at_x is not None:
             left = slot.left + slot.width * entry.at_x - width / 2
         elif index == 0:
-            left = slot.right - width
+            left = slot.left if anchor == "left" else slot.right - width
         else:
-            left = slot.left
+            left = slot.right - width if anchor == "left" else slot.left
 
         placed.append(
             {
@@ -193,6 +200,52 @@ class DeadSpace:
 #: reads as unfinished. Judged by eye against the foundation poster, whose
 #: bottom-left hole ran to roughly a sixth of the canvas.
 DEAD_SPACE_LIMIT = 0.11
+
+#: Contact treatments that paint straight onto the plate with no surface of
+#: their own. They are the editorial ones, and that is exactly why they are
+#: fragile: `bar`, `icon_cards` and `slab` bring a white card or a solid band
+#: with them, so the artwork underneath cannot reach the text. These cannot.
+BARE_INFO_VARIANTS = frozenset({"columns", "buttons"})
+
+#: Contrast the footer text must keep against every part of the plate beneath
+#: it. The same 4.5:1 body-text floor `theme.ensure_contrast` solves for; the
+#: point here is that the footer was never included in that solve.
+FOOTER_CONTRAST_FLOOR = 4.5
+
+
+def footer_contrast(
+    plate: Path,
+    text_color: str,
+    *,
+    band: float = 0.16,
+    cells: tuple[int, int] = (8, 2),
+) -> float:
+    """Worst contrast the footer text has against the plate under it.
+
+    A bare contact treatment sets its values in `--text`, which was solved
+    against the *copy zone* — somewhere else on the canvas entirely. Where the
+    foot of the plate disagrees with that zone the result is white type on white
+    artwork, which passes the verbatim audit (the string is in the DOM) and the
+    clipped audit (nothing is cropped) while being unreadable.
+
+    Calmness is the wrong question to ask here, and asking it was the first
+    attempt: a broad flat plane of white is maximally calm and maximally
+    illegible under white text. Contrast is the question, and it has to be the
+    *worst* cell rather than the average — a band that is half navy and half
+    white averages to a mid grey that reads as fine and is fine nowhere.
+    """
+    with Image.open(plate) as image:
+        width, height = image.size
+        crop = (
+            image.convert("RGB")
+            .crop((0, int(height * (1.0 - band)), width, height))
+            .resize(cells, Image.Resampling.BOX)
+        )
+        patches = list(crop.getdata())
+    return min(
+        contrast_ratio(text_color, "#" + "".join(f"{value:02X}" for value in patch))
+        for patch in patches
+    )
 
 
 def dead_space(freespace: FreeSpaceMap, occupied: list[Rect]) -> DeadSpace:
@@ -325,6 +378,10 @@ class ComposeResult:
     scan_url: str
     score_total: float
     zone: Rect
+    #: Worst contrast the footer text keeps against the plate beneath it.
+    #: `None` when the treatment brings its own surface and the plate is
+    #: therefore never visible behind the type.
+    footer_contrast: float | None = None
 
 
 def _info_cells(blocks: list[ContentBlock]) -> list[dict]:
@@ -441,6 +498,8 @@ class PosterComposer:
         subject_files: list[str] | None = None,
         bullets_variant: str = "auto",
         info_variant: str = "bar",
+        badge_variant: str = "block",
+        headline_variant: str = "solid",
         campaign: str | None = None,
         source: str | None = None,
         include_qr: bool = False,
@@ -469,37 +528,53 @@ class PosterComposer:
                 "after adding background plates to assets/plates/."
             )
 
+        # Fall back to the archetype the plate was *generated* for, not to a
+        # free search across every archetype. Searching lets a newly-defined
+        # archetype outscore the intended one on a plate it had no part in
+        # briefing — so adding a layout would silently restyle posters that
+        # were already right. The manifest tag is the plate's own answer to
+        # "which brief did this honour", and it cannot drift as the set grows.
         chosen = select_archetype(
             [zone.box for zone in plate.freespace.zones],
             plate.freespace.width,
             plate.freespace.height,
-            preferred=archetype_id,
+            preferred=archetype_id or plate.entry.archetype,
         )
         archetype, zone = chosen if chosen else (ARCHETYPES[ArchetypeId.LEFT_COLUMN], plate.zone)
 
         width, height = plate.freespace.width, plate.freespace.height
-        zone = archetype.shape_zone(zone, width, height)
+        if archetype.owns_backdrop:
+            # The field is painted over the plate, so there is no calm rectangle
+            # to find and none to chase deeper — the archetype takes its own
+            # region and the artwork underneath is irrelevant to legibility.
+            zone = archetype.region_rect(width, height)
+        else:
+            zone = archetype.shape_zone(zone, width, height)
 
-        # Narrowing the column to the archetype's proportions usually frees up
-        # depth: the plate's artwork cuts in diagonally, so a slimmer column
-        # stays calm much further down than the widest-area rectangle did.
-        # Without this the copy keeps the short zone and leaves a hole beneath.
-        deeper = plate.freespace.tallest_within(zone.left, zone.right, zone.top)
-        if deeper is not None:
-            zone.bottom = min(
-                max(zone.bottom, deeper.bottom),
-                archetype.region_rect(width, height).bottom,
-            )
+            # Narrowing the column to the archetype's proportions usually frees
+            # up depth: the plate's artwork cuts in diagonally, so a slimmer
+            # column stays calm much further down than the widest-area rectangle
+            # did. Without this the copy keeps the short zone and leaves a hole
+            # beneath.
+            deeper = plate.freespace.tallest_within(zone.left, zone.right, zone.top)
+            if deeper is not None:
+                zone.bottom = min(
+                    max(zone.bottom, deeper.bottom),
+                    archetype.region_rect(width, height).bottom,
+                )
         scale = width / 1728
 
         # Copy sits on the plate, so solve its colours against the colour the
-        # plate actually is in that zone rather than an assumed panel.
-        theme = build_theme(
-            intent,
-            brand.palette,
-            color_mode,
-            backdrop=sample_zone_color(plate.path, zone),
-        )
+        # plate actually is in that zone rather than an assumed panel — unless
+        # the layout paints its own field, in which case solve against that.
+        # `bg` is computed from palette, mode and intent alone and never reads
+        # `backdrop`, so this throwaway pass yields exactly the colour the field
+        # will be painted, and the second pass solves the text against it.
+        if archetype.owns_backdrop:
+            backdrop = build_theme(intent, brand.palette, color_mode).colors.bg
+        else:
+            backdrop = sample_zone_color(plate.path, zone)
+        theme = build_theme(intent, brand.palette, color_mode, backdrop=backdrop)
         font_stack = FONT_STACKS[theme.font_preset.value]
 
         bar_blocks = [b for b in blocks if b.role is BlockRole.INFO_BAR]
@@ -516,6 +591,7 @@ class PosterComposer:
                     tags=[intent.value], limit=1, only_files=subject_files
                 ),
                 archetype.subject_slot(zone, width, height),
+                anchor=archetype.subject_anchor,
             )
         )
 
@@ -554,6 +630,8 @@ class PosterComposer:
                 "dot_colors": DOT_COLORS,
                 "bullets_variant": bullets_variant,
                 "info_variant": info_variant,
+                "badge_variant": badge_variant,
+                "headline_variant": headline_variant,
                 "qr_uri": qr.data_uri if qr else None,
                 # Absolute pixels, deliberately outside the --s design scale:
                 # whether a code scans is a property of real pixels, not of how
@@ -610,8 +688,12 @@ class PosterComposer:
                 () => {
                   const frame = document.querySelector('.canvas').getBoundingClientRect();
                   const boxes = [];
+                  // The colour field counts as drawn. It is deliberate design,
+                  // not a gap — and the fit engine already guarantees the copy
+                  // fills 88-97% of the zone inside it. Leaving it out makes
+                  // every split_field poster report a hole that is not there.
                   document.querySelectorAll(
-                    '[data-block], .canvas__bottom, .canvas__subject'
+                    '[data-block], .canvas__bottom, .canvas__subject, .canvas__field'
                   ).forEach(el => {
                     const b = el.getBoundingClientRect();
                     if (b.width > 0 && b.height > 0) {
@@ -668,7 +750,11 @@ class PosterComposer:
 
         visible = norm(rendered_text)
         expected = block_values([*result.blocks, *bar_blocks])
-        if banner_block and banner_block.order in result.state.promoted:
+        # The banner is excluded from the fitted column, so it can never appear
+        # in `promoted` — the old condition here was unreachable and the tagline
+        # went unverified on every poster even though the template always draws
+        # it. It renders whenever it exists, so that is when it is checked.
+        if banner_block:
             expected += banner_block.display_values()
         missing = [value for value in expected if norm(value) not in visible]
 
@@ -687,4 +773,9 @@ class PosterComposer:
             scan_url=scan_url,
             score_total=0.0,
             zone=zone,
+            footer_contrast=(
+                footer_contrast(plate.path, theme.colors.text)
+                if info_variant in BARE_INFO_VARIANTS
+                else None
+            ),
         )

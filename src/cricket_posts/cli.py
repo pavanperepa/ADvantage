@@ -259,6 +259,8 @@ def run_compose(
     subject: str | None = None,
     bullets: str = "auto",
     info: str = "bar",
+    badge: str = "block",
+    headline: str = "solid",
     campaign: str | None = None,
     source: str | None = None,
     qr: bool = False,
@@ -293,6 +295,8 @@ def run_compose(
             subject_files=subjects or None,
             bullets_variant=bullets,
             info_variant=info,
+            badge_variant=badge,
+            headline_variant=headline,
             campaign=campaign,
             source=source,
             include_qr=qr,
@@ -334,6 +338,19 @@ def run_compose(
         print(f"CLIPPED ({len(result.clipped_copy)}) — cropped or off-canvas:")
         for value in result.clipped_copy:
             print(f"  {value!r}")
+    if result.footer_contrast is not None:
+        from .pipeline import FOOTER_CONTRAST_FLOOR
+
+        ok = result.footer_contrast >= FOOTER_CONTRAST_FLOOR
+        print(
+            f"Footer    : {result.footer_contrast:.1f}:1 worst contrast on the plate"
+            + (
+                ""
+                if ok
+                else f"  <- UNREADABLE. {info!r} paints straight onto the "
+                "artwork; use bar, icon_cards or slab on this plate."
+            )
+        )
 
 
 def run_bank_index(kind: str) -> None:
@@ -676,11 +693,26 @@ def build_parser() -> argparse.ArgumentParser:
     )
     compose.add_argument(
         "--info",
-        choices=["bar", "stack", "columns", "buttons"],
+        choices=["bar", "stack", "columns", "buttons", "icon_cards", "slab"],
         default="bar",
         help=(
             "How contact details are set. 'stack' also moves them into the copy "
             "column instead of a band along the foot."
+        ),
+    )
+    compose.add_argument(
+        "--badge",
+        choices=["block", "stamp"],
+        default="block",
+        help="How the subtitle is set. 'stamp' is the circular seal; it clips.",
+    )
+    compose.add_argument(
+        "--headline",
+        choices=["solid", "outline"],
+        default="solid",
+        help=(
+            "'outline' strokes every line of the title after the first. Acts on "
+            "the source line breaks, so a one-line title renders solid."
         ),
     )
     compose.add_argument(
@@ -698,7 +730,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     compose.add_argument(
         "--bullets",
-        choices=["auto", "dots", "feature", "rules"],
+        choices=["auto", "dots", "feature", "rules", "checks"],
         default="auto",
         help="How selling points are set. 'auto' tiles three or more, lists fewer.",
     )
@@ -805,6 +837,8 @@ def main() -> None:
             subject=args.subject,
             bullets=args.bullets,
             info=args.info,
+            badge=args.badge,
+            headline=args.headline,
             campaign=args.campaign,
             source=args.source,
             qr=args.qr,
