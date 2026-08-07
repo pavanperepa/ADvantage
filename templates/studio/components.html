@@ -99,9 +99,63 @@
 {% endmacro %}
 
 {#
-  The information bar. This is the component that exists because Ideogram
-  cannot be trusted with a phone number: every value is composited.
+  Contact details, four ways. Same cells, same strings, different furniture and
+  — for `stack` — a different place on the page entirely, since it sits inside
+  the copy column rather than along the foot. One poster after another carrying
+  the identical white pill is what made the set look like one design recoloured.
+
+    bar      a white pill along the foot            (the original)
+    stack    icon rows down the copy column         (ref 094932)
+    columns  headed columns on the plate, no pill   (refs 155442 / 155619)
+    buttons  a solid CTA beside an outlined link    (refs 155500 / 155619)
 #}
+{% macro info_stack(cells) %}
+  <div class="c-infostack" data-block="info_bar">
+    {% for cell in cells %}
+      <div class="c-infostack__row">
+        <span class="c-infostack__icon c-infobar__icon--{{ cell.icon }}">{{ cell.svg }}</span>
+        <div>
+          {% if cell.label %}<div class="c-infostack__label" data-copy>{{ cell.label }}</div>{% endif %}
+          {% for value in cell.lines %}
+            <div class="c-infostack__value" data-body data-copy>{{ value }}</div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endmacro %}
+
+{% macro info_columns(cells) %}
+  <div class="c-infocols" data-block="info_bar">
+    {% for cell in cells %}
+      <div class="c-infocols__col">
+        {% if cell.label %}<div class="c-infocols__label" data-copy>{{ cell.label }}</div>{% endif %}
+        {% for value in cell.lines %}
+          <div class="c-infocols__value" data-body data-copy>{{ value }}</div>
+        {% endfor %}
+      </div>
+    {% endfor %}
+  </div>
+{% endmacro %}
+
+{% macro info_buttons(cells) %}
+  <div class="c-infobtns" data-block="info_bar">
+    {% for cell in cells %}
+      {# The link cell is the call to action and gets the solid fill; the rest
+         stay outlined so one thing on the row reads as the thing to press. #}
+      <div class="c-infobtns__btn {{ 'is-primary' if cell.icon == 'web' }}">
+        <span class="c-infobtns__icon">{{ cell.svg }}</span>
+        <div>
+          {% if cell.label %}<div class="c-infobtns__label" data-copy>{{ cell.label }}</div>{% endif %}
+          {% for value in cell.lines %}
+            <div class="c-infobtns__value" data-body data-copy>{{ value }}</div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endmacro %}
+
 {% macro info_bar(cells) %}
   <div class="c-infobar" data-block="info_bar">
     {% for cell in cells %}

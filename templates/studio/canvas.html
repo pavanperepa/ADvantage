@@ -78,6 +78,14 @@
         {% elif block.role.value == "stat_chips" %}{{ c.stat_chips(block) }}
         {% endif %}
       {% endfor %}
+      {# `stack` puts the contact details in the copy column rather than in a
+         band along the foot — the one variant that changes placement, not just
+         furniture. Inside the stack it is measured like any other block. #}
+      {% if info_cells and info_variant == "stack" %}
+        <div data-region="footer" data-audit data-field="contact stack">
+          {{ c.info_stack(info_cells) }}
+        </div>
+      {% endif %}
       {# Inside the stack, so the fit engine measures it like any other block
          rather than having it overlap whatever the engine settled on. #}
       {% if qr_uri %}<img class="c-qr" src="{{ qr_uri }}" alt="" data-qr
@@ -87,10 +95,13 @@
 
     {# Bar and banner share one bottom stack so their heights cannot disagree.
        Positioning the bar with a guessed banner offset hid it behind the banner. #}
-    <div class="canvas__bottom">
-      {% if info_cells %}
-        <div class="canvas__bar" data-region="footer" data-audit data-field="contact bar">
-          {{ c.info_bar(info_cells) }}
+    <div class="canvas__bottom {{ 'is-bare' if info_variant != 'bar' }}">
+      {% if info_cells and info_variant != "stack" %}
+        <div class="canvas__bar"
+             data-region="footer" data-audit data-field="contact bar">
+          {% if info_variant == "columns" %}{{ c.info_columns(info_cells) }}
+          {% elif info_variant == "buttons" %}{{ c.info_buttons(info_cells) }}
+          {% else %}{{ c.info_bar(info_cells) }}{% endif %}
         </div>
       {% endif %}
       {% if banner_block %}

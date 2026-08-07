@@ -440,6 +440,7 @@ class PosterComposer:
         plate_file: str | None = None,
         subject_files: list[str] | None = None,
         bullets_variant: str = "auto",
+        info_variant: str = "bar",
         campaign: str | None = None,
         source: str | None = None,
         include_qr: bool = False,
@@ -552,6 +553,7 @@ class PosterComposer:
                 "body_font": font_stack["body"],
                 "dot_colors": DOT_COLORS,
                 "bullets_variant": bullets_variant,
+                "info_variant": info_variant,
                 "qr_uri": qr.data_uri if qr else None,
                 # Absolute pixels, deliberately outside the --s design scale:
                 # whether a code scans is a property of real pixels, not of how

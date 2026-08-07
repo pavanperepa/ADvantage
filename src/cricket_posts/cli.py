@@ -258,6 +258,7 @@ def run_compose(
     plate: str | None = None,
     subject: str | None = None,
     bullets: str = "auto",
+    info: str = "bar",
     campaign: str | None = None,
     source: str | None = None,
     qr: bool = False,
@@ -291,6 +292,7 @@ def run_compose(
             plate_file=plate,
             subject_files=subjects or None,
             bullets_variant=bullets,
+            info_variant=info,
             campaign=campaign,
             source=source,
             include_qr=qr,
@@ -673,6 +675,15 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     compose.add_argument(
+        "--info",
+        choices=["bar", "stack", "columns", "buttons"],
+        default="bar",
+        help=(
+            "How contact details are set. 'stack' also moves them into the copy "
+            "column instead of a band along the foot."
+        ),
+    )
+    compose.add_argument(
         "--qr",
         action="store_true",
         help="Print a QR on the poster. For flyers and signage, not feed posts.",
@@ -793,6 +804,7 @@ def main() -> None:
             plate=args.plate,
             subject=args.subject,
             bullets=args.bullets,
+            info=args.info,
             campaign=args.campaign,
             source=args.source,
             qr=args.qr,
