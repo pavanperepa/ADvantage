@@ -11,8 +11,8 @@
       ],
       "seed": 1800976199,
       "note": "Background-only geometric plate, brand palette locked at generation.",
-      "has_subjects": false,
-      "content_types": []
+      "content_types": [],
+      "has_subjects": false
     },
     {
       "file": "collage-left-column-01.png",
@@ -20,11 +20,24 @@
       "intents": [],
       "seed": 1932308921,
       "note": "Seed plate. Subjects are baked in; background-only plates supersede it.",
-      "has_subjects": false,
       "content_types": [
         "camp",
         "coaching"
-      ]
+      ],
+      "has_subjects": false
+    },
+    {
+      "file": "dusk-floodlit-bottom-01.png",
+      "archetype": "bottom_third",
+      "intents": [
+        "bold_attention",
+        "youthful_energetic",
+        "modern_sleek"
+      ],
+      "seed": 1591036652,
+      "note": "Floodlit hall at dusk with yellow/blue motion streaks up top, large calm near-black field below. First plate for the bottom_third archetype, which had none.",
+      "content_types": [],
+      "has_subjects": false
     },
     {
       "file": "geometric-center-frame-01.png",
@@ -32,8 +45,8 @@
       "intents": [],
       "seed": 1525146270,
       "note": "Corner-weighted frame, calm centre. For information-only announcements.",
-      "has_subjects": false,
-      "content_types": []
+      "content_types": [],
+      "has_subjects": false
     },
     {
       "file": "kids-celebration-01.png",
@@ -45,11 +58,11 @@
       ],
       "seed": 1366081044,
       "note": "Kids baked in along the bottom. Stand-in until real student cut-outs exist.",
-      "has_subjects": false,
       "content_types": [
         "camp",
         "coaching"
-      ]
+      ],
+      "has_subjects": false
     },
     {
       "file": "lane-scene-machine-01.png",
@@ -61,11 +74,11 @@
       ],
       "seed": 763217068,
       "note": "Square 2048 SCENE plate: bowling machine large in the near foreground, batsman small at the far end, one perspective. Cast is baked in, so it is not reusable - but the scale and lighting between figure and room come free, which compositing had to reconstruct by hand.",
-      "has_subjects": true,
       "content_types": [
         "lane_rental",
         "coaching"
-      ]
+      ],
+      "has_subjects": true
     },
     {
       "file": "lane-square-navy-01.png",
@@ -77,8 +90,8 @@
       ],
       "seed": 1244884500,
       "note": "Square 2048. Calm navy left for copy, photographic indoor lane right. No text, no people.",
-      "has_subjects": false,
-      "content_types": []
+      "content_types": [],
+      "has_subjects": false
     },
     {
       "file": "playful-center-frame-01.png",
@@ -90,11 +103,11 @@
       ],
       "seed": 203404945,
       "note": "Soft blobs, confetti and arcs framing a calm cream centre. Warm, non-competitive.",
-      "has_subjects": false,
       "content_types": [
         "camp",
         "coaching"
-      ]
+      ],
+      "has_subjects": false
     }
   ]
 }

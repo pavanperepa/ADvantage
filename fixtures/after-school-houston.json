@@ -1,0 +1,60 @@
+{
+  "brand": {
+    "name": "22 YARDS HOUSTON CRICKET FACILITY",
+    "tagline": "",
+    "location": "Houston, TX 77082",
+    "contact_lines": [],
+    "palette": {
+      "ink": "#080D1F",
+      "surface": "#F4F7FF",
+      "accent": "#FFD100",
+      "highlight": "#2E7BFF"
+    },
+    "logo_path": "assets/brand/22yards-houston.png",
+    "registration_url": "https://axon22yards.com/join?location=houston"
+  },
+  "content": {
+    "content_type": "coaching",
+    "organization": "22 YARDS",
+    "eyebrow": "HOUSTON\nCRICKET FACILITY",
+    "title": "SCHOOL'S OUT. BATS OUT.",
+    "subtitle": "THE AFTER-SCHOOL CRICKET CLUB",
+    "tagline": "NEW PLAYERS WELCOME EVERY WEEK.",
+    "price_line": "TERM PASS $140",
+    "detail_lines": [
+      "EVERY THURSDAY",
+      "3:15 - 4:45 PM",
+      "AGES 6-13"
+    ],
+    "location_lines": [
+      "22 Yards Houston Cricket Facility",
+      "14929 Westpark Dr, Suite 300",
+      "Houston, TX 77082"
+    ],
+    "contacts": [
+      {
+        "display_text": "+1 (713) 498-2155"
+      },
+      {
+        "display_text": "+1 (737) 323-0270"
+      }
+    ],
+    "sections": [
+      {
+        "heading": "",
+        "text": "",
+        "items": [
+          "COACHED IN SMALL GROUPS",
+          "ALL EQUIPMENT PROVIDED",
+          "INDOORS, SO IT NEVER RAINS OFF",
+          "A REAL MATCH EVERY FOURTH WEEK"
+        ]
+      }
+    ],
+    "cta_lines": [
+      "GRAB A SPOT",
+      "axon22yards.com/join",
+      "CALL OR TEXT"
+    ]
+  }
+}

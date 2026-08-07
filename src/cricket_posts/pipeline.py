@@ -442,13 +442,18 @@ class PosterComposer:
         bullets_variant: str = "auto",
         campaign: str | None = None,
         source: str | None = None,
+        include_qr: bool = False,
     ) -> ComposeResult:
         blocks = derive_blocks(content, brand)
         logo_path = logo_path or brand_logo(brand)
         scan_url = tracked_url(
             brand.registration_url or "", campaign=campaign, source=source
         )
-        qr = qr_code(scan_url)
+        # Off by default. A QR earns its space on a printed flyer or a banner
+        # in the facility; on a feed post it asks someone to scan a code with
+        # the phone that is already displaying it. The tagged link belongs in
+        # the caption, where it is one tap.
+        qr = qr_code(scan_url) if include_qr else None
 
         plate = select_plate(
             self.plate_bank,

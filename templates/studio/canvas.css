@@ -71,6 +71,11 @@ body {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-content: start;
+  /* Hug content, do not stretch. Grid items default to filling their row, so a
+     short block sharing a row with a tall one grows to match it — which turned
+     the pill chips into tall ellipses with the text spilling out of the top,
+     because a 999px radius on a stretched box is an oval. */
+  align-items: start;
   column-gap: calc(var(--gap) * 1.6);
 }
 

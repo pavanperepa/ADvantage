@@ -260,6 +260,7 @@ def run_compose(
     bullets: str = "auto",
     campaign: str | None = None,
     source: str | None = None,
+    qr: bool = False,
 ) -> None:
     subjects = [name.strip() for name in (subject or "").split(",") if name.strip()]
     from .pipeline import PosterComposer
@@ -292,6 +293,7 @@ def run_compose(
             bullets_variant=bullets,
             campaign=campaign,
             source=source,
+            include_qr=qr,
         )
     finally:
         composer.renderer.close()
@@ -315,9 +317,10 @@ def run_compose(
     else:
         print("Copy      : every value renders verbatim")
     if result.scan_url:
-        # Printed because it belongs in the caption and the link-in-bio too,
-        # not only inside the QR — a scan-only tag misses everyone who taps.
-        print(f"Scan/link : {result.scan_url}")
+        # This is the whole point of the tag on a feed post: it goes in the
+        # caption and the link-in-bio, where it is one tap on the phone the
+        # reader already has in their hand.
+        print(f"Caption   : {result.scan_url}")
     if result.dead.box is not None:
         box = result.dead.box
         print(
@@ -439,8 +442,15 @@ def run_variants(input_path: Path, count: int, logo: Path | None, output: Path |
     print(f"\nSheet     : {sheet_path}")
 
 
-def run_harvest(source: Path, name: str | None, max_passes: int, force: bool) -> None:
-    from PIL import Image
+def run_harvest(
+    source: Path,
+    name: str | None,
+    max_passes: int,
+    force: bool,
+    dry_run: bool = False,
+    overlay: Path | None = None,
+) -> None:
+    from PIL import Image, ImageDraw
 
     from .layerize import harvest
     from .layouts import LAYOUT_DIR, LayoutBank, template_from_blocks
@@ -470,10 +480,10 @@ def run_harvest(source: Path, name: str | None, max_passes: int, force: bool) ->
             return
         print("Banking anyway because --force was given.")
 
-    LAYOUT_DIR.mkdir(parents=True, exist_ok=True)
+    import io
+
     plate_file = f"{label}.png"
-    (LAYOUT_DIR / plate_file).write_bytes(result.base_image)
-    with Image.open(LAYOUT_DIR / plate_file) as plate:
+    with Image.open(io.BytesIO(result.base_image)) as plate:
         width, height = plate.size
 
     template = template_from_blocks(
@@ -484,13 +494,55 @@ def run_harvest(source: Path, name: str | None, max_passes: int, force: bool) ->
         height=height,
         note=f"Harvested from {source.name} in {result.passes} pass(es).",
     )
+
+    if overlay:
+        # The numbers say where the slots are; only a picture says whether that
+        # is the arrangement a designer would recognise.
+        with Image.open(source) as original:
+            canvas = original.convert("RGB").resize((width, height))
+        painter = ImageDraw.Draw(canvas, "RGBA")
+        for slot in template.slots:
+            box = slot.box
+            painter.rectangle(
+                (box.left, box.top, box.right, box.bottom),
+                outline="#FF2D55" if slot.found_on_pass > 1 else "#00E5FF",
+                width=2,
+            )
+            painter.text((box.left + 3, box.top + 2), slot.role.value, fill="#00E5FF")
+        overlay.parent.mkdir(parents=True, exist_ok=True)
+        canvas.save(overlay)
+        print(f"\nOverlay   : {overlay}")
+
+    if dry_run:
+        print("\nDry run — nothing written to the layout bank.")
+        _print_template(template)
+        return
+
+    LAYOUT_DIR.mkdir(parents=True, exist_ok=True)
+    (LAYOUT_DIR / plate_file).write_bytes(result.base_image)
     LayoutBank.load().add(template).save()
 
     print(f"\nPlate     : {LAYOUT_DIR / plate_file} ({width}x{height})")
-    print(f"Template  : {label} — {len(template.slots)} slot(s)")
+    _print_template(template)
+
+
+def _print_template(template) -> None:
+    print(f"Template  : {template.name} — {len(template.slots)} slot(s) "
+          f"in {template.width}x{template.height}")
+    print("Slots:")
+    for slot in sorted(template.slots, key=lambda item: item.order):
+        box = slot.box
+        print(
+            f"  {slot.role.value:<11} <- {slot.source_role:<11} "
+            f"({box.left:.0f},{box.top:.0f}) {box.width:.0f}x{box.height:.0f} "
+            f"{slot.font_size:.0f}px {slot.font_family:<15} {slot.color} "
+            f"{slot.alignment}"
+            + ("  <- late" if slot.found_on_pass > 1 else "")
+        )
+    print("Bands:")
     for role, box in template.bands():
         print(
-            f"  {role.value:<10} ({box.left:.0f},{box.top:.0f}) "
+            f"  {role.value:<11} ({box.left:.0f},{box.top:.0f}) "
             f"{box.width:.0f}x{box.height:.0f}"
         )
     suspect = template.suspect_slots()
@@ -621,6 +673,11 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     compose.add_argument(
+        "--qr",
+        action="store_true",
+        help="Print a QR on the poster. For flyers and signage, not feed posts.",
+    )
+    compose.add_argument(
         "--campaign",
         help="Campaign tag for the QR link, e.g. foundation-aug. Enables attribution.",
     )
@@ -659,6 +716,16 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=4,
         help="Erase passes allowed before the harvest is rejected.",
+    )
+    harvest.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Inspect the harvest without writing a plate or touching the bank.",
+    )
+    harvest.add_argument(
+        "--overlay",
+        type=Path,
+        help="Draw the detected slots over the source, to judge them by eye.",
     )
     harvest.add_argument(
         "--force",
@@ -728,13 +795,21 @@ def main() -> None:
             bullets=args.bullets,
             campaign=args.campaign,
             source=args.source,
+            qr=args.qr,
         )
     elif args.command == "bank":
         run_bank_index(args.kind)
     elif args.command == "cutout":
         run_cutout(args.input, args.tags, args.limit)
     elif args.command == "harvest":
-        run_harvest(args.input, args.name, args.max_passes, args.force)
+        run_harvest(
+            args.input,
+            args.name,
+            args.max_passes,
+            args.force,
+            dry_run=args.dry_run,
+            overlay=args.overlay,
+        )
     elif args.command == "variants":
         run_variants(args.input, args.count, args.logo, args.output)
     elif args.command == "validate":

@@ -6,6 +6,7 @@ import json
 
 import pytest
 
+from cricket_posts.archetypes import ArchetypeId
 from cricket_posts.blocks import derive_blocks
 from cricket_posts.models import BrandProfile, ColorMode, StyleIntent, parse_editable_content
 from cricket_posts.pipeline import PosterComposer, sample_zone_color
@@ -288,10 +289,9 @@ def test_the_printed_link_and_the_scanned_link_differ_on_purpose(composer, tmp_p
     assert printed == ["axon22yards.com/join"], "printed link must stay typeable"
     assert "utm_campaign=aug" in result.scan_url
     assert "location=houston" in result.scan_url
-    # The tagged URL must never leak onto the poster itself.
-    assert "utm_campaign" not in result.html.read_text(encoding="utf-8").replace(
-        result.html.read_text(encoding="utf-8").split("data:image")[1].split('"')[0], ""
-    )
+    # The tagged URL is for the caption. Nobody should ever have to read a
+    # query string off a poster, so it must not reach the artwork.
+    assert "utm_campaign" not in result.html.read_text(encoding="utf-8")
 
 
 def test_no_campaign_still_renders_and_still_carries_the_destination(composer, tmp_path):
@@ -301,3 +301,65 @@ def test_no_campaign_still_renders_and_still_carries_the_destination(composer, t
 
     assert result.scan_url == brand.registration_url
     assert result.missing_copy == []
+
+
+def test_a_feed_post_carries_no_qr_by_default(composer, tmp_path):
+    """Scanning a code with the phone that is displaying it is friction.
+
+    The QR belongs on a printed flyer or facility signage; on a feed post the
+    tagged link goes in the caption, one tap away.
+    """
+    content, brand = load("foundation-program-houston.json")
+
+    plain = composer.compose(
+        content, brand, tmp_path / "social.png", campaign="aug", source="instagram"
+    )
+    printed = composer.compose(
+        content,
+        brand,
+        tmp_path / "flyer.png",
+        campaign="aug",
+        source="instagram",
+        include_qr=True,
+    )
+
+    assert "data:image/png" not in plain.html.read_text(encoding="utf-8")
+    assert "data:image/png" in printed.html.read_text(encoding="utf-8")
+    # The tag is still produced either way — the caption needs it regardless.
+    assert plain.scan_url == printed.scan_url
+
+
+def test_two_column_layouts_do_not_stretch_their_blocks(composer, tmp_path):
+    """Grid items fill their row by default, and a pill is not a pill when tall.
+
+    `bottom_third` is the only two-column archetype and had no plate behind it
+    until now, so this went unnoticed: a short chip row sharing a row with the
+    price card grew to match it, and a 999px radius on a stretched box renders
+    as an ellipse with the text spilling out of the top.
+    """
+    content, brand = load("after-school-houston.json")
+
+    result = composer.compose(
+        content,
+        brand,
+        tmp_path / "twocol.png",
+        archetype_id=ArchetypeId.BOTTOM_THIRD,
+        plate_file="dusk-floodlit-bottom-01.png",
+    )
+
+    session = composer.renderer._session()
+    page = session.browser.new_page(viewport={"width": 800, "height": 600})
+    try:
+        page.goto(result.html.resolve().as_uri(), wait_until="networkidle")
+        chips = page.evaluate(
+            """() => [...document.querySelectorAll('.c-stats__chip')].map(el => {
+                 const b = el.getBoundingClientRect();
+                 return {w: b.width, h: b.height};
+               })"""
+        )
+    finally:
+        page.close()
+
+    assert chips, "expected the detail lines to render as chips"
+    for chip in chips:
+        assert chip["h"] < chip["w"] / 2, f"chip stretched into an ellipse: {chip}"
