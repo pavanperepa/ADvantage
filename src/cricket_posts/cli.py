@@ -353,6 +353,55 @@ def run_compose(
         )
 
 
+def run_restock(
+    archetype_id: ArchetypeId,
+    *,
+    name: str,
+    scene: str,
+    mood: str,
+    intents: list[str],
+    content_types: list[str],
+    attempts: int,
+    speed: str,
+    brand_fixture: Path | None,
+    auto_accept: bool,
+) -> None:
+    from .archetypes import ARCHETYPES
+    from .plate_studio import accept, generate
+
+    palette = BrandProfile(name="Cricket Academy").palette
+    if brand_fixture:
+        payload = json.loads(brand_fixture.read_text(encoding="utf-8"))
+        palette = BrandProfile.model_validate(payload["brand"]).palette
+
+    print(f"Brief     : {ARCHETYPES[archetype_id].negative_space_brief}\n")
+    found = generate(
+        archetype_id,
+        palette,
+        scene=scene,
+        mood=mood,
+        intents=intents,
+        content_types=content_types,
+        name=name,
+        attempts=attempts,
+        rendering_speed=speed,
+    )
+    if found is None:
+        print(
+            f"\nNo candidate honoured the brief in {attempts} attempt(s). "
+            "Tighten the brief or the scene rather than spending more."
+        )
+        return
+
+    candidate, verdict = found
+    print(f"\nStaged    : {candidate}")
+    if not auto_accept:
+        print("Review it, then: cricket-posts accept --file " + candidate.name)
+        return
+    entry = accept(candidate)
+    print(f"Banked    : {entry.file} as {entry.archetype.value} (seed {entry.seed})")
+
+
 def run_bank_index(kind: str) -> None:
     if kind == "plates":
         from .plates import index_plates
@@ -432,8 +481,9 @@ def run_variants(input_path: Path, count: int, logo: Path | None, output: Path |
         if result.clipped_copy:
             flags.append(f"CLIPPED {len(result.clipped_copy)}")
         print(
-            f"{index:2}. {spec.plate_file:<30} {spec.intent.value:<20} "
-            f"{spec.color_mode.value:<6} {spec.bullets:<8} "
+            f"{index:2}. {result.archetype.id.value:<14} {spec.plate_file:<34} "
+            f"{spec.intent.value:<20} {spec.color_mode.value:<6} "
+            f"{spec.bullets:<8} {spec.info:<11} "
             f"fill {result.fit.fill:.0%} dead {result.dead.fraction:4.1%}"
             f"{'' if result.dead.ok else ' HOLE'} {' '.join(flags)}"
         )
@@ -453,7 +503,11 @@ def run_variants(input_path: Path, count: int, logo: Path | None, output: Path |
         sheet.paste(thumb, (x + (cell - thumb.width) // 2, y + 8))
         painter.text(
             (x + 10, y + cell + 6),
-            f"{index + 1}. {spec.intent.value} / {spec.color_mode.value} / {spec.bullets}",
+            # Archetype first: it is the axis this sheet exists to show, and a
+            # label naming only intent and bullets hides the very thing that
+            # makes two of these posters different.
+            f"{index + 1}. {result.archetype.id.value} / {spec.intent.value}"
+            f" / {spec.color_mode.value} / {spec.bullets} / {spec.info}",
             fill="#E8ECF4",
         )
     sheet_path = out_dir / "contact-sheet.png"
@@ -739,6 +793,63 @@ def build_parser() -> argparse.ArgumentParser:
     bank = subparsers.add_parser("bank", help="Rebuild an asset manifest.")
     bank.add_argument("kind", choices=["plates", "subjects"])
 
+    plate_gen = subparsers.add_parser(
+        "restock",
+        help="Generate background plates for an archetype, measured before you look.",
+    )
+    plate_gen.add_argument(
+        "--archetype",
+        required=True,
+        choices=[archetype.value for archetype in ArchetypeId],
+    )
+    plate_gen.add_argument("--name", required=True, help="Filename stem for the candidates.")
+    plate_gen.add_argument("--scene", required=True, help="What the artwork shows.")
+    plate_gen.add_argument(
+        "--mood",
+        default="high-energy youth sports marketing, premium but playful",
+    )
+    plate_gen.add_argument(
+        "--intents",
+        default="",
+        help="Comma-separated style intents this plate suits. Empty means any.",
+    )
+    plate_gen.add_argument("--content-types", default="coaching")
+    plate_gen.add_argument(
+        "--attempts",
+        type=int,
+        default=3,
+        help="Stop as soon as one candidate measures right, or after this many.",
+    )
+    plate_gen.add_argument("--speed", default="TURBO", choices=["TURBO", "DEFAULT", "QUALITY"])
+    plate_gen.add_argument(
+        "--brand",
+        type=Path,
+        help="Fixture whose palette locks the plate's colours.",
+    )
+    plate_gen.add_argument(
+        "--accept",
+        action="store_true",
+        help="Bank the winner immediately instead of leaving it staged for review.",
+    )
+
+    accept_plate = subparsers.add_parser(
+        "accept",
+        help="Bank a staged plate candidate once you have looked at it.",
+    )
+    accept_plate.add_argument("--file", required=True, help="Candidate filename in staging.")
+    accept_plate.add_argument("--note", default="", help="Why this one was kept.")
+
+    mirror = subparsers.add_parser(
+        "mirror",
+        help="Flip a plate and bank it as the opposite-handed layout.",
+    )
+    mirror.add_argument(
+        "--file",
+        required=True,
+        help="Plate filename already in the bank, e.g. austin-geometric-left-01.png",
+    )
+    mirror.add_argument("--name", help="Filename for the mirrored plate.")
+
     variants = subparsers.add_parser(
         "variants",
         help="Render several meaningfully different posters from one content file.",
@@ -845,6 +956,30 @@ def main() -> None:
         )
     elif args.command == "bank":
         run_bank_index(args.kind)
+    elif args.command == "restock":
+        run_restock(
+            ArchetypeId(args.archetype),
+            name=args.name,
+            scene=args.scene,
+            mood=args.mood,
+            intents=[v.strip() for v in args.intents.split(",") if v.strip()],
+            content_types=[v.strip() for v in args.content_types.split(",") if v.strip()],
+            attempts=args.attempts,
+            speed=args.speed,
+            brand_fixture=args.brand,
+            auto_accept=args.accept,
+        )
+    elif args.command == "accept":
+        from .plate_studio import STAGING_DIR, accept
+
+        entry = accept(STAGING_DIR / args.file, note=args.note)
+        print(f"Banked    : {entry.file} as {entry.archetype.value} (seed {entry.seed})")
+    elif args.command == "mirror":
+        from .plates import mirror_plate
+
+        entry = mirror_plate(args.file, name=args.name)
+        print(f"Mirrored  : {args.file} -> {entry.file}")
+        print(f"Archetype : {entry.archetype.value}")
     elif args.command == "cutout":
         run_cutout(args.input, args.tags, args.limit)
     elif args.command == "harvest":

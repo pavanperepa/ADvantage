@@ -1,0 +1,57 @@
+{
+  "brand": {
+    "name": "22 YARDS HOUSTON CRICKET FACILITY",
+    "tagline": "",
+    "location": "Houston, TX 77082",
+    "contact_lines": [],
+    "palette": {
+      "ink": "#080D1F",
+      "surface": "#F4F7FF",
+      "accent": "#FFD100",
+      "highlight": "#2E7BFF"
+    },
+    "logo_path": "assets/brand/22yards-houston.png",
+    "registration_url": "https://axon22yards.com/join?location=houston"
+  },
+  "content": {
+    "content_type": "coaching",
+    "organization": "22 YARDS",
+    "eyebrow": "HOUSTON\nJUNIOR PATHWAY",
+    "title": "HARD BALL.\nREAL GAME.",
+    "subtitle": "UNDER 10 SQUAD",
+    "tagline": "PLACES ARE CAPPED AT TWELVE.",
+    "price_line": "TERM PASS $150",
+    "detail_lines": [
+      "AGES 8-10",
+      "THURSDAYS",
+      "4:30 - 6:00 PM"
+    ],
+    "location_lines": [
+      "22 Yards Houston Cricket Facility",
+      "14929 Westpark Dr, Suite 300",
+      "Houston, TX 77082"
+    ],
+    "contacts": [
+      {
+        "display_text": "+1 (713) 498-2155"
+      }
+    ],
+    "sections": [
+      {
+        "heading": "THE PROGRAMME",
+        "text": "",
+        "items": [
+          "HARD BALL INTRODUCTION",
+          "SEAM AND SPIN BASICS",
+          "A REAL MATCH EVERY FOURTH WEEK",
+          "SMALL GROUPS, NAMED COACH"
+        ]
+      }
+    ],
+    "cta_lines": [
+      "GRAB A SPOT",
+      "axon22yards.com/join",
+      "CALL OR TEXT"
+    ]
+  }
+}

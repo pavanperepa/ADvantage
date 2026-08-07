@@ -124,6 +124,39 @@ def generate_from_prompt(
     return Path(_download_result(response, destination, used_json_prompt=False).path)
 
 
+def generate_json_prompt(
+    prompt: dict[str, Any],
+    destination: Path,
+    *,
+    resolution: str = "1792x2240",
+    rendering_speed: str = "TURBO",
+) -> IdeogramResult:
+    """Generate from an already-built structured prompt.
+
+    `generate_studio_art` is bound to a `DesignSpec`, which a background plate
+    has none of — it carries no copy, so there is nothing to plan a design
+    around. The seed comes back on the result and is what makes a promising
+    plate reproducible at a higher rendering speed instead of re-rolled.
+    """
+    api_key = os.getenv("IDEOGRAM_API_KEY")
+    if not api_key:
+        raise RuntimeError("IDEOGRAM_API_KEY is missing. Add it to .env.")
+    response = _request_with_retries(
+        headers={"Api-Key": api_key},
+        files={
+            "json_prompt": (
+                None,
+                json.dumps(prompt, ensure_ascii=False),
+                "application/json",
+            ),
+            "resolution": (None, resolution),
+            "rendering_speed": (None, rendering_speed),
+            "enable_copyright_detection": (None, "true"),
+        },
+    )
+    return _download_result(response, destination, used_json_prompt=True)
+
+
 def _structured_prompt(design: DesignSpec) -> dict[str, Any]:
     focus_boxes = {
         "art_forward": {

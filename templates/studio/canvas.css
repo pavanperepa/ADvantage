@@ -79,6 +79,14 @@ body {
   column-gap: calc(var(--gap) * 1.6);
 }
 
+/* `align-self: flex-start` is a flex property and does nothing to a grid item's
+   width, so the price card — which hugs its content everywhere else — stretched
+   to the full column and read as a mostly-empty box with a figure in the
+   corner. The grid spelling of the same intent. */
+.canvas__copy.is-two-col .c-price,
+.canvas__copy.is-two-col .c-badge,
+.canvas__copy.is-two-col .c-ribbon { justify-self: start; }
+
 /* --- components --------------------------------------------------------- */
 
 .c-lockup { display: flex; align-items: center; gap: calc(20px * var(--s)); }
@@ -522,7 +530,13 @@ body {
 
 .arch-center_stage .c-badge,
 .arch-center_stage .c-chip,
+.arch-center_stage .c-price,
+.arch-center_stage .c-bullets,
 .arch-center_stage .c-ribbon { align-self: center; text-align: center; }
+/* The card centres; its contents stay left-aligned against each other, because
+   a label sitting centred over a figure of a different width reads as drift
+   rather than as alignment. */
+.arch-center_stage .c-price { align-items: center; }
 
 .arch-center_stage .c-paragraph { max-width: 88%; margin: 0 auto; }
 .arch-center_stage .c-paragraph p { text-align: center; }
@@ -787,3 +801,9 @@ body {
 .arch-top_band .canvas__stack { align-content: start; }
 .arch-top_band .c-lockup,
 .arch-top_band .c-headline { grid-column: 1 / -1; }
+/* The selling points and the short facts run the full width too. Half a row of
+   four claims leaves the other half empty, and the space that buys back is
+   what lets the fit engine promote the age and the time — which on an
+   age-band poster are the two things a parent came to read. */
+.arch-top_band .c-bullets,
+.arch-top_band .c-stats { grid-column: 1 / -1; }

@@ -293,7 +293,24 @@ def dead_space(freespace: FreeSpaceMap, occupied: list[Rect]) -> DeadSpace:
 #: of plate rebuilds the whole picture; a change of bullet treatment restyles
 #: one block. Weighting them equally produces six posters that differ only in
 #: details a viewer never notices.
-AXIS_WEIGHTS = {"plate_file": 3.0, "intent": 2.0, "color_mode": 1.5, "bullets": 1.0}
+#:
+#: `info` ranks above `bullets` because it can move the contact details to a
+#: different part of the page rather than merely restyling them, and a reader
+#: notices where a thing is long before they notice what it is wearing.
+AXIS_WEIGHTS = {
+    "plate_file": 3.0,
+    "intent": 2.0,
+    "color_mode": 1.5,
+    "info": 1.5,
+    "bullets": 1.0,
+}
+
+#: Contact treatments safe to offer unattended. `columns` and `buttons` are
+#: excluded because they paint straight onto the plate, and whether that is
+#: legible depends on the plate — a question `compose` answers per poster and a
+#: batch has no way to ask. Offering them here would put unreadable posters on
+#: a contact sheet meant for choosing between.
+VARIANT_INFO = ["bar", "stack", "icon_cards", "slab"]
 
 
 @dataclass(frozen=True)
@@ -304,6 +321,7 @@ class VariantSpec:
     intent: StyleIntent
     color_mode: ColorMode
     bullets: str
+    info: str = "bar"
 
     def distance(self, other: "VariantSpec") -> float:
         return sum(
@@ -342,11 +360,18 @@ def variant_specs(
         return []
 
     candidates = [
-        VariantSpec(plate_file=plate, intent=intent, color_mode=mode, bullets=style)
+        VariantSpec(
+            plate_file=plate,
+            intent=intent,
+            color_mode=mode,
+            bullets=style,
+            info=contact,
+        )
         for plate in plates
         for intent in (intents or list(StyleIntent))
         for mode in (modes or [ColorMode.DARK, ColorMode.LIGHT])
-        for style in (bullets or ["auto", "rules", "feature"])
+        for style in (bullets or ["auto", "rules", "feature", "checks"])
+        for contact in VARIANT_INFO
     ]
 
     chosen = [candidates[0]]
@@ -471,6 +496,12 @@ class PosterComposer:
                             logo_path=logo_path,
                             plate_file=spec.plate_file,
                             bullets_variant=spec.bullets,
+                            info_variant=spec.info,
+                            # The plate's own tag, so a right-column plate is
+                            # never laid out as a left column. Deriving it
+                            # rather than offering it as a free axis makes the
+                            # pairing coherent by construction.
+                            archetype_id=self.plate_bank.archetype_of(spec.plate_file),
                         ),
                     )
                 )

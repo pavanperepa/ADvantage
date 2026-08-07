@@ -108,6 +108,76 @@
         "coaching"
       ],
       "has_subjects": false
+    },
+    {
+      "file": "collage-left-column-01-mirror.png",
+      "archetype": "right_column",
+      "intents": [],
+      "seed": 1932308921,
+      "note": "Horizontal mirror of collage-left-column-01.png. Seed plate. Subjects are baked in; background-only plates supersede it.",
+      "content_types": [
+        "camp",
+        "coaching"
+      ],
+      "has_subjects": false
+    },
+    {
+      "file": "austin-geometric-left-01-mirror.png",
+      "archetype": "right_column",
+      "intents": [
+        "bold_attention",
+        "professional_clean",
+        "youthful_energetic",
+        "modern_sleek"
+      ],
+      "seed": 1800976199,
+      "note": "Horizontal mirror of austin-geometric-left-01.png. Background-only geometric plate, brand palette locked at generation.",
+      "content_types": [],
+      "has_subjects": false
+    },
+    {
+      "file": "lane-square-navy-01-mirror.png",
+      "archetype": "right_column",
+      "intents": [
+        "bold_attention",
+        "professional_clean",
+        "modern_sleek"
+      ],
+      "seed": 1244884500,
+      "note": "Horizontal mirror of lane-square-navy-01.png. Square 2048. Calm navy left for copy, photographic indoor lane right. No text, no people.",
+      "content_types": [],
+      "has_subjects": false
+    },
+    {
+      "file": "top-band-turf-01.png",
+      "archetype": "top_band",
+      "intents": [
+        "youthful_energetic",
+        "playful_fun",
+        "bright_vibrant"
+      ],
+      "seed": 165019548,
+      "note": "Sunlit ground, brand brush arcs low, ball tracing an arc. First top_band plate; the archetype had none.",
+      "content_types": [
+        "coaching",
+        "camp"
+      ],
+      "has_subjects": false
+    },
+    {
+      "file": "right-nets-01.png",
+      "archetype": "right_column",
+      "intents": [
+        "modern_sleek",
+        "professional_clean",
+        "bold_attention"
+      ],
+      "seed": 1428067396,
+      "note": "Indoor cricket nets down the lane, navy field right for copy. First native right_column plate; the mirrors were stand-ins.",
+      "content_types": [
+        "coaching"
+      ],
+      "has_subjects": false
     }
   ]
 }

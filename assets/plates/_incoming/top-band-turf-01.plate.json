@@ -1,0 +1,18 @@
+{
+  "archetype": "top_band",
+  "intents": [
+    "youthful_energetic",
+    "playful_fun",
+    "bright_vibrant"
+  ],
+  "content_types": [
+    "coaching",
+    "camp"
+  ],
+  "seed": 165019548,
+  "resolution": "1792x2240",
+  "rendering_speed": "TURBO",
+  "scene": "The lower half is a bright outdoor cricket ground in warm late-afternoon light: mown green turf running to a soft-focus treeline, with broad sweeping dry-brush paint strokes in golden yellow and bright blue arcing across it, and a red leather cricket ball trailing a dotted arc through the air. The artwork runs off the bottom edge of the frame.",
+  "mood": "high-energy youth sports marketing, premium but playful",
+  "iou": 0.8
+}

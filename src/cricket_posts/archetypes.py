@@ -229,7 +229,12 @@ ARCHETYPES: dict[ArchetypeId, Archetype] = {
             "half, and let the artwork run off the bottom edge of the frame rather "
             "than stopping short of it and leaving a strip of background beneath."
         ),
-        expected_region=(0.05, 0.05, 0.95, 0.46),
+        # Runs to half height rather than stopping at 0.46. The brief asks for a
+        # calm upper *half*, so trimming the zone above where the artwork
+        # actually starts throws away room the plate was generated to provide —
+        # and the block that loses out is the optional one, which on an
+        # age-band poster is the age and the session time.
+        expected_region=(0.05, 0.05, 0.95, 0.50),
         columns=2,
         # Runs to the bottom edge on purpose. A figure stopping short leaves a
         # calm strip under the artwork, which measurement then offers to

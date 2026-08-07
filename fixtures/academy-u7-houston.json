@@ -1,0 +1,57 @@
+{
+  "brand": {
+    "name": "22 YARDS HOUSTON CRICKET FACILITY",
+    "tagline": "",
+    "location": "Houston, TX 77082",
+    "contact_lines": [],
+    "palette": {
+      "ink": "#080D1F",
+      "surface": "#F4F7FF",
+      "accent": "#FFD100",
+      "highlight": "#2E7BFF"
+    },
+    "logo_path": "assets/brand/22yards-houston.png",
+    "registration_url": "https://axon22yards.com/join?location=houston"
+  },
+  "content": {
+    "content_type": "coaching",
+    "organization": "22 YARDS",
+    "eyebrow": "HOUSTON\nJUNIOR PATHWAY",
+    "title": "FIRST BAT.\nFIRST BALL.",
+    "subtitle": "UNDER 7 STARTERS",
+    "tagline": "NEW STARTERS WELCOME EVERY TERM.",
+    "price_line": "TERM PASS $120",
+    "detail_lines": [
+      "AGES 6-7",
+      "SATURDAYS",
+      "10:00 - 11:00 AM"
+    ],
+    "location_lines": [
+      "22 Yards Houston Cricket Facility",
+      "14929 Westpark Dr, Suite 300",
+      "Houston, TX 77082"
+    ],
+    "contacts": [
+      {
+        "display_text": "+1 (713) 498-2155"
+      }
+    ],
+    "sections": [
+      {
+        "heading": "WHAT THEY LEARN",
+        "text": "",
+        "items": [
+          "SOFT BALL, SAFE START",
+          "ONE COACH TO SIX PLAYERS",
+          "ALL EQUIPMENT PROVIDED",
+          "INDOORS, SO IT NEVER RAINS OFF"
+        ]
+      }
+    ],
+    "cta_lines": [
+      "GRAB A SPOT",
+      "axon22yards.com/join",
+      "CALL OR TEXT"
+    ]
+  }
+}

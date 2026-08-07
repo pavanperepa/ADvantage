@@ -1,0 +1,17 @@
+{
+  "archetype": "right_column",
+  "intents": [
+    "modern_sleek",
+    "professional_clean",
+    "bold_attention"
+  ],
+  "content_types": [
+    "coaching"
+  ],
+  "seed": 1428067396,
+  "resolution": "1792x2240",
+  "rendering_speed": "TURBO",
+  "scene": "A full-bleed photograph covering the whole canvas edge to edge with no borders and no white margin: the inside of an indoor CRICKET practice net, looking down the length of the lane. A cricket pitch strip with a white batting crease painted on it, three wooden cricket stumps with bails standing at the far end, black practice netting along both sides, bright industrial ceiling lights. This is cricket only \u2014 absolutely no tennis court, no tennis net across the floor, no tennis balls, no court markings. Broad dry-brush strokes in golden yellow and bright blue sweep diagonally across the lower left. A large flat area of deep navy overlays the right side of the frame.",
+  "mood": "high-energy youth sports marketing, premium but playful",
+  "iou": 0.771
+}

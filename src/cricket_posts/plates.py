@@ -13,6 +13,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from PIL import Image
 from pydantic import BaseModel, ConfigDict, Field
 
 from .archetypes import ArchetypeId
@@ -65,6 +66,13 @@ class PlateBank(BaseModel):
         manifest.parent.mkdir(parents=True, exist_ok=True)
         manifest.write_text(self.model_dump_json(indent=2), encoding="utf-8")
         return manifest
+
+    def archetype_of(self, file: str) -> ArchetypeId | None:
+        """The layout a plate was generated for, by filename."""
+        for entry in self.entries:
+            if entry.file == file:
+                return entry.archetype
+        return None
 
     def candidates(
         self,
@@ -141,6 +149,60 @@ def select_plate(
             if best is None or score > best[0]:
                 best = (score, choice)
     return best[1] if best else None
+
+
+#: Which archetype a plate serves once it has been flipped. Only the handed
+#: layouts change; a centred or banded plate is the same plate mirrored.
+MIRRORED_ARCHETYPE = {
+    ArchetypeId.LEFT_COLUMN: ArchetypeId.RIGHT_COLUMN,
+    ArchetypeId.RIGHT_COLUMN: ArchetypeId.LEFT_COLUMN,
+}
+
+
+def mirror_plate(
+    source_file: str,
+    *,
+    name: str | None = None,
+    root: Path = PLATE_DIR,
+) -> PlateEntry:
+    """Flip a plate horizontally and bank it as the opposite-handed layout.
+
+    Mirroring artwork is normally a bad idea because it reverses lettering and
+    logos. It is safe *here* because of the bank's own invariants: a plate
+    carries no text and no crest by construction, so the two things a flip
+    ruins do not exist on one. That makes a right-hand column available for the
+    cost of a file copy, where the alternative is a generation per plate.
+
+    What it cannot do is make the pair look unrelated. A geometric plate beside
+    its own mirror in one variant sheet reads as the same poster flipped, so the
+    note records the source and that call stays with whoever reviews the sheet.
+    """
+    from PIL import ImageOps
+
+    bank = PlateBank.load(root / "manifest.json")
+    entries = {entry.file: entry for entry in bank.entries}
+    origin = entries.get(source_file)
+    if origin is None:
+        raise ValueError(f"No plate named {source_file!r} in the bank.")
+
+    stem = Path(source_file).stem
+    destination = root / (name or f"{stem}-mirror.png")
+    with Image.open(origin.path(root)) as image:
+        ImageOps.mirror(image).save(destination)
+
+    mirrored = PlateEntry(
+        file=destination.name,
+        archetype=MIRRORED_ARCHETYPE.get(origin.archetype, origin.archetype),
+        intents=list(origin.intents),
+        seed=origin.seed,
+        note=f"Horizontal mirror of {source_file}. {origin.note}".strip(),
+        content_types=list(origin.content_types),
+        has_subjects=origin.has_subjects,
+    )
+    entries[mirrored.file] = mirrored
+    PlateBank(entries=list(entries.values())).save(root / "manifest.json")
+    load_or_analyze(destination)
+    return mirrored
 
 
 def index_plates(root: Path = PLATE_DIR) -> PlateBank:
