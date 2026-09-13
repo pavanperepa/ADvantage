@@ -15,6 +15,7 @@ scope cut.
 from __future__ import annotations
 
 import hashlib
+import os
 import uuid
 from pathlib import Path
 from typing import Any
@@ -25,12 +26,18 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from advantage import (
+    PALETTE_SWATCHES,
+    ActivityStep,
+    BrandPalette,
     CampaignRationale,
     CampaignRequest,
     CampaignResult,
     CreativeFormat,
+    CreativeCritique,
     CreativePlan,
     MetaAdResult,
+    PosterStyle,
+    ReelFeel,
     OrchestratorError,
     PosterAdapterError,
     ReelAdapterError,
@@ -40,10 +47,21 @@ from advantage import (
 from advantage.application.interview import (
     AnswerValidationError,
     apply_answers,
-    enrich_questions,
-    next_questions,
+    plan_interview,
 )
-from advantage.integrations.google_drive import AssetKind, IntakeAsset, IntakeStatus
+from advantage.integrations.google_drive import (
+    AssetKind,
+    DriveAuthenticationError,
+    DriveFolderNotSharedError,
+    DriveIntakeConfig,
+    DriveIntakeError,
+    GoogleDriveClient,
+    IntakeAsset,
+    IntakeStatus,
+    ingest_drive_folder,
+    list_campaign_folders,
+)
+from advantage.integrations.google_oauth import GoogleOAuthError, resolve_google_drive_access_token
 from .renderer import PROJECT_ROOT
 
 # `cli.run_serve` never loads .env (only the one-shot CLI commands and the Meta
@@ -99,6 +117,8 @@ class CampaignRunOut(BaseModel):
     # (e.g. no Meta preview to explain); the UI renders them only when present.
     plan: CreativePlan | None = None
     rationale: CampaignRationale | None = None
+    critique: CreativeCritique | None = None
+    activity: list[ActivityStep] = []
 
 
 class QuestionChoiceOut(BaseModel):
@@ -117,6 +137,17 @@ class QuestionOut(BaseModel):
     choices: list[QuestionChoiceOut] | None
     why: str
     required: bool
+    # An answer the agent drafted from the brief, for the owner to confirm or
+    # edit. None whenever the agent had nothing honest to propose.
+    suggestion: str | list[str] | None = None
+    suggestion_note: str | None = None
+
+
+class AgentInferenceOut(BaseModel):
+    field: str
+    label: str
+    value: str
+    note: str
 
 
 class InterviewIn(BaseModel):
@@ -130,6 +161,12 @@ class InterviewOut(BaseModel):
     questions: list[QuestionOut]
     answers: dict[str, Any]
     ready: bool
+    # What the agent said, what it worked out from the brief by itself, and
+    # where this round sits in the conversation.
+    agent_note: str = ""
+    understood: list[AgentInferenceOut] = []
+    round: int = 1
+    total_rounds: int = 1
 
 
 class CreatePausedOut(BaseModel):
@@ -159,6 +196,8 @@ def _to_out(run_id: str, result: CampaignResult) -> CampaignRunOut:
         ),
         plan=result.plan,
         rationale=result.rationale,
+        critique=result.critique,
+        activity=result.activity,
     )
 
 
@@ -201,11 +240,32 @@ def interview(body: InterviewIn) -> InterviewOut:
         except Exception as exc:
             raise HTTPException(422, str(exc)) from exc
 
-    questions = next_questions(draft, format=body.format)
-    # Rewording is a garnish: enrich_questions returns the deterministic set
-    # unchanged whenever OpenAI is unavailable or answers oddly, so a missing
-    # key or a flaky call can never block the intake flow.
-    questions = enrich_questions(questions, brief_text=body.brief_text or "")
+    # `round` is derived from how many answers the client has already sent
+    # rather than tracked server-side, keeping this endpoint stateless.
+    round_index = 2 if answers else 1
+
+    # The agent reads the brief, fills in what it can, and drafts an answer for
+    # what it still has to ask. It degrades to the plain deterministic
+    # checklist on a missing key, an API failure, or any response it cannot
+    # validate -- so intake never depends on the LLM being reachable.
+    agent_plan = plan_interview(
+        draft,
+        format=body.format,
+        brief_text=body.brief_text or "",
+        round_index=round_index,
+    )
+
+    # Anything the agent worked out for itself is applied on the owner's
+    # behalf and echoed back in `answers`, so the client posts it forward and
+    # the field is never asked about again.
+    if agent_plan.inferred_answers:
+        candidate = {**answers, **agent_plan.inferred_answers}
+        try:
+            apply_answers(draft, candidate)
+        except AnswerValidationError:
+            pass  # already validated per-field in _merge_plan; keep prior answers
+        else:
+            answers = candidate
 
     return InterviewOut(
         questions=[
@@ -220,11 +280,20 @@ def interview(body: InterviewIn) -> InterviewOut:
                 ),
                 why=question.why,
                 required=question.required,
+                suggestion=question.suggestion,
+                suggestion_note=question.suggestion_note,
             )
-            for question in questions
+            for question in agent_plan.questions
         ],
         answers=answers,
-        ready=not questions,
+        ready=not agent_plan.questions,
+        agent_note=agent_plan.agent_note,
+        understood=[
+            AgentInferenceOut(field=i.field, label=i.label, value=i.value, note=i.note)
+            for i in agent_plan.understood
+        ],
+        round=agent_plan.round,
+        total_rounds=agent_plan.total_rounds,
     )
 
 
@@ -278,27 +347,53 @@ def create_campaign(
     poster_style: str | None = Form(None),
     art_direction_notes: str | None = Form(None),
     proof_point: str | None = Form(None),
+    palette: str | None = Form(None),
+    refinement_notes: str | None = Form(None),
     key_benefits: list[str] | None = Form(None),
     logo: UploadFile | None = None,
     footage: list[UploadFile] | None = None,
+    # Alternative to `logo`/`footage`: an owner picked a folder from
+    # GET /drive/folders instead of uploading files directly. When set, it
+    # takes over asset selection entirely and any uploaded files are ignored.
+    drive_folder_id: str | None = Form(None),
 ) -> CampaignRunOut:
     run_id = uuid.uuid4().hex[:12]
     workdir = RUNS_DIR / run_id
     upload_dir = UPLOADS_DIR / run_id
 
     logo_asset: IntakeAsset | None = None
-    if logo is not None and logo.filename:
-        if logo.content_type not in _IMAGE_TYPES:
-            raise HTTPException(422, f"Logo must be PNG, JPEG, or WebP; got {logo.content_type!r}.")
-        logo_asset = _asset_from_upload(logo, upload_dir, kind=AssetKind.LOGO)
-
     footage_assets: list[IntakeAsset] = []
-    for clip in footage or []:
-        if not clip.filename:
-            continue
-        if clip.content_type not in _VIDEO_TYPES:
-            raise HTTPException(422, f"Footage must be MP4/MOV/WebM; got {clip.content_type!r}.")
-        footage_assets.append(_asset_from_upload(clip, upload_dir, kind=AssetKind.VIDEO))
+
+    if drive_folder_id:
+        client = _drive_client()
+        try:
+            receipt = ingest_drive_folder(
+                client, drive_folder_id, upload_dir / "drive", config=DriveIntakeConfig()
+            )
+        except DriveAuthenticationError as exc:
+            raise HTTPException(503, str(exc) + _REAUTHORIZE_HINT) from exc
+        except DriveIntakeError as exc:
+            raise HTTPException(422, str(exc)) from exc
+        imported = receipt.imported
+        footage_assets = [asset for asset in imported if asset.kind == AssetKind.VIDEO]
+        image_assets = [
+            asset for asset in imported if asset.kind in (AssetKind.LOGO, AssetKind.PHOTO)
+        ]
+        logo_asset = image_assets[0] if image_assets else None
+    else:
+        if logo is not None and logo.filename:
+            if logo.content_type not in _IMAGE_TYPES:
+                raise HTTPException(
+                    422, f"Logo must be PNG, JPEG, or WebP; got {logo.content_type!r}."
+                )
+            logo_asset = _asset_from_upload(logo, upload_dir, kind=AssetKind.LOGO)
+
+        for clip in footage or []:
+            if not clip.filename:
+                continue
+            if clip.content_type not in _VIDEO_TYPES:
+                raise HTTPException(422, f"Footage must be MP4/MOV/WebM; got {clip.content_type!r}.")
+            footage_assets.append(_asset_from_upload(clip, upload_dir, kind=AssetKind.VIDEO))
 
     try:
         request = CampaignRequest(
@@ -315,6 +410,8 @@ def create_campaign(
             poster_style=poster_style or None,
             art_direction_notes=art_direction_notes or None,
             proof_point=proof_point or None,
+            palette=palette or None,
+            refinement_notes=refinement_notes or None,
             key_benefits=[b.strip() for b in (key_benefits or []) if b.strip()],
             logo_asset=logo_asset,
             footage_assets=footage_assets,
@@ -336,6 +433,183 @@ def _get_run(run_id: str) -> CampaignResult:
     if result is None:
         raise HTTPException(404, f"No campaign run {run_id!r} (runs don't survive a server restart).")
     return result
+
+
+class PaletteOut(BaseModel):
+    value: str
+    label: str
+    primary: str
+    accent: str
+    ink: str
+
+
+@router.get("/palettes", response_model=list[PaletteOut])
+def list_palettes() -> list[PaletteOut]:
+    """The colour schemes a creative can be generated in.
+
+    Built from PALETTE_SWATCHES so it can never drift from the enum the
+    request model actually validates against.
+    """
+    return [
+        PaletteOut(
+            value=palette.value,
+            label=swatch.label,
+            primary=swatch.primary,
+            accent=swatch.accent,
+            ink=swatch.ink,
+        )
+        for palette, swatch in PALETTE_SWATCHES.items()
+    ]
+
+
+# --- Google Drive intake ----------------------------------------------------
+#
+# Read-only browsing of the owner's "Shared with me" -> "Social Media" folder,
+# and an alternative to uploading files directly. The refresh/access token is
+# never configured in this repo's committed state -- `_drive_client()` turns
+# that (and an expired token) into a clear 503 rather than a 500, pointing at
+# the authorize script. Like `/palettes`, these `/drive/...` literal routes
+# must stay declared before `GET /{run_id}` or they would be captured as a
+# run id lookup.
+
+DRIVE_PARENT_FOLDER_NAME = "Social Media"
+DRIVE_IMPORTS_DIR = PROJECT_ROOT / "output" / "campaign_drive_imports"
+
+# `DriveAuthenticationError` (an expired/invalid token, from a live Drive
+# call) doesn't itself name the fix, unlike `GoogleOAuthError` (no token
+# configured yet at all), whose message already points at the script.
+_REAUTHORIZE_HINT = " Run scripts/intake/google_drive_authorize.py to reconnect it."
+
+
+def _drive_client() -> GoogleDriveClient:
+    try:
+        token = resolve_google_drive_access_token(os.environ)
+    except GoogleOAuthError as exc:
+        raise HTTPException(503, str(exc)) from exc
+    return GoogleDriveClient(token)
+
+
+class DriveFolderOut(BaseModel):
+    id: str
+    name: str
+
+
+class DriveImportIn(BaseModel):
+    folder_id: str
+
+
+class DriveImportAssetOut(BaseModel):
+    source_ref: str
+    name: str
+    kind: AssetKind
+    mime_type: str
+    duration_seconds: float | None
+    status: IntakeStatus
+    reason: str | None
+
+
+@router.get("/drive/folders", response_model=list[DriveFolderOut])
+def list_drive_folders() -> list[DriveFolderOut]:
+    """The campaign subfolders under "Shared with me" -> "Social Media"."""
+    client = _drive_client()
+    try:
+        folders = list_campaign_folders(client, parent_name=DRIVE_PARENT_FOLDER_NAME)
+    except DriveAuthenticationError as exc:
+        raise HTTPException(503, str(exc) + _REAUTHORIZE_HINT) from exc
+    except DriveFolderNotSharedError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except DriveIntakeError as exc:
+        raise HTTPException(502, str(exc)) from exc
+    return [
+        DriveFolderOut(id=folder.id, name=f"{DRIVE_PARENT_FOLDER_NAME} / {folder.name}")
+        for folder in folders
+    ]
+
+
+@router.post("/drive/import", response_model=list[DriveImportAssetOut])
+def import_drive_folder(body: DriveImportIn) -> list[DriveImportAssetOut]:
+    """Preview a Drive folder's contents by actually ingesting it (read-only).
+
+    Downloads through the same sanitizing `ingest_drive_folder` path used by
+    the CLI intake script; nothing here is wired to a campaign run yet.
+    """
+    client = _drive_client()
+    destination = DRIVE_IMPORTS_DIR / uuid.uuid4().hex[:12]
+    try:
+        receipt = ingest_drive_folder(client, body.folder_id, destination)
+    except DriveAuthenticationError as exc:
+        raise HTTPException(503, str(exc) + _REAUTHORIZE_HINT) from exc
+    except DriveIntakeError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    return [
+        DriveImportAssetOut(
+            source_ref=asset.source_ref,
+            name=asset.source_name,
+            kind=asset.kind,
+            mime_type=asset.mime_type,
+            duration_seconds=asset.duration_seconds,
+            status=asset.status,
+            reason=asset.reason,
+        )
+        for asset in receipt.assets
+    ]
+
+
+class RegenerateIn(BaseModel):
+    refinement_notes: str | None = None
+    palette: str | None = None
+    poster_style: str | None = None
+    reel_feel: str | None = None
+
+
+def _parse_enum(enum_cls, value: str | None, field: str):
+    """Validate one optional enum override, listing valid values on failure."""
+    if value is None or not str(value).strip():
+        return None
+    try:
+        return enum_cls(str(value).strip())
+    except ValueError:
+        valid = ", ".join(member.value for member in enum_cls)
+        raise HTTPException(422, f"{field} must be one of: {valid} (got {value!r}).") from None
+
+
+@router.post("/{run_id}/regenerate", response_model=CampaignRunOut, status_code=201)
+def regenerate(run_id: str, body: RegenerateIn) -> CampaignRunOut:
+    """Re-run an existing request with refinements, as a NEW run.
+
+    The original run and its artifact are left untouched, so an owner can
+    regenerate freely without losing the version they already have. Only the
+    supplied overrides are applied; everything else (assets, budget, copy
+    facts) carries over from the original request.
+    """
+    previous = _get_run(run_id)
+
+    overrides: dict[str, Any] = {}
+    if body.refinement_notes and body.refinement_notes.strip():
+        overrides["refinement_notes"] = body.refinement_notes.strip()
+    palette = _parse_enum(BrandPalette, body.palette, "palette")
+    if palette is not None:
+        overrides["palette"] = palette
+    poster_style = _parse_enum(PosterStyle, body.poster_style, "poster_style")
+    if poster_style is not None:
+        overrides["poster_style"] = poster_style
+    reel_feel = _parse_enum(ReelFeel, body.reel_feel, "reel_feel")
+    if reel_feel is not None:
+        overrides["reel_feel"] = reel_feel
+
+    try:
+        request = previous.request.model_copy(update=overrides)
+    except Exception as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+    new_run_id = uuid.uuid4().hex[:12]
+    try:
+        result = run_campaign(request, workdir=RUNS_DIR / new_run_id)
+    except (OrchestratorError, PosterAdapterError, ReelAdapterError) as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+    _RUNS[new_run_id] = result
+    return _to_out(new_run_id, result)
 
 
 @router.get("/{run_id}", response_model=CampaignRunOut)

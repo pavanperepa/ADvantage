@@ -6,6 +6,9 @@ then prepares a paused Meta campaign for human approval. The working 22Yards
 poster studio and Remotion reels are the current proof case and implementation
 foundation.
 
+For hosting, see the [Render deployment guide](docs/RENDER_DEPLOYMENT.md) and
+the repository Blueprint in `render.yaml`.
+
 ## Start here
 
 - `AGENTS.md` — safety, approval, privacy, and verification rules.
@@ -153,9 +156,31 @@ uv sync --group video
 uv run python scripts/demo/create_drive_demo_packet.py
 ```
 
-Upload the files under `output/drive_demo_source/` to a small test folder. After
-completing read-only Google OAuth, keep the short-lived access token only in the
-ignored `.env`, then run:
+Upload the files under `output/drive_demo_source/` to a small test folder. In
+Google Cloud, enable the Drive API, configure the OAuth consent screen/test user,
+and add this exact authorized redirect URI to the OAuth **Web application**
+client:
+
+```text
+http://localhost:8765/oauth2/callback
+```
+
+Put `GOOGLE_DRIVE_OAUTH_CLIENT_ID` and `GOOGLE_DRIVE_OAUTH_CLIENT_SECRET` in the
+ignored `.env` (never in source or shell history), then complete consent once:
+
+```powershell
+uv run python scripts/intake/google_drive_authorize.py
+```
+
+The authorization helper requests only Google's `drive.readonly` scope, checks
+the OAuth state value, receives the result on localhost, and stores the refresh
+token in `.env` without displaying it. The scope can read Drive broadly at the
+provider boundary; this adapter narrows its own behavior to one explicit folder,
+direct children only, and never calls a Drive write endpoint. A production
+deployment must keep each user's refresh token in a secrets manager or encrypted
+server-side store rather than `.env`.
+
+After authorization, run:
 
 ```powershell
 uv run python scripts/intake/google_drive_intake.py --folder "<folder URL or ID>"
@@ -164,8 +189,9 @@ uv run python scripts/intake/google_drive_intake.py --folder "<folder URL or ID>
 The command writes downloaded files and `inventory.json` under the ignored
 `output/drive_intake/` directory. Console output contains counts and hashed
 references, not access tokens, raw Drive IDs, source filenames, or brief content.
-The environment-token path exists for local preflight only; the platform OAuth
-flow must keep per-user refresh tokens in secure server-side storage.
+The command refreshes the short-lived access token automatically. The older
+`GOOGLE_DRIVE_ACCESS_TOKEN` setting remains available only as a manual local
+preflight fallback.
 
 ## CLI
 

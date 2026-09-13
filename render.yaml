@@ -1,0 +1,48 @@
+# yaml-language-server: $schema=https://render.com/schema/render.yaml.json
+
+services:
+  - type: pserv
+    name: advantage-api
+    runtime: docker
+    plan: 1c-2g
+    region: ohio
+    branch: campaign-flow
+    dockerContext: .
+    dockerfilePath: ./Dockerfile.render
+    maxShutdownDelaySeconds: 300
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: IDEOGRAM_API_KEY
+        sync: false
+      - key: GOOGLE_DRIVE_OAUTH_CLIENT_ID
+        sync: false
+      - key: GOOGLE_DRIVE_OAUTH_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_DRIVE_REFRESH_TOKEN
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-5.4
+      - key: GOOGLE_DRIVE_OAUTH_REDIRECT_URI
+        value: http://localhost:8765/oauth2/callback
+      - key: META_API_VERSION
+        value: v24.0
+      - key: REMOTION_BROWSER_EXECUTABLE
+        value: /usr/bin/chromium
+
+  - type: web
+    name: advantage-web
+    runtime: node
+    plan: 0.5c-512mb
+    region: ohio
+    branch: campaign-flow
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: BACKEND_INTERNAL_HOSTPORT
+        fromService:
+          type: pserv
+          name: advantage-api
+          property: hostport

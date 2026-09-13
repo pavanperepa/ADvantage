@@ -6,7 +6,9 @@ import { AnimatePresence, motion } from "motion/react";
 import {
   AlertTriangle,
   Film,
+  FolderOpen,
   ImageIcon,
+  ListChecks,
   Loader2,
   Plus,
   Sparkles,
@@ -21,10 +23,18 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { GenerationProgress } from "@/components/generation-progress";
-import { ApiError, createCampaign, fetchInterviewQuestions } from "@/lib/api";
-import type { CreativeFormat, InterviewAnswers, InterviewQuestion } from "@/lib/types";
+import { ApiError, createCampaign, fetchDriveFolders, fetchInterviewQuestions } from "@/lib/api";
+import { cn } from "@/lib/utils";
+import type {
+  AgentInference,
+  CreativeFormat,
+  DriveFolder,
+  InterviewAnswers,
+  InterviewQuestion,
+} from "@/lib/types";
 
 const ACCEPTED_VIDEO_TYPES = ["video/mp4", "video/quicktime", "video/webm"];
 const ACCEPTED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"];
@@ -73,6 +83,36 @@ export function CampaignForm() {
   const [logo, setLogo] = React.useState<File | null>(null);
   const [footage, setFootage] = React.useState<File[]>([]);
 
+  // Alternative to uploading: pick a folder from the owner's Google Drive
+  // ("Shared with me" -> "Social Media") instead. Degrades silently to the
+  // upload-only UI whenever the folders call fails or Drive isn't connected
+  // -- the owner must always be able to create a campaign by uploading.
+  const [assetSource, setAssetSource] = React.useState<"upload" | "drive">("upload");
+  const [driveFolders, setDriveFolders] = React.useState<DriveFolder[]>([]);
+  const [driveFoldersLoading, setDriveFoldersLoading] = React.useState(true);
+  const [driveAvailable, setDriveAvailable] = React.useState(false);
+  const [selectedDriveFolderId, setSelectedDriveFolderId] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    fetchDriveFolders()
+      .then((folders) => {
+        if (cancelled) return;
+        setDriveFolders(folders);
+        setDriveAvailable(true);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setDriveAvailable(false);
+      })
+      .finally(() => {
+        if (!cancelled) setDriveFoldersLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const [errors, setErrors] = React.useState<FieldErrors>({});
   const [submitError, setSubmitError] = React.useState<string | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
@@ -87,13 +127,25 @@ export function CampaignForm() {
   const [questionErrors, setQuestionErrors] = React.useState<Record<string, string>>({});
   const [interviewLoading, setInterviewLoading] = React.useState(false);
   const [interviewAvailable, setInterviewAvailable] = React.useState(true);
+  // What the agent already worked out from the brief this round: a short
+  // intro line, the facts it applied without asking, and where we are in
+  // the (at most two) rounds of questions. All optional -- an older backend
+  // or a degraded LLM path simply omits them and the form still works.
+  const [agentNote, setAgentNote] = React.useState<string | null>(null);
+  const [understood, setUnderstood] = React.useState<AgentInference[]>([]);
+  const [round, setRound] = React.useState<number | null>(null);
+  const [totalRounds, setTotalRounds] = React.useState<number | null>(null);
 
   function validateBrief(): FieldErrors {
     const next: FieldErrors = {};
     if (!businessName.trim()) next.business_name = "Tell us the business name.";
     if (!briefText.trim()) next.brief_text = "A rough brief helps us write the ad copy.";
-    if (format === "reel" && footage.length === 0) {
+    const usingDriveFolder = assetSource === "drive" && Boolean(selectedDriveFolderId);
+    if (format === "reel" && footage.length === 0 && !usingDriveFolder) {
       next.footage = "Add at least one video clip — a reel needs footage to work with.";
+    }
+    if (assetSource === "drive" && !selectedDriveFolderId) {
+      next.footage = "Pick a Google Drive folder, or switch back to uploading files.";
     }
     return next;
   }
@@ -126,13 +178,25 @@ export function CampaignForm() {
       const nextAnswers = res.answers ?? accumulated;
       setAnswers(nextAnswers);
       setInterviewAvailable(true);
+      setAgentNote(res.agent_note ?? null);
+      setUnderstood(res.understood ?? []);
+      setRound(res.round ?? null);
+      setTotalRounds(res.total_rounds ?? null);
       if (res.ready || res.questions.length === 0) {
         setStep(3);
       } else {
         setQuestions(res.questions);
         const draft: InterviewAnswers = {};
         for (const q of res.questions) {
-          if (nextAnswers[q.id] !== undefined) draft[q.id] = nextAnswers[q.id];
+          if (nextAnswers[q.id] !== undefined) {
+            // Already confirmed in an earlier round -- keep it.
+            draft[q.id] = nextAnswers[q.id];
+          } else if (q.suggestion !== null && q.suggestion !== undefined) {
+            // No answer yet: start from the agent's drafted answer. The
+            // user can edit or clear it freely -- this just saves them
+            // from typing what the agent already worked out.
+            draft[q.id] = q.suggestion;
+          }
         }
         setDraftAnswers(draft);
         setStep(2);
@@ -214,9 +278,13 @@ export function CampaignForm() {
     if (audience.trim()) fd.set("audience", audience.trim());
     if (budgetUsd.trim()) fd.set("budget_usd", budgetUsd.trim());
     fd.set("campaign_days", campaignDays.trim() || "4");
-    if (format === "poster" && logo) fd.set("logo", logo);
-    if (format === "reel") {
-      for (const file of footage) fd.append("footage", file);
+    if (assetSource === "drive" && selectedDriveFolderId) {
+      fd.set("drive_folder_id", selectedDriveFolderId);
+    } else {
+      if (format === "poster" && logo) fd.set("logo", logo);
+      if (format === "reel") {
+        for (const file of footage) fd.append("footage", file);
+      }
     }
 
     // Forward whatever the guided interview collected that the create
@@ -312,8 +380,72 @@ export function CampaignForm() {
             {errors.brief_text && <p className="text-xs text-destructive">{errors.brief_text}</p>}
           </div>
 
+          {driveAvailable && (
+            <div className="space-y-1.5">
+              <Label>Assets</Label>
+              <Tabs
+                value={assetSource}
+                onValueChange={(v) => setAssetSource(v as "upload" | "drive")}
+              >
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="upload" className="gap-1.5">
+                    <Upload className="size-4" /> Upload files
+                  </TabsTrigger>
+                  <TabsTrigger value="drive" className="gap-1.5">
+                    <FolderOpen className="size-4" /> Use my Google Drive
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+          )}
+          {!driveFoldersLoading && !driveAvailable && (
+            <p className="text-xs text-muted-foreground">
+              Google Drive isn&apos;t connected — upload files below instead.
+            </p>
+          )}
+
           <AnimatePresence mode="wait">
-            {format === "poster" ? (
+            {assetSource === "drive" ? (
+              <motion.div
+                key="drive"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-1.5"
+              >
+                <Label>Pick a campaign folder</Label>
+                {driveFolders.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">
+                    No campaign folders found under &quot;Social Media&quot; in your Google
+                    Drive.
+                  </p>
+                ) : (
+                  <div className="space-y-1.5">
+                    {driveFolders.map((folder) => {
+                      const selected = selectedDriveFolderId === folder.id;
+                      return (
+                        <button
+                          key={folder.id}
+                          type="button"
+                          onClick={() => setSelectedDriveFolderId(folder.id)}
+                          className={cn(
+                            "flex w-full items-center gap-2.5 rounded-lg border px-3 py-2.5 text-left text-sm transition-colors",
+                            selected
+                              ? "border-primary bg-primary/5"
+                              : "border-input hover:border-ring",
+                          )}
+                        >
+                          <FolderOpen className="size-4 shrink-0 text-muted-foreground" />
+                          <span className="flex-1 truncate">{folder.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                {errors.footage && <p className="text-xs text-destructive">{errors.footage}</p>}
+              </motion.div>
+            ) : format === "poster" ? (
               <motion.div
                 key="logo"
                 initial={{ opacity: 0, y: 6 }}
@@ -371,6 +503,50 @@ export function CampaignForm() {
 
       {step === 2 && (
         <div className="space-y-4">
+          {agentNote && (
+            <div className="flex items-start gap-2.5 rounded-lg border border-border/70 bg-muted/40 px-4 py-3.5">
+              <Sparkles className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+              <div className="space-y-1">
+                <p className="text-sm">{agentNote}</p>
+                {round != null && totalRounds != null && (
+                  <p className="text-xs text-muted-foreground">
+                    Question round {round} of {totalRounds}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+          {!agentNote && round != null && totalRounds != null && (
+            <p className="text-xs text-muted-foreground">
+              Question round {round} of {totalRounds}
+            </p>
+          )}
+
+          {understood.length > 0 && (
+            <div className="space-y-2.5 rounded-lg border border-border/70 bg-card px-4 py-3.5">
+              <div className="flex items-center gap-2">
+                <ListChecks className="size-4 text-muted-foreground" />
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Already picked up from your brief
+                </span>
+              </div>
+              <ul className="space-y-2">
+                {understood.map((item) => (
+                  <li
+                    key={item.field}
+                    className="flex flex-col gap-0.5 sm:flex-row sm:items-start sm:justify-between sm:gap-3"
+                  >
+                    <div className="space-y-0.5">
+                      <p className="text-sm font-medium">{item.label}</p>
+                      <p className="text-xs text-muted-foreground">{item.note}</p>
+                    </div>
+                    <p className="text-sm sm:max-w-[55%] sm:text-right">{item.value}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {questions.map((q) => (
             <InterviewQuestionField
               key={q.id}
@@ -397,7 +573,7 @@ export function CampaignForm() {
               onClick={handleContinueFromQuestions}
             >
               {interviewLoading && <Loader2 className="size-4 animate-spin" />}
-              Continue
+              Looks good — continue
             </Button>
           </div>
         </div>
@@ -557,15 +733,22 @@ function InterviewQuestionField({
         <div className="flex flex-wrap gap-2">
           {(question.choices ?? []).map((choice) => {
             const selected = value === choice.value;
+            const suggested = question.suggestion === choice.value;
             return (
               <Button
                 key={choice.value}
                 type="button"
                 variant={selected ? "default" : "outline"}
                 size="sm"
+                className="gap-1.5"
                 onClick={() => onChange(question.id, selected ? "" : choice.value)}
               >
                 {choice.label}
+                {suggested && (
+                  <Badge variant="secondary" className="h-4 px-1.5 text-[10px] font-normal">
+                    Suggested
+                  </Badge>
+                )}
               </Button>
             );
           })}
@@ -577,6 +760,10 @@ function InterviewQuestionField({
           values={Array.isArray(value) ? value : []}
           onChange={(v) => onChange(question.id, v)}
         />
+      )}
+
+      {question.suggestion_note && (
+        <p className="text-xs text-muted-foreground italic">{question.suggestion_note}</p>
       )}
 
       {error && <p className="text-xs text-destructive">{error}</p>}

@@ -116,7 +116,7 @@ that approval.
 
 | Integration | Status | Evidence / limitation |
 |---|---|---|
-| Google Drive | Partial | Generic read-only Drive v3 adapter, CLI, neutral demo packet, and 13 synthetic tests are implemented. A live OAuth access token and exact dummy folder URL/ID are still required to record the external list/download receipt. |
+| Google Drive | Partial | Generic read-only Drive v3 adapter, localhost OAuth bootstrap, automatic access-token refresh, CLI, neutral demo packet, and 20 focused Drive/OAuth tests are implemented. User consent and the exact dummy folder URL/ID are still required to record the external list/download receipt. |
 | Ideogram | Passed live | The configured key completed two bounded v4 TURBO generations on September 13, 2026. The first output was correctly rejected for invented text/logo; the second was visually inspected and accepted as text-free integration evidence. |
 | Meta Ads | Passed read-only | Configured account is accessible and active (`account_status=1`), USD/CST6CDT; the configured page and historical lead form are readable, and the form reports ACTIVE. No write endpoint was called. |
 
@@ -138,11 +138,14 @@ path, and first-attempt seed are the retained non-secret receipt fields.
 ### Drive live proof still needed
 
 Upload the generated neutral files from `output/drive_demo_source/` to any small
-Google Drive folder. Ownership and business identity do not matter. The runtime
-needs read-only OAuth authorization plus the exact folder URL/ID; an email address
-and folder name alone cannot identify or authorize the folder. Run
-`scripts/intake/google_drive_intake.py`, retain the sanitized `inventory.json` receipt,
-and verify its downloaded hashes against the generated packet.
+Google Drive folder. Ownership and business identity do not matter. Configure
+the ignored local OAuth client values, register
+`http://localhost:8765/oauth2/callback`, and run
+`scripts/intake/google_drive_authorize.py` to complete read-only consent. Then
+run `scripts/intake/google_drive_intake.py` with the exact folder URL/ID, retain
+the sanitized `inventory.json` receipt, and verify its downloaded hashes against
+the generated packet. An email address and folder name alone cannot identify or
+authorize the folder.
 
 ## Operational fact check
 

@@ -144,11 +144,18 @@ def create_app(studio: PosterStudio | None = None) -> FastAPI:
     # calls this JSON API directly rather than through a proxy/rewrite.
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:3000"],
+        # Both spellings of the dev origin: a browser treats localhost and
+        # 127.0.0.1 as different origins, and which one appears depends on how
+        # the developer opened the page.
+        allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
         allow_methods=["*"],
         allow_headers=["*"],
     )
     app.include_router(campaign_router)
+
+    @app.get("/healthz")
+    def healthz() -> dict[str, str]:
+        return {"status": "ok"}
 
     @app.get("/", response_class=HTMLResponse)
     def home(request: Request) -> HTMLResponse:

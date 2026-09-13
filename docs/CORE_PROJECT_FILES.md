@@ -11,7 +11,8 @@ rules and `API_CONTRACTS.md` for the owner-UI contract.
 - `src/advantage/domain/`: internal campaign and artifact models.
 - `src/advantage/application/`: orchestration and verification use cases.
 - `src/advantage/adapters/`: poster, reel, and paused Meta adapters.
-- `src/advantage/integrations/`: read-only Google Drive intake.
+- `src/advantage/integrations/`: read-only Google Drive intake and OAuth token
+  refresh.
 - `tests/advantage/test_api_contracts.py` and the campaign/adapter/integration tests.
 
 New application code imports `advantage`. Compatibility modules under
@@ -37,6 +38,8 @@ break the campaign flow.
 
 - `scripts/demo/create_drive_demo_packet.py`: synthetic, permission-safe demo
   packet.
+- `scripts/intake/google_drive_authorize.py`: localhost OAuth bootstrap for the
+  ignored local development environment.
 - `scripts/intake/google_drive_intake.py`: bounded Drive intake CLI.
 - `scripts/media/generate_sports_instrumental.py`: current instrumental source.
 - `scripts/meta/meta_ads_full_export.py`: read-only aggregate export.

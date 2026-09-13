@@ -12,6 +12,9 @@ import { MetaPreviewCard } from "@/components/meta-preview-card";
 import { CreativePlanCard } from "@/components/creative-plan-card";
 import { RationaleCard } from "@/components/rationale-card";
 import { CreatePausedCampaign } from "@/components/create-paused-campaign";
+import { ActivityPanel } from "@/components/activity-panel";
+import { CritiqueCard } from "@/components/critique-card";
+import { RegeneratePanel } from "@/components/regenerate-panel";
 import {
   Card,
   CardContent,
@@ -133,6 +136,50 @@ export default function CampaignReviewPage() {
           </CardContent>
         </Card>
       </PageSection>
+
+      {run.critique && (
+        <PageSection delay={0.07}>
+          <Card>
+            <CardHeader>
+              <CardTitle>How this turned out</CardTitle>
+              <CardDescription>
+                What was built, why, and which of your details are on it.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <CritiqueCard critique={run.critique} />
+            </CardContent>
+          </Card>
+        </PageSection>
+      )}
+
+      <PageSection delay={0.08}>
+        <Card>
+          <CardHeader>
+            <CardTitle>Not quite right?</CardTitle>
+            <CardDescription>
+              Tell it what to change and regenerate. This version is kept.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <RegeneratePanel runId={run.id} format={run.artifact.format} />
+          </CardContent>
+        </Card>
+      </PageSection>
+
+      {run.activity && run.activity.length > 0 && (
+        <PageSection delay={0.09}>
+          <Card>
+            <CardHeader>
+              <CardTitle>What the agent did</CardTitle>
+              <CardDescription>Each step it ran to build this, and how long it took.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ActivityPanel activity={run.activity} />
+            </CardContent>
+          </Card>
+        </PageSection>
+      )}
 
       <PageSection delay={0.1}>
         <Card>

@@ -45,6 +45,7 @@ from ..domain.models import (
     CreativeFormat,
     CreativePlan,
     PosterStyle,
+    resolve_palette,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -52,10 +53,23 @@ FONT_DIR = REPO_ROOT / "assets" / "fonts"
 
 #: Poster canvas -- matches poster.py / AGENTS.md's 1080x1350 (Instagram Feed 4:5).
 W, H = 1080, 1350
-PHOTO_H = 760
+
+# Band layout. Previously the info band was 270px (only ever holding one short
+# paragraph) and the footer took 320px to hold a phone number -- which read as
+# a heavy empty slab and left no room for the owner's benefit list. The info
+# band now takes that space instead: it is where the "why join" copy lives,
+# and the footer is sized to what it actually contains (contact + URL + a
+# 170px QR block plus padding).
+FOOTER_H = 230
+#: The info band flexes between these so the photo never collapses to a strip
+#: and a long benefit list never runs into the footer.
+MIN_INFO_H = 210
+MAX_INFO_H = 430
+#: Defaults kept for module-level callers/tests; `_stamp` computes its own.
+PHOTO_H = H - FOOTER_H - MIN_INFO_H
 INFO_TOP = PHOTO_H
-INFO_H = 270
-FOOTER_TOP = INFO_TOP + INFO_H
+INFO_H = MIN_INFO_H
+FOOTER_TOP = H - FOOTER_H
 
 #: No per-request brand palette field exists on CampaignRequest (same gap
 #: poster.py's build_brand_profile() docstring notes for BrandProfile.palette),
@@ -63,6 +77,8 @@ FOOTER_TOP = INFO_TOP + INFO_H
 WHITE = "#FFFFFF"
 OFF_WHITE = "#F7F9FC"
 INK = "#12161C"
+# Fallbacks only. The real values come from `resolve_palette(request.palette)`
+# inside `_stamp()`; these remain so module-level helpers keep working.
 DEEP = "#0B3B66"
 ACCENT = "#F4B400"
 
@@ -124,6 +140,7 @@ def build_art_prompt(request: CampaignRequest) -> str:
     """
     style = _resolve_style(request.poster_style)
     scene = _PRESETS[style]
+    swatch = resolve_palette(request.palette)
 
     parts = [
         f"Create a premium, text-free 4:5 vertical photograph of a real scene for "
@@ -138,6 +155,22 @@ def build_art_prompt(request: CampaignRequest) -> str:
         parts.append(
             "Additional scene notes from the business owner (about the subject/scene "
             f"only, not any wording to render): {request.art_direction_notes.strip()}"
+        )
+    parts.append(
+        f"Colour direction: the finished poster sits on a {swatch.label.lower()} brand "
+        f"scheme (primary {swatch.primary}, accent {swatch.accent}). Favour a scene "
+        "whose natural colours sit comfortably beside those, so the artwork and the "
+        "brand bands do not clash."
+    )
+    if request.refinement_notes and request.refinement_notes.strip():
+        # Regeneration steering. Deliberately placed BEFORE the hard
+        # constraints below so the no-text/no-logo rules still win: this may
+        # change what the scene shows, never whether writing appears in it,
+        # and never what copy the poster carries (that is stamped separately
+        # from the request's own fields).
+        parts.append(
+            "Additional direction from the business owner for this regeneration "
+            f"(about the scene and framing only): {request.refinement_notes.strip()}"
         )
     parts.append(
         "Composition: strict 4:5 vertical portrait framing (matching a 1080x1350 "
@@ -351,9 +384,9 @@ def _qr_image(url: str, size: int) -> Image.Image:
         return source.convert("RGB").resize((size, size), Image.Resampling.NEAREST)
 
 
-def _add_gradient_scrim(canvas: Image.Image) -> None:
+def _add_gradient_scrim(canvas: Image.Image, photo_h: int = PHOTO_H) -> None:
     band = 420
-    top = PHOTO_H - band
+    top = photo_h - band
     overlay = Image.new("RGBA", (W, band), (0, 0, 0, 0))
     pixels = overlay.load()
     for y in range(band):
@@ -368,6 +401,10 @@ def _stamp(request: CampaignRequest, artwork_path: Path, destination: Path) -> S
     if not artwork_path.is_file():
         raise PosterAdapterError(f"Ideogram artwork not found at {artwork_path}.")
 
+    swatch = resolve_palette(request.palette)
+    deep, accent = swatch.ink, swatch.accent
+    panel = swatch.primary
+
     business_name = _clip(request.business_name, 60)
     headline = _clip(request.offer_text or request.business_name, 90)
     subtitle = _clip(request.audience, 90) if request.audience and request.audience.strip() else ""
@@ -379,14 +416,42 @@ def _stamp(request: CampaignRequest, artwork_path: Path, destination: Path) -> S
         else ""
     )
 
-    stamped_copy = [value for value in (business_name, headline, subtitle, body, contact, url) if value]
+    # The owner's answer to "why should someone join" -- collected by the
+    # interview as `key_benefits`, and previously dropped on the floor here:
+    # the info band rendered `brief_text` alone, which is why it looked empty
+    # and why supplied benefits never reached the poster.
+    benefits = [_clip(item, 44) for item in request.key_benefits if item and item.strip()][:4]
+    proof = _clip(request.proof_point, 70) if request.proof_point and request.proof_point.strip() else ""
+
+    stamped_copy = [
+        value
+        for value in (business_name, headline, subtitle, body, *benefits, proof, contact, url)
+        if value
+    ]
     overflow: list[str] = []
+
+    # The info band is sized to its own content rather than fixed: a poster
+    # with one line of body copy and no benefits used to leave ~200px of blank
+    # white, which is what made the earlier output read as empty. Whatever the
+    # copy does not need goes to the photo.
+    body_max_lines = 2 if benefits else 4
+    info_h = (
+        40                                  # top padding under the accent rule
+        + 36 * body_max_lines               # body paragraph
+        + (8 + 34 * len(benefits) if benefits else 0)
+        + (6 + 30 if proof else 0)
+        + 32                                # bottom padding
+    )
+    info_h = max(MIN_INFO_H, min(info_h, MAX_INFO_H))
+    info_top = H - FOOTER_H - info_h
+    footer_top = H - FOOTER_H
+    photo_h = info_top
 
     try:
         with Image.open(artwork_path) as source:
             art = ImageOps.fit(
                 source.convert("RGB"),
-                (W, PHOTO_H),
+                (W, photo_h),
                 method=Image.Resampling.LANCZOS,
                 centering=(0.5, 0.45),
             )
@@ -395,7 +460,7 @@ def _stamp(request: CampaignRequest, artwork_path: Path, destination: Path) -> S
 
     canvas = Image.new("RGBA", (W, H), OFF_WHITE)
     canvas.paste(art, (0, 0))
-    _add_gradient_scrim(canvas)
+    _add_gradient_scrim(canvas, photo_h)
     draw = ImageDraw.Draw(canvas)
 
     # --- brand lockup (logo + business name) over the photo, top-left -------
@@ -416,7 +481,7 @@ def _stamp(request: CampaignRequest, artwork_path: Path, destination: Path) -> S
     )
     if headline_truncated:
         overflow.append(headline)
-    y = PHOTO_H - 60 - 66 * max(1, len(headline_lines)) - (40 if subtitle else 0)
+    y = photo_h - 60 - 66 * max(1, len(headline_lines)) - (40 if subtitle else 0)
     for line in headline_lines:
         draw.text((SAFE_MARGIN, y), line, font=headline_font, fill=WHITE)
         _check_fit(draw, line, headline_font, SAFE_MARGIN, W - SAFE_MARGIN, overflow)
@@ -425,27 +490,46 @@ def _stamp(request: CampaignRequest, artwork_path: Path, destination: Path) -> S
     if subtitle:
         subtitle_upper = subtitle.upper()
         subtitle_font = _fit_font("space-grotesk-700.woff2", subtitle_upper, W - 2 * SAFE_MARGIN, 26)
-        draw.text((SAFE_MARGIN, y + 6), subtitle_upper, font=subtitle_font, fill=ACCENT)
+        draw.text((SAFE_MARGIN, y + 6), subtitle_upper, font=subtitle_font, fill=accent)
         _check_fit(draw, subtitle_upper, subtitle_font, SAFE_MARGIN, W - SAFE_MARGIN, overflow)
 
     # --- info band: the raw brief, verbatim -----------------------------
-    draw.rectangle((0, INFO_TOP, W, INFO_TOP + INFO_H), fill=WHITE)
-    draw.rectangle((0, INFO_TOP, W, INFO_TOP + 8), fill=ACCENT)
+    draw.rectangle((0, info_top, W, info_top + info_h), fill=WHITE)
+    draw.rectangle((0, info_top, W, info_top + 8), fill=accent)
+    # With benefits to show, the body paragraph gets fewer lines so the
+    # bullets fit; with none, it keeps the full height it always had.
     body_lines, body_font, body_truncated = _wrap_lines(
-        draw, body, "space-grotesk-500.woff2", 26, W - 2 * SAFE_MARGIN, max_lines=5
+        draw, body, "space-grotesk-500.woff2", 26, W - 2 * SAFE_MARGIN, max_lines=body_max_lines
     )
     if body_truncated:
         overflow.append(body)
-    by = INFO_TOP + 40
+    by = info_top + 40
     for line in body_lines:
         draw.text((SAFE_MARGIN, by), line, font=body_font, fill=INK)
         _check_fit(draw, line, body_font, SAFE_MARGIN, W - SAFE_MARGIN, overflow)
         by += 36
 
+    # Benefits as a bulleted "why join" list -- the accent-coloured marker
+    # keeps them scannable at feed size rather than reading as more prose.
+    if benefits:
+        by += 8
+        bullet_font = _font("space-grotesk-500.woff2", 25)
+        for benefit in benefits:
+            draw.ellipse((SAFE_MARGIN, by + 9, SAFE_MARGIN + 9, by + 18), fill=accent)
+            draw.text((SAFE_MARGIN + 24, by), benefit, font=bullet_font, fill=INK)
+            _check_fit(draw, benefit, bullet_font, SAFE_MARGIN + 24, W - SAFE_MARGIN, overflow)
+            by += 34
+
+    if proof:
+        by += 6
+        proof_font = _font("space-grotesk-500.woff2", 22)
+        draw.text((SAFE_MARGIN, by), proof, font=proof_font, fill=INK)
+        _check_fit(draw, proof, proof_font, SAFE_MARGIN, W - SAFE_MARGIN, overflow)
+
     # --- footer band: contact + destination + QR ----------------------------
-    draw.rectangle((0, FOOTER_TOP, W, H), fill=DEEP)
-    draw.rectangle((0, FOOTER_TOP, W, FOOTER_TOP + 8), fill=ACCENT)
-    fy = FOOTER_TOP + 40
+    draw.rectangle((0, footer_top, W, H), fill=deep)
+    draw.rectangle((0, footer_top, W, footer_top + 8), fill=accent)
+    fy = footer_top + 40
     footer_right = W - SAFE_MARGIN
     if url:
         footer_right = W - SAFE_MARGIN - 190  # reserve room for the QR block

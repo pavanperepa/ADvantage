@@ -14,6 +14,10 @@ from advantage.integrations.google_drive import (
     GoogleDriveClient,
     ingest_drive_folder,
 )
+from advantage.integrations.google_oauth import (
+    GoogleOAuthError,
+    resolve_google_drive_access_token,
+)
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -37,11 +41,10 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> None:
     args = build_parser().parse_args()
     load_dotenv(ROOT / ".env")
-    token = os.getenv("GOOGLE_DRIVE_ACCESS_TOKEN", "")
-    if not token:
-        raise DriveAuthenticationError(
-            "GOOGLE_DRIVE_ACCESS_TOKEN is missing. Complete read-only OAuth and keep the token in .env."
-        )
+    try:
+        token = resolve_google_drive_access_token(os.environ)
+    except GoogleOAuthError as exc:
+        raise DriveAuthenticationError(str(exc)) from None
     config = DriveIntakeConfig(
         max_files=args.max_files,
         max_videos=args.max_videos,

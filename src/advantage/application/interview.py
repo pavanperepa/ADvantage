@@ -41,6 +41,13 @@ class Question(BaseModel):
     why: str
     required: bool = True
 
+    #: An answer the agent drafted from the brief for the owner to confirm or
+    #: edit. Shape follows ``kind``: a plain string for "text", one of
+    #: ``choices`` for "choice", a list for "multi_text". ``None`` means the
+    #: agent had nothing to go on -- never a fabricated placeholder.
+    suggestion: str | list[str] | None = None
+    suggestion_note: str | None = None
+
 
 class AnswerValidationError(ValueError):
     """Raised by :func:`apply_answers` when one or more answers are invalid.
@@ -195,8 +202,16 @@ def next_questions(
 
 
 def _coerce_key_benefits(value: str | list[str]) -> list[str]:
+    """Split a benefits blob into separate phrases.
+
+    Prefers newlines/semicolons as the separator when either is present, and
+    only falls back to commas otherwise: an individual benefit frequently
+    contains a comma of its own ("fundamentals, balance and confidence"), so
+    splitting on commas as well would cut real phrases in half.
+    """
     if isinstance(value, str):
-        parts = re.split(r"[,\n]", value)
+        separator = r"[;\n]" if re.search(r"[;\n]", value) else r","
+        parts = re.split(separator, value)
     else:
         parts = [str(item) for item in value]
     return [part.strip() for part in parts if part.strip()]
@@ -361,3 +376,296 @@ def enrich_questions(
         # Any failure (network, auth, malformed schema, unexpected shape) falls
         # back to the deterministic questions. This path must never raise.
         return questions
+
+
+# --- agentic planning pass -------------------------------------------------------
+#
+# `next_questions` above is the contract: a fixed checklist, always available.
+# What follows turns that checklist into something that reads like an agent
+# doing the work rather than a form demanding it -- it reads `brief_text`,
+# fills in what it can actually infer, and drafts an answer for each remaining
+# question so the owner confirms instead of authors.
+#
+# Everything here degrades to the deterministic checklist. The LLM may only
+# choose among field ids `next_questions` would already have asked, and every
+# value it returns is validated against the same enums `apply_answers` uses,
+# so a creative model cannot invent a field, a choice, or a question.
+
+#: Questions per round. Deliberately small: two short rounds read as a
+#: conversation, one round of four reads as a form.
+QUESTIONS_PER_ROUND = 2
+
+
+class AgentInference(BaseModel):
+    """One fact the agent extracted from the brief and applied by itself."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    field: str
+    label: str
+    value: str
+    note: str
+
+
+class InterviewPlan(BaseModel):
+    """One round of the intake conversation."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    agent_note: str
+    understood: list[AgentInference] = Field(default_factory=list)
+    questions: list[Question] = Field(default_factory=list)
+    inferred_answers: dict[str, Any] = Field(default_factory=dict)
+    round: int = 1
+    total_rounds: int = 1
+
+
+#: Human labels for the fields the agent may fill in or ask about.
+FIELD_LABELS: dict[str, str] = {
+    "reel_feel": "Reel feel",
+    "poster_style": "Art style",
+    "art_direction_notes": "Artwork scene",
+    "offer_text": "Offer",
+    "key_benefits": "Key benefits",
+    "proof_point": "Proof point",
+}
+
+PLAN_INSTRUCTIONS = """\
+You are an ad-campaign intake agent talking to a small-business owner who has
+just written a rough brief. Your job is to do as much of the work for them as
+possible, then ask only what you genuinely cannot infer.
+
+You are given the brief and a list of fields that are still unfilled. Each
+field has an id, a kind, and (for choice fields) the only permitted values.
+
+Return three things:
+
+1. "understood" -- fields you can confidently fill straight from the brief.
+   Quote or closely paraphrase the owner's own words. Do NOT guess at facts
+   the brief does not contain: never invent a price, date, phone number,
+   statistic, guarantee, or testimonial. If the brief does not say it, leave
+   the field out of "understood" entirely.
+2. "questions" -- the most useful remaining fields to ask about, worded
+   specifically for THIS business in plain language (not generic form
+   labels). For each, draft a "suggestion": your best answer given the brief,
+   which the owner will confirm or edit. A suggestion for a choice field must
+   be exactly one of that field's permitted values. If you have nothing
+   honest to suggest, use an empty string.
+3. "agent_note" -- one short, friendly sentence summarising what you did and
+   what you still need. No greeting, no sign-off.
+
+Only ever use the field ids you were given. Never invent a field id or a
+choice value.
+"""
+
+
+class _PlanInference(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    field: str
+    value: str
+    note: str = Field(default="", max_length=200)
+
+
+class _PlanQuestion(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    prompt: str = Field(min_length=1, max_length=300)
+    why: str = Field(default="", max_length=300)
+    suggestion: str = Field(default="", max_length=400)
+    suggestion_note: str = Field(default="", max_length=200)
+
+
+class _AgentPlan(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    agent_note: str = Field(default="", max_length=300)
+    understood: list[_PlanInference] = Field(default_factory=list)
+    questions: list[_PlanQuestion] = Field(default_factory=list)
+
+
+def _coerce_suggestion(question: Question, raw: str) -> str | list[str] | None:
+    """Validate a drafted answer against the question it belongs to.
+
+    Returns ``None`` (no suggestion shown) rather than raising whenever the
+    model proposed something the owner could not have selected anyway.
+    """
+    text = (raw or "").strip()
+    if not text:
+        return None
+    if question.kind == "choice":
+        return text if question.choices and text in question.choices else None
+    if question.kind == "multi_text":
+        return _coerce_key_benefits(text) or None
+    return text
+
+
+def _deterministic_plan(
+    request_draft: CampaignRequest, *, format: CreativeFormat, round_index: int
+) -> InterviewPlan:
+    """The always-available fallback: the plain checklist, no agent voice."""
+    missing = [f for f in FIELD_PRIORITY.get(format, []) if _is_missing(request_draft, f)]
+    questions = next_questions(request_draft, format=format, max_questions=QUESTIONS_PER_ROUND)
+    remaining = max(0, len(missing) - len(questions))
+    extra_rounds = -(-remaining // QUESTIONS_PER_ROUND)  # ceil
+    return InterviewPlan(
+        agent_note=(
+            "A couple of quick questions and I can build this."
+            if questions
+            else "I have everything I need."
+        ),
+        questions=questions,
+        round=round_index,
+        total_rounds=round_index + extra_rounds,
+    )
+
+
+def plan_interview(
+    request_draft: CampaignRequest,
+    *,
+    format: CreativeFormat,
+    brief_text: str,
+    round_index: int = 1,
+    api_key: str | None = None,
+    model: str | None = None,
+    client: Any | None = None,
+) -> InterviewPlan:
+    """Plan one round of intake: what the agent worked out, and what it asks.
+
+    Falls back to :func:`_deterministic_plan` -- the plain checklist -- on a
+    missing key, any API failure, a malformed response, or a response that
+    references a field the owner was never going to be asked about. The
+    fallback is the contract; the agent pass only makes it feel like less
+    work for the owner.
+    """
+    fallback = _deterministic_plan(request_draft, format=format, round_index=round_index)
+    if not fallback.questions:
+        return fallback
+
+    key = api_key or os.getenv("OPENAI_API_KEY")
+    if not key and client is None:
+        return fallback
+
+    missing = [f for f in FIELD_PRIORITY.get(format, []) if _is_missing(request_draft, f)]
+    catalogue = [
+        {
+            "id": field,
+            "kind": _BUILDERS[field](format).kind,
+            "permitted_values": _BUILDERS[field](format).choices or [],
+        }
+        for field in missing
+    ]
+
+    try:
+        openai_client = client
+        if openai_client is None:
+            from openai import OpenAI
+
+            openai_client = OpenAI(api_key=key)
+
+        response = openai_client.responses.parse(
+            model=model or os.getenv("OPENAI_MODEL", "gpt-5.4"),
+            instructions=PLAN_INSTRUCTIONS,
+            input=(
+                f"Brief from the owner:\n{brief_text.strip() or '(none supplied)'}\n\n"
+                f"Business: {request_draft.business_name}\n"
+                f"Creative format: {format.value}\n"
+                f"Unfilled fields (ask about at most {QUESTIONS_PER_ROUND}):\n"
+                f"{catalogue}"
+            ),
+            text_format=_AgentPlan,
+            reasoning={"effort": "low"},
+        )
+        parsed = response.output_parsed
+        if parsed is None or not isinstance(parsed, _AgentPlan):
+            return fallback
+        return _merge_plan(parsed, request_draft, format=format, round_index=round_index)
+    except Exception:
+        # Network, auth, schema drift, unexpected shape -- never raises.
+        return fallback
+
+
+def _merge_plan(
+    parsed: _AgentPlan,
+    request_draft: CampaignRequest,
+    *,
+    format: CreativeFormat,
+    round_index: int,
+) -> InterviewPlan:
+    """Validate an agent plan against what the owner could actually be asked.
+
+    Anything the model returned that is not a currently-missing field, or not
+    a value `apply_answers` would accept, is dropped rather than trusted.
+    """
+    missing = [f for f in FIELD_PRIORITY.get(format, []) if _is_missing(request_draft, f)]
+    allowed = set(missing)
+
+    understood: list[AgentInference] = []
+    inferred: dict[str, Any] = {}
+    for item in parsed.understood:
+        if item.field not in allowed or not item.value.strip():
+            continue
+        candidate: dict[str, Any] = {item.field: item.value.strip()}
+        try:
+            apply_answers(request_draft, candidate)  # validates enums/shape
+        except AnswerValidationError:
+            continue
+        value: Any = item.value.strip()
+        if item.field == "key_benefits":
+            value = _coerce_key_benefits(value)
+            if not value:
+                continue
+        inferred[item.field] = value
+        understood.append(
+            AgentInference(
+                field=item.field,
+                label=FIELD_LABELS.get(item.field, item.field),
+                value=", ".join(value) if isinstance(value, list) else str(value),
+                note=item.note.strip() or "picked up from your brief",
+            )
+        )
+        allowed.discard(item.field)
+
+    questions: list[Question] = []
+    seen: set[str] = set()
+    for proposed in parsed.questions:
+        if proposed.id not in allowed or proposed.id in seen:
+            continue
+        if len(questions) >= QUESTIONS_PER_ROUND:
+            break
+        base = _BUILDERS[proposed.id](format)
+        questions.append(
+            base.model_copy(
+                update={
+                    "prompt": proposed.prompt.strip() or base.prompt,
+                    "why": proposed.why.strip() or base.why,
+                    "suggestion": _coerce_suggestion(base, proposed.suggestion),
+                    "suggestion_note": proposed.suggestion_note.strip() or None,
+                }
+            )
+        )
+        seen.add(proposed.id)
+
+    # The agent may have inferred everything, or returned nothing usable. Keep
+    # the round non-empty by falling back to the checklist order for whatever
+    # is still unanswered and unasked.
+    if not questions:
+        for field in missing:
+            if field in inferred or len(questions) >= QUESTIONS_PER_ROUND:
+                continue
+            questions.append(_BUILDERS[field](format))
+            seen.add(field)
+
+    open_fields = [f for f in missing if f not in inferred and f not in seen]
+    extra_rounds = -(-len(open_fields) // QUESTIONS_PER_ROUND)  # ceil
+
+    return InterviewPlan(
+        agent_note=parsed.agent_note.strip()
+        or "Here is what I could work out from your brief.",
+        understood=understood,
+        questions=questions,
+        inferred_answers=inferred,
+        round=round_index,
+        total_rounds=round_index + extra_rounds,
+    )

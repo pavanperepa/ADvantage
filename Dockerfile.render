@@ -1,0 +1,41 @@
+FROM node:22-bookworm-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    REMOTION_BROWSER_EXECUTABLE=/usr/bin/chromium
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        chromium \
+        ffmpeg \
+        fonts-liberation \
+        fonts-noto-core \
+        python3 \
+        python3-pip \
+        python3-venv \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN python3 -m venv /opt/uv \
+    && /opt/uv/bin/pip install --no-cache-dir uv
+
+ENV PATH="/app/.venv/bin:/opt/uv/bin:${PATH}"
+
+WORKDIR /app
+RUN chown node:node /app
+
+COPY --chown=node:node pyproject.toml uv.lock README.md ./
+COPY --chown=node:node src ./src
+
+USER node
+
+RUN uv sync --frozen --no-dev --group video
+
+COPY --chown=node:node package.json package-lock.json ./
+RUN npm ci --omit=dev
+
+COPY --chown=node:node . .
+
+EXPOSE 10000
+
+CMD ["sh", "-c", "uvicorn cricket_posts.web:app --host 0.0.0.0 --port ${PORT:-10000}"]

@@ -50,6 +50,68 @@ class PosterStyle(str, Enum):
     PREMIUM_MINIMAL = "premium_minimal"
 
 
+class BrandPalette(str, Enum):
+    """Named colour scheme for a creative.
+
+    Every creative path (Ideogram stamping, the offline compose pipeline, and
+    the reel's EditSpec ``brand`` block) previously hardcoded the same academy
+    blue/yellow. This is the one knob that recolours all three, so a business
+    that is not blue-and-yellow is not forced to look like one.
+    """
+
+    ACADEMY_BLUE = "academy_blue"
+    SUNSET_WARM = "sunset_warm"
+    FOREST_GREEN = "forest_green"
+    CRIMSON_SPORT = "crimson_sport"
+    ROYAL_PURPLE = "royal_purple"
+    MONO_SLATE = "mono_slate"
+
+
+class PaletteSwatch(BaseModel):
+    """The concrete colours one :class:`BrandPalette` resolves to."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    label: str
+    primary: str
+    accent: str
+    ink: str
+
+
+#: The single source of truth for what each palette actually looks like.
+#: ``primary`` carries panels and fills, ``accent`` is the highlight/rule
+#: colour, ``ink`` is the darkest value used behind light text.
+PALETTE_SWATCHES: dict[BrandPalette, PaletteSwatch] = {
+    BrandPalette.ACADEMY_BLUE: PaletteSwatch(
+        label="Academy blue", primary="#2E7BFF", accent="#FFD100", ink="#080D1F"
+    ),
+    BrandPalette.SUNSET_WARM: PaletteSwatch(
+        label="Sunset warm", primary="#F2683C", accent="#FFC24B", ink="#2A1207"
+    ),
+    BrandPalette.FOREST_GREEN: PaletteSwatch(
+        label="Forest green", primary="#1F8A5B", accent="#E7C948", ink="#07200F"
+    ),
+    BrandPalette.CRIMSON_SPORT: PaletteSwatch(
+        label="Crimson sport", primary="#C8102E", accent="#F4B41A", ink="#1A0407"
+    ),
+    BrandPalette.ROYAL_PURPLE: PaletteSwatch(
+        label="Royal purple", primary="#5B3FD6", accent="#FFD166", ink="#100A2B"
+    ),
+    BrandPalette.MONO_SLATE: PaletteSwatch(
+        label="Mono slate", primary="#3F4A5A", accent="#9FB3C8", ink="#0B1016"
+    ),
+}
+
+#: Used wherever a request carries no explicit palette, so behaviour is
+#: unchanged for callers that never set one.
+DEFAULT_PALETTE = BrandPalette.ACADEMY_BLUE
+
+
+def resolve_palette(palette: "BrandPalette | None") -> PaletteSwatch:
+    """The swatch for ``palette``, falling back to the academy default."""
+    return PALETTE_SWATCHES[palette or DEFAULT_PALETTE]
+
+
 class CampaignRequest(BaseModel):
     """One owner request: pick a format, supply facts and assets for it."""
 
@@ -89,6 +151,13 @@ class CampaignRequest(BaseModel):
     )
     proof_point: str | None = Field(
         default=None, description="One verifiable fact or quote the owner supplied"
+    )
+    palette: BrandPalette | None = Field(
+        default=None, description="Named colour scheme; None means the academy default"
+    )
+    refinement_notes: str | None = Field(
+        default=None,
+        description="Free-text 'make it more X' instructions from a regenerate request",
     )
     supplied_media_approved: bool = False
     likeness_use_approved: bool | None = None
@@ -209,6 +278,51 @@ class CampaignRationale(BaseModel):
     meta_account_grounded: bool = False
 
 
+class ActivityStep(BaseModel):
+    """One step the system took while producing a creative.
+
+    Exists purely for owner-facing visibility: the generate call is otherwise
+    an opaque wait, and a small business owner has no way to tell a slow
+    render from a silent fallback.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    label: str
+    detail: str = ""
+    status: Literal["done", "skipped", "failed"] = "done"
+    seconds: float | None = None
+
+
+class CreativeCritique(BaseModel):
+    """An independent review pass over the finished creative.
+
+    Separate from ``VerificationResult``, which answers "is this file
+    structurally correct". This answers "is this any good, and what went
+    wrong" -- including, deliberately, where the system struggled. Honest
+    weaknesses are the point; an empty ``struggled`` list on a visibly poor
+    poster is a failure of this step, not a pass.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    summary: str
+    did: list[str] = Field(default_factory=list)
+    why: list[str] = Field(default_factory=list)
+    #: Every piece of the owner's own information that actually reached the
+    #: creative -- the answer to "did it use what I gave it?". Read from the
+    #: renderer's stamped-copy record, not re-derived from the request, so it
+    #: reflects what is really on the artwork.
+    information: list[str] = Field(default_factory=list)
+    #: Kept for internal use (it drives regeneration hints and shows up in
+    #: logs), but deliberately NOT surfaced to the owner: the review panel is
+    #: there to explain the creative, not to argue with it.
+    struggled: list[str] = Field(default_factory=list)
+    #: False when no vision model reviewed the pixels, so the UI never implies
+    #: the artwork was actually looked at when it was not.
+    model_reviewed: bool = False
+
+
 class CampaignResult(BaseModel):
     """The bundle `orchestrator.run_campaign()` returns: one request's worth
     of generate + verify + (budget permitting) suggest, nothing published."""
@@ -221,3 +335,5 @@ class CampaignResult(BaseModel):
     meta_preview: MetaAdPreview | None = None
     plan: CreativePlan | None = None
     rationale: CampaignRationale | None = None
+    critique: CreativeCritique | None = None
+    activity: list[ActivityStep] = Field(default_factory=list)

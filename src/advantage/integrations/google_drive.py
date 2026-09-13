@@ -34,6 +34,10 @@ class DriveProtocolError(DriveIntakeError):
     pass
 
 
+class DriveFolderNotSharedError(DriveIntakeError):
+    """Raised when an expected parent folder is not shared with the account."""
+
+
 class AssetKind(str, Enum):
     LOGO = "logo"
     PHOTO = "photo"
@@ -61,10 +65,21 @@ class DriveRemoteFile(BaseModel):
     can_download: bool = True
 
 
+class DriveFolderRef(BaseModel):
+    """A minimal, display-safe reference to a Drive folder (id + name only)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str = Field(min_length=1)
+    name: str = Field(min_length=1)
+
+
 class DriveClient(Protocol):
     def get_metadata(self, file_id: str) -> DriveRemoteFile: ...
 
     def list_children(self, folder_id: str) -> list[DriveRemoteFile]: ...
+
+    def list_shared_folders(self) -> list[DriveRemoteFile]: ...
 
     def download(self, item: DriveRemoteFile, *, max_bytes: int) -> bytes: ...
 
@@ -220,6 +235,33 @@ class GoogleDriveClient:
             if not page_token:
                 return items
 
+    def list_shared_folders(self) -> list[DriveRemoteFile]:
+        """List folders under the account's "Shared with me" view.
+
+        Mirrors `list_children`'s request shape (same auth header, timeout,
+        pagination, and error mapping via `_request`) but queries by
+        `sharedWithMe` instead of a parent id.
+        """
+        items: list[DriveRemoteFile] = []
+        page_token: str | None = None
+        while True:
+            params = {
+                "q": f"sharedWithMe = true and mimeType = '{DRIVE_FOLDER_MIME}' and trashed = false",
+                "pageSize": "100",
+                "orderBy": "name_natural",
+                "fields": "nextPageToken,files(id,name,mimeType)",
+                "supportsAllDrives": "true",
+                "includeItemsFromAllDrives": "true",
+            }
+            if page_token:
+                params["pageToken"] = page_token
+            response = self._request("GET", f"{DRIVE_API_ROOT}/files", params=params)
+            payload = response.json()
+            items.extend(_remote_file(item) for item in payload.get("files", []))
+            page_token = payload.get("nextPageToken")
+            if not page_token:
+                return items
+
     def download(self, item: DriveRemoteFile, *, max_bytes: int) -> bytes:
         if not item.can_download:
             raise DriveAccessError("The selected Drive file cannot be downloaded.")
@@ -261,6 +303,43 @@ def parse_drive_folder_id(value: str) -> str:
 
 def source_ref(source_id: str) -> str:
     return hashlib.sha256(source_id.encode("utf-8")).hexdigest()[:16]
+
+
+def find_shared_folder(client: DriveClient, name: str) -> DriveRemoteFile | None:
+    """Find a folder in "Shared with me" by case-insensitive name match.
+
+    Returns None if no shared folder has that name (rather than raising),
+    since "not found" is an expected, ordinary outcome here.
+    """
+    target = name.strip().casefold()
+    for folder in client.list_shared_folders():
+        if folder.name.strip().casefold() == target:
+            return folder
+    return None
+
+
+def list_campaign_folders(
+    client: DriveClient, *, parent_name: str = "Social Media"
+) -> list[DriveFolderRef]:
+    """List the campaign subfolders under the shared `parent_name` folder.
+
+    E.g. the owner's "Shared with me" -> "Social Media" folder, which holds
+    one subfolder per campaign/topic. Only immediate subfolders are
+    returned (not files, and not the parent itself).
+    """
+    parent = find_shared_folder(client, parent_name)
+    if parent is None:
+        raise DriveFolderNotSharedError(
+            f"'{parent_name}' is not shared with this Google account yet. "
+            "Share that folder from Google Drive with the connected account, "
+            "then try again."
+        )
+    children = client.list_children(parent.id)
+    return [
+        DriveFolderRef(id=child.id, name=child.name)
+        for child in children
+        if child.mime_type == DRIVE_FOLDER_MIME
+    ]
 
 
 def ingest_drive_folder(

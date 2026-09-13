@@ -2,18 +2,21 @@ import type {
   CampaignRun,
   CreatePausedResult,
   CreativeFormat,
+  DriveFolder,
   InterviewAnswers,
   InterviewResponse,
+  Palette,
+  RegenerateRequest,
 } from "./types";
 
 /**
- * Base URL for the FastAPI backend. Defaults to the port the backend uses
- * out of the box (`uvicorn cricket_posts.web:app`, port 8000). Override with
- * NEXT_PUBLIC_API_BASE_URL, e.g. for local testing against a backend running
- * on a different port.
+ * Browser-visible base URL for the FastAPI backend. It is relative by default,
+ * so Next.js can proxy `/api` over Render's private network (and to port 8000
+ * during local development). Set NEXT_PUBLIC_API_BASE_URL only when the API is
+ * deliberately hosted at a separate public origin.
  */
 export const API_BASE_URL = (
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000"
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? ""
 ).replace(/\/+$/, "");
 
 export class ApiError extends Error {
@@ -101,4 +104,44 @@ export async function createPausedCampaign(id: string): Promise<CreatePausedResu
   );
   if (!res.ok) throw new ApiError(res.status, await extractErrorMessage(res));
   return (await res.json()) as CreatePausedResult;
+}
+
+/** GET /api/campaigns/palettes -- the colour schemes a creative can use. */
+export async function fetchPalettes(): Promise<Palette[]> {
+  const res = await fetch(`${API_BASE_URL}/api/campaigns/palettes`, { cache: "no-store" });
+  if (!res.ok) throw new ApiError(res.status, await extractErrorMessage(res));
+  return (await res.json()) as Palette[];
+}
+
+/**
+ * GET /api/campaigns/drive/folders -- the owner's Google Drive campaign
+ * subfolders (under "Shared with me" -> "Social Media"), for picking one
+ * instead of uploading files. Throws `ApiError` with status 503 when Drive
+ * isn't connected yet -- callers should degrade to the upload UI rather than
+ * surface this as a hard failure.
+ */
+export async function fetchDriveFolders(): Promise<DriveFolder[]> {
+  const res = await fetch(`${API_BASE_URL}/api/campaigns/drive/folders`, { cache: "no-store" });
+  if (!res.ok) throw new ApiError(res.status, await extractErrorMessage(res));
+  return (await res.json()) as DriveFolder[];
+}
+
+/**
+ * POST /api/campaigns/{id}/regenerate -- re-run with refinements.
+ * Returns a NEW run; the original is kept, not overwritten.
+ */
+export async function regenerateCampaign(
+  id: string,
+  body: RegenerateRequest,
+): Promise<CampaignRun> {
+  const res = await fetch(
+    `${API_BASE_URL}/api/campaigns/${encodeURIComponent(id)}/regenerate`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    },
+  );
+  if (!res.ok) throw new ApiError(res.status, await extractErrorMessage(res));
+  return (await res.json()) as CampaignRun;
 }

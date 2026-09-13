@@ -25,6 +25,7 @@ real, footage-derived shot timeline and assembles the EditSpec dict.
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -32,7 +33,12 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from ..domain.models import CampaignArtifact, CampaignRequest, CreativeFormat
+from ..domain.models import (
+    CampaignArtifact,
+    CampaignRequest,
+    CreativeFormat,
+    resolve_palette,
+)
 from . import reel_plan
 from .reel_plan import HERO_LINE2_MAX_CHARS, HERO_OVERLAY_MAX_SECONDS, ReelPlan, describe_plan, short_hook
 
@@ -55,6 +61,13 @@ REMOTION_CLI_ENTRY = REPO_ROOT / "node_modules" / "@remotion" / "cli" / "remotio
 # locked to one statically-imported fixture), this composition uses Remotion's
 # calculateMetadata to size itself from whatever `spec` arrives via --props.
 REEL_COMPOSITION_ID = "GeneratedReel"
+
+# Remotion renders each frame in a headless browser tab, so wall-clock time is
+# dominated by how many tabs run at once. Left unset it is conservative; a
+# 17-second reel measured at ~5 minutes on a 16-core machine. Half the cores
+# (capped) keeps the box usable and leaves headroom -- each worker is a real
+# Chrome instance, so "all cores" risks memory pressure mid-render.
+RENDER_CONCURRENCY = max(2, min((os.cpu_count() or 4) // 2, 8))
 
 CANVAS_WIDTH = 1080
 CANVAS_HEIGHT = 1920
@@ -87,11 +100,21 @@ DEFAULT_MUSIC = {
 
 # No per-request brand palette in CampaignRequest yet; reuse the existing
 # academy palette rather than inventing a new one.
+# Kept as the values `BrandPalette.ACADEMY_BLUE` resolves to, so a request
+# with no palette renders exactly as it did before palettes existed.
 DEFAULT_PRIMARY = "#2E7BFF"
 DEFAULT_ACCENT = "#FFD100"
 DEFAULT_INK = "#080D1F"
 
 _SUBPROCESS_STDERR_TAIL = 4000
+
+# ffmpeg and the Remotion CLI both emit non-ASCII bytes (progress spinners,
+# box-drawing, file names). `text=True` alone decodes with the Windows ANSI
+# codepage, which raises UnicodeDecodeError inside subprocess's reader thread
+# -- the exception is swallowed there, so the symptom is a lost stderr and an
+# unexplained failure rather than a clean error. Decode as UTF-8 and replace
+# anything undecodable instead.
+_SUBPROCESS_TEXT = {"encoding": "utf-8", "errors": "replace"}
 
 
 class ReelAdapterError(RuntimeError):
@@ -122,6 +145,7 @@ def build_edit_spec(request: CampaignRequest) -> dict[str, Any]:
         )
 
     slug = _slugify(request.business_name)
+    swatch = resolve_palette(request.palette)
     plan: ReelPlan = reel_plan.plan_reel(request, shot_count=len(usable_assets))
 
     shots: list[dict[str, Any]] = []
@@ -221,9 +245,9 @@ def build_edit_spec(request: CampaignRequest) -> dict[str, Any]:
             "location": "",
             "phone": request.contact_phone or "",
             "registrationUrl": request.destination_url or "",
-            "primary": DEFAULT_PRIMARY,
-            "accent": DEFAULT_ACCENT,
-            "ink": DEFAULT_INK,
+            "primary": swatch.primary,
+            "accent": swatch.accent,
+            "ink": swatch.ink,
         },
         "music": dict(DEFAULT_MUSIC),
         "shots": shots,
@@ -296,7 +320,9 @@ def _slugify(value: str) -> str:
 
 def _run_prepare_media(spec_path: Path) -> None:
     command = [sys.executable, str(PREPARE_SCRIPT), str(spec_path), "--force"]
-    result = subprocess.run(command, cwd=REPO_ROOT, capture_output=True, text=True)
+    result = subprocess.run(
+        command, cwd=REPO_ROOT, capture_output=True, text=True, **_SUBPROCESS_TEXT
+    )
     if result.returncode != 0:
         raise ReelAdapterError(
             "Preparing reel media failed "
@@ -326,10 +352,22 @@ def _run_remotion_render(props_path: Path, output_path: Path) -> None:
         REEL_COMPOSITION_ID,
         str(output_path),
         "--codec=h264",
-        "--crf=17",
+        # 23 is visually indistinguishable from 17 at Reels bitrates and
+        # encodes noticeably faster; the render, not the encode, dominates.
+        "--crf=23",
+        f"--concurrency={RENDER_CONCURRENCY}",
         f"--props={props_path}",
     ]
-    result = subprocess.run(command, cwd=REPO_ROOT, capture_output=True, text=True)
+    browser_executable = (
+        os.getenv("REMOTION_BROWSER_EXECUTABLE")
+        or shutil.which("chromium")
+        or shutil.which("google-chrome")
+    )
+    if browser_executable:
+        command.append(f"--browser-executable={browser_executable}")
+    result = subprocess.run(
+        command, cwd=REPO_ROOT, capture_output=True, text=True, **_SUBPROCESS_TEXT
+    )
     if result.returncode != 0:
         raise ReelAdapterError(
             f"Remotion render failed (exit {result.returncode}):\n{_tail(result.stderr)}"
@@ -351,7 +389,10 @@ def _probe_video(path: Path) -> tuple[int, int, float]:
     # `ffmpeg -i <file>` with no output always exits non-zero; the stream info
     # we want is printed to stderr regardless, so the return code is ignored.
     result = subprocess.run(
-        [ffmpeg, "-hide_banner", "-i", str(path)], capture_output=True, text=True
+        [ffmpeg, "-hide_banner", "-i", str(path)],
+        capture_output=True,
+        text=True,
+        **_SUBPROCESS_TEXT,
     )
     stderr = result.stderr
     video_line = next((line for line in stderr.splitlines() if "Video:" in line), "")

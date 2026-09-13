@@ -6,6 +6,14 @@ from cricket_posts.studio import PosterStudio
 from cricket_posts.web import create_app
 
 
+def test_healthcheck(tmp_path):
+    studio = PosterStudio(database_path=tmp_path / "studio.db")
+    response = TestClient(create_app(studio)).get("/healthz")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+
+
 def test_structured_api_workflow_generates_and_exports_one_poster(
     tmp_path,
     load_content,
