@@ -1,0 +1,19 @@
+{
+  "name": "coaching-probe",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "clips": [
+    {"file": "vids/AP7A4314.MP4", "start": 4.1, "end": 6.4, "purpose": "batting payoff"},
+    {"file": "vids/AP7A4298.MP4", "start": 0.2, "end": 2.6, "purpose": "close coach demonstration"},
+    {"file": "vids/AP7A4309.MP4", "start": 0.2, "end": 2.8, "purpose": "coach sets footwork drill"},
+    {"file": "vids/AP7A4318.MP4", "start": 9.4, "end": 12.6, "purpose": "bat path demonstration"},
+    {"file": "vids/AP7A4311.MP4", "start": 1.7, "end": 4.4, "purpose": "bowling action"},
+    {"file": "vids/AP7A4296.MP4", "start": 12.1, "end": 15.0, "purpose": "group footwork atmosphere"}
+  ],
+  "titles": [
+    {"start": 0.0, "end": 2.3, "text": "THE DRILL BEHIND THE SHOT", "size": 58},
+    {"start": 8.5, "end": 11.1, "text": "FOOTWORK  •  BALANCE  •  CONTROL", "size": 46},
+    {"start": 13.2, "end": 16.1, "text": "22YARDS CRICKET ACADEMY", "size": 54}
+  ]
+}

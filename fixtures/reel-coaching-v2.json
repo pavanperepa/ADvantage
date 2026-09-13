@@ -1,0 +1,27 @@
+{
+  "name": "coaching-v2",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "grade": {"contrast": 1.08, "saturation": 1.12, "brightness": -0.015},
+  "clips": [
+    {"file": "vids/AP7A4314.MP4", "start": 4.0, "end": 6.5, "speed": 0.96, "push_in": true, "purpose": "batting payoff"},
+    {"file": "vids/AP7A4298.MP4", "start": 0.1, "end": 2.9, "speed": 1.08, "push_in": true, "purpose": "close coach demonstration"},
+    {"file": "vids/AP7A4309.MP4", "start": 0.4, "end": 3.4, "speed": 1.05, "purpose": "coach sets footwork drill"},
+    {"file": "vids/AP7A4318.MP4", "start": 9.2, "end": 13.0, "speed": 1.1, "push_in": true, "purpose": "bat path demonstration"},
+    {"file": "vids/AP7A4311.MP4", "start": 1.4, "end": 4.3, "speed": 0.96, "push_in": true, "purpose": "bowling action"},
+    {"file": "vids/AP7A4296.MP4", "start": 12.0, "end": 16.0, "speed": 1.12, "purpose": "group footwork atmosphere"}
+  ],
+  "transitions": [
+    {"type": "fadewhite", "duration": 0.10},
+    {"type": "fade", "duration": 0.10},
+    {"type": "smoothleft", "duration": 0.14},
+    {"type": "fade", "duration": 0.10},
+    {"type": "smoothright", "duration": 0.14}
+  ],
+  "titles": [
+    {"start": 0.0, "end": 2.5, "text": "THE DRILL BEHIND THE SHOT", "size": 58},
+    {"start": 8.2, "end": 11.0, "text": "FOOTWORK  •  BALANCE  •  CONTROL", "size": 46},
+    {"start": 14.1, "end": 17.1, "text": "22YARDS CRICKET ACADEMY", "size": 54}
+  ]
+}

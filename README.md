@@ -120,6 +120,36 @@ Copy `.env.example` to `.env` and add `OPENAI_API_KEY` and
 `IDEOGRAM_API_KEY` for live extraction, planning, artwork, and optional visual
 critique. API keys stay in the server process and are never sent to the browser.
 
+## Google Drive intake
+
+The read-only Drive adapter accepts one explicit folder URL/ID, inventories only
+its direct children, and downloads a bounded allow-list of logo, photo, short
+video, and brief types. It records content hashes and sanitized source references,
+deduplicates identical files, rejects oversized or overlong media, and quarantines
+imported instructions that attempt to authorize tools, publishing, or secret
+access.
+
+Create a permission-safe neutral packet for a live Drive demo:
+
+```powershell
+uv sync --group video
+uv run python scripts/create_drive_demo_packet.py
+```
+
+Upload the files under `output/drive_demo_source/` to a small test folder. After
+completing read-only Google OAuth, keep the short-lived access token only in the
+ignored `.env`, then run:
+
+```powershell
+uv run python scripts/google_drive_intake.py --folder "<folder URL or ID>"
+```
+
+The command writes downloaded files and `inventory.json` under the ignored
+`output/drive_intake/` directory. Console output contains counts and hashed
+references, not access tokens, raw Drive IDs, source filenames, or brief content.
+The environment-token path exists for local preflight only; the platform OAuth
+flow must keep per-user refresh tokens in secure server-side storage.
+
 ## CLI
 
 Generate from a structured fixture without API calls:

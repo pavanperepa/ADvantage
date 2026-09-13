@@ -1,0 +1,40 @@
+{
+  "name": "academy-introduction-v1",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "grade": {"contrast": 1.08, "saturation": 1.12, "brightness": -0.012},
+  "clips": [
+    {"file": "vids/AP7A4296.MP4", "start": 0.35, "end": 3.20, "speed": 1.0, "motion": "push_in", "purpose": "academy energy and warmup"},
+    {"file": "vids/AP7A4298.MP4", "start": 0.15, "end": 3.65, "speed": 1.0, "motion": "push_in", "purpose": "coach demonstrates the bat path"},
+    {"file": "vids/AP7A4309.MP4", "start": 0.25, "end": 4.45, "speed": 1.0, "motion": "drift_left", "purpose": "coach corrects stance and foot placement"},
+    {"file": "vids/AP7A4318.MP4", "start": 8.85, "end": 13.65, "speed": 1.0, "motion": "push_in", "purpose": "coach explains and player watches"},
+    {"file": "vids/AP7A4314.MP4", "start": 3.75, "end": 6.48, "speed": 0.90, "motion": "push_in", "purpose": "player implements the correction"},
+    {"file": "vids/AP7A4281.MP4", "start": 0.00, "end": 2.72, "speed": 0.96, "crop_x": "(iw-ow)*0.42", "freeze_duration": 1.55, "purpose": "children run toward camera and final hold"}
+  ],
+  "transitions": [
+    {"type": "fade", "duration": 0.28},
+    {"type": "smoothleft", "duration": 0.24},
+    {"type": "fade", "duration": 0.28},
+    {"type": "fadewhite", "duration": 0.18},
+    {"type": "fade", "duration": 0.30}
+  ],
+  "end_card": {"start": 19.45, "end": 21.65, "dim": 0.58},
+  "logo": {
+    "file": "assets/brand/22yards-houston.png",
+    "start": 19.55,
+    "end": 21.65,
+    "width": 390,
+    "y": 420,
+    "fade": 0.32
+  },
+  "titles": [
+    {"start": 0.25, "end": 2.55, "text": "WELCOME TO 22YARDS", "style": "recede", "size": 64, "start_size": 104, "y": 700, "start_y": 805},
+    {"start": 3.05, "end": 5.65, "text": "EXPERT COACHING", "style": "recede", "size": 62, "start_size": 98, "y": 710, "start_y": 800},
+    {"start": 6.35, "end": 9.30, "text": "CORRECT THE DETAILS", "style": "recede", "size": 58, "start_size": 92, "y": 710, "start_y": 800},
+    {"start": 10.25, "end": 13.30, "text": "WATCH. LEARN. APPLY.", "style": "recede", "size": 58, "start_size": 92, "y": 710, "start_y": 800},
+    {"start": 14.35, "end": 17.10, "text": "BUILD SKILL. BUILD CONFIDENCE.", "style": "recede", "size": 46, "start_size": 76, "y": 710, "start_y": 790},
+    {"start": 19.72, "end": 21.55, "text": "CALL US FOR MORE INFO", "style": "banner", "size": 48, "y": 1235, "box_y": 1165, "box_height": 175, "underline_y": 1340, "box_opacity": 0.66},
+    {"start": 19.82, "end": 21.55, "text": "(713) 570-9054", "style": "banner", "size": 58, "y": 1430, "box_y": 1370, "box_height": 165, "underline_y": 1535, "box_opacity": 0.66}
+  ]
+}

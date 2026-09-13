@@ -364,6 +364,11 @@ changes external state and must be used only after explicit approval.
 
 ## 10. Known issues and unresolved decisions
 
+- September 13 product decision: Google Drive intake and the external-app demo
+  are business-generic and may use a completely synthetic, permission-safe media
+  packet. Private 22Yards assets and child-media permission are not prerequisites
+  for proving the Drive connector. The 22Yards files remain a separate local
+  renderer proof case.
 - Recent work needs a reviewed Git baseline; do not bulk-add generated media or
   secrets.
 - The root README has a few character-encoding artifacts such as malformed

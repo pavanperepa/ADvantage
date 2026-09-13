@@ -1,0 +1,124 @@
+{
+  "version": 1,
+  "name": "practice-match-reel-v1",
+  "status": "DRAFT — shot ranges are placeholders until vids/<practice-match>.mp4 lands",
+  "director": {
+    "personality": "academy_cinematic",
+    "intent": "Show that kids at 22 Yards play real practice matches, so a real tournament is not their first time under pressure.",
+    "rules": [
+      "Open on live match play, not a title card — sound of bat on ball first.",
+      "Let each passage of play breathe for at least three seconds.",
+      "Transitions only when the story changes chapter (net -> match -> tournament-ready).",
+      "Never cover a child's face or the ball with headline text.",
+      "Keep real match audio — appeals, encouragement, the coach umpiring.",
+      "End on live footage with the brand and the dated free-trial offer over it, not a full-screen card."
+    ]
+  },
+  "canvas": {"width": 1080, "height": 1920, "fps": 30},
+  "brand": {
+    "academy": "22 YARDS HOUSTON CRICKET ACADEMY",
+    "location": "HOUSTON, TEXAS",
+    "phone": "",
+    "registrationUrl": "",
+    "primary": "#2E7BFF",
+    "accent": "#FFD100",
+    "ink": "#080D1F"
+  },
+  "music": {
+    "source": "assets/music/mixkit-dirty-thinkin-989.mp3",
+    "file": "music/dirty-thinkin.mp3",
+    "title": "Dirty Thinkin'",
+    "artist": "Michael Ramir C.",
+    "sourceUrl": "https://mixkit.co/free-stock-music/",
+    "license": "Mixkit Stock Music Free License",
+    "baseVolume": 0.16,
+    "duckVolume": 0.05,
+    "duckStart": 0.0,
+    "duckEnd": 0.0,
+    "fadeIn": 0.8,
+    "fadeOut": 1.15
+  },
+  "shots": [
+    {
+      "id": "match-wide",
+      "source": "vids/PLACEHOLDER.MP4",
+      "media": "media/01-match-wide.mp4",
+      "sourceStart": 0.0,
+      "sourceEnd": 3.6,
+      "speed": 1.0,
+      "timelineStart": 0.0,
+      "duration": 3.6,
+      "focusX": 0.5,
+      "motion": "slow_push",
+      "transition": "none",
+      "audio": 0.5,
+      "semanticPurpose": "wide of a real practice match in progress — field set, batter at the crease"
+    },
+    {
+      "id": "delivery",
+      "source": "vids/PLACEHOLDER.MP4",
+      "media": "media/02-delivery.mp4",
+      "sourceStart": 0.0,
+      "sourceEnd": 3.4,
+      "speed": 1.0,
+      "timelineStart": 3.3,
+      "duration": 3.4,
+      "focusX": 0.5,
+      "motion": "gentle_drift_right",
+      "transition": "soft_dissolve",
+      "audio": 0.6,
+      "semanticPurpose": "bowler runs in and delivers, batter plays a shot — the contest"
+    },
+    {
+      "id": "field-react",
+      "source": "vids/PLACEHOLDER.MP4",
+      "media": "media/03-field-react.mp4",
+      "sourceStart": 0.0,
+      "sourceEnd": 3.2,
+      "speed": 1.0,
+      "timelineStart": 6.5,
+      "duration": 3.2,
+      "focusX": 0.5,
+      "motion": "none",
+      "transition": "soft_dissolve",
+      "audio": 0.7,
+      "semanticPurpose": "fielders chase and appeal, coach umpires — pressure that looks like a real game"
+    },
+    {
+      "id": "run",
+      "source": "vids/PLACEHOLDER.MP4",
+      "media": "media/04-run.mp4",
+      "sourceStart": 0.0,
+      "sourceEnd": 3.0,
+      "speed": 0.9,
+      "timelineStart": 9.5,
+      "duration": 3.0,
+      "focusX": 0.5,
+      "motion": "hero_push",
+      "transition": "brand_wipe",
+      "audio": 0.4,
+      "semanticPurpose": "batters running between the wickets, restrained slow motion on the payoff"
+    },
+    {
+      "id": "ready",
+      "source": "vids/PLACEHOLDER.MP4",
+      "media": "media/05-ready.mp4",
+      "sourceStart": 0.0,
+      "sourceEnd": 3.5,
+      "speed": 1.0,
+      "timelineStart": 12.3,
+      "duration": 3.5,
+      "focusX": 0.45,
+      "motion": "none",
+      "transition": "soft_dissolve",
+      "audio": 0.45,
+      "semanticPurpose": "team together after the passage of play — the closing shot the CTA sits over"
+    }
+  ],
+  "overlays": [
+    {"type": "hero_title", "start": 0.3, "duration": 2.6, "eyebrow": "AT 22 YARDS", "line1": "THEY'VE ALREADY", "line2": "PLAYED THE GAME"},
+    {"type": "chapter", "start": 3.5, "duration": 2.8, "number": "", "title": "REAL PRACTICE MATCHES", "detail": "Every fourth week, a proper game"},
+    {"type": "chapter", "start": 9.7, "duration": 2.8, "number": "", "title": "SO THE TOURNAMENT ISN'T THE FIRST TIME", "detail": "Pressure they've felt before"},
+    {"type": "closing", "start": 12.6, "duration": 3.2, "headline": "FREE TRIAL CLASS", "action": "BOOK BY SEPT 12 — TAP 'SIGN UP'"}
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "name": "coaching-v3-maximum-local",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "grade": {"contrast": 1.12, "saturation": 1.16, "brightness": -0.018},
+  "clips": [
+    {"file": "vids/AP7A4314.MP4", "start": 4.72, "end": 5.18, "speed": 0.72, "interpolate_slowmo": true, "motion": "punch", "purpose": "cold-open batting action"},
+    {"file": "vids/AP7A4311.MP4", "start": 2.20, "end": 2.72, "speed": 1.25, "motion": "punch", "purpose": "bowling release"},
+    {"file": "vids/AP7A4296.MP4", "start": 12.18, "end": 12.72, "speed": 1.35, "motion": "drift_left", "purpose": "rapid footwork"},
+    {"file": "vids/AP7A4298.MP4", "start": 0.18, "end": 0.82, "speed": 1.30, "motion": "punch", "purpose": "bat demonstration closeup"},
+    {"file": "vids/AP7A4309.MP4", "start": 0.35, "end": 1.10, "speed": 1.15, "motion": "push_in", "purpose": "coach sets the drill"},
+    {"file": "vids/AP7A4318.MP4", "start": 9.05, "end": 10.25, "speed": 1.35, "motion": "drift_right", "purpose": "coach starts technique demonstration"},
+    {"file": "vids/AP7A4318.MP4", "start": 10.25, "end": 11.55, "speed": 0.62, "interpolate_slowmo": true, "motion": "push_in", "purpose": "slow technique detail"},
+    {"file": "vids/AP7A4318.MP4", "start": 11.55, "end": 12.25, "speed": 1.55, "motion": "punch", "purpose": "speed-ramp exit"},
+    {"file": "vids/AP7A4309.MP4", "start": 6.82, "end": 7.62, "speed": 1.25, "motion": "push_in", "purpose": "player applies correction"},
+    {"file": "vids/AP7A4314.MP4", "start": 3.82, "end": 4.55, "speed": 1.40, "motion": "drift_left", "purpose": "batting setup"},
+    {"file": "vids/AP7A4314.MP4", "start": 4.55, "end": 5.88, "speed": 0.58, "interpolate_slowmo": true, "motion": "push_in", "purpose": "hero slow motion shot"},
+    {"file": "vids/AP7A4314.MP4", "start": 5.88, "end": 6.42, "speed": 1.45, "motion": "punch", "purpose": "hero shot exit"},
+    {"file": "vids/AP7A4311.MP4", "start": 2.48, "end": 3.52, "speed": 0.72, "interpolate_slowmo": true, "motion": "drift_right", "freeze_duration": 0.32, "purpose": "bowling follow-through freeze"},
+    {"file": "vids/AP7A4296.MP4", "start": 12.05, "end": 15.30, "speed": 1.55, "motion": "push_in", "purpose": "fast group finish"}
+  ],
+  "transitions": [
+    {"type": "fadewhite", "duration": 0.06},
+    {"type": "slideleft", "duration": 0.08},
+    {"type": "fadewhite", "duration": 0.05},
+    {"type": "smoothright", "duration": 0.08},
+    {"type": "zoomin", "duration": 0.10},
+    {"type": "fade", "duration": 0.04},
+    {"type": "smoothleft", "duration": 0.07},
+    {"type": "fadewhite", "duration": 0.06},
+    {"type": "slideleft", "duration": 0.09},
+    {"type": "fade", "duration": 0.04},
+    {"type": "fadewhite", "duration": 0.06},
+    {"type": "smoothright", "duration": 0.08},
+    {"type": "zoomin", "duration": 0.10}
+  ],
+  "flashes": [
+    {"time": 0.00, "duration": 0.06, "opacity": 0.72},
+    {"time": 1.43, "duration": 0.05, "opacity": 0.58},
+    {"time": 4.12, "duration": 0.07, "opacity": 0.48},
+    {"time": 7.15, "duration": 0.06, "opacity": 0.62},
+    {"time": 10.08, "duration": 0.06, "opacity": 0.58}
+  ],
+  "titles": [
+    {"start": 0.10, "end": 1.55, "text": "TRAIN THE DETAILS", "size": 66},
+    {"start": 3.10, "end": 5.55, "text": "FOOTWORK  |  BALANCE  |  CONTROL", "size": 42},
+    {"start": 9.35, "end": 11.35, "text": "BUILD THE SHOT", "size": 64},
+    {"start": 12.10, "end": 14.10, "text": "22YARDS CRICKET ACADEMY", "size": 50}
+  ]
+}
