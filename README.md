@@ -119,6 +119,12 @@ Open `http://127.0.0.1:8000`. The local workflow is:
 Copy `.env.example` to `.env` and add `OPENAI_API_KEY` and
 `IDEOGRAM_API_KEY` for live extraction, planning, artwork, and optional visual
 critique. API keys stay in the server process and are never sent to the browser.
+Add `SLACK_BOT_TOKEN` to send a generated poster and message to a public Slack
+channel from the campaign page. It is used only by FastAPI and must not be
+added to `frontend/.env.local` or any `NEXT_PUBLIC_` variable. The Slack app
+uses the bot scopes `channels:read`, `chat:write`, `chat:write.public`, and
+`files:write`. No public callback URL, Interactivity configuration, or Event
+Subscriptions are needed for this one-way sharing flow.
 
 ## Google Drive intake
 

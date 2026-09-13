@@ -7,6 +7,7 @@ import {
   AlertTriangle,
   Film,
   ImageIcon,
+  MessageSquareText,
   Sparkles,
   Upload,
   Video,
@@ -20,8 +21,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { GenerationProgress } from "@/components/generation-progress";
+import { PushNotificationWorkspace } from "@/components/push-notification-workspace";
 import { ApiError, createCampaign } from "@/lib/api";
 import type { CreativeFormat } from "@/lib/types";
+
+type CreationFormat = CreativeFormat | "text_generation";
 
 const ACCEPTED_VIDEO_TYPES = ["video/mp4", "video/quicktime", "video/webm"];
 const ACCEPTED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"];
@@ -37,7 +41,7 @@ interface FieldErrors {
 export function CampaignForm() {
   const router = useRouter();
 
-  const [format, setFormat] = React.useState<CreativeFormat>("poster");
+  const [format, setFormat] = React.useState<CreationFormat>("poster");
   const [businessName, setBusinessName] = React.useState("");
   const [briefText, setBriefText] = React.useState("");
   const [contactPhone, setContactPhone] = React.useState("");
@@ -72,7 +76,7 @@ export function CampaignForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (submitting) return;
+    if (submitting || format === "text_generation") return;
 
     const nextErrors = validate();
     setErrors(nextErrors);
@@ -110,30 +114,41 @@ export function CampaignForm() {
   }
 
   if (submitting) {
-    return <GenerationProgress format={format} />;
+    return <GenerationProgress format={format as CreativeFormat} />;
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+    <div className="space-y-6">
       <div className="space-y-1.5">
         <Label htmlFor="format">Format</Label>
-        <Tabs value={format} onValueChange={(v) => setFormat(v as CreativeFormat)}>
-          <TabsList className="grid w-full grid-cols-2">
+        <Tabs value={format} onValueChange={(v) => setFormat(v as CreationFormat)}>
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="poster" className="gap-1.5">
               <ImageIcon /> Poster
             </TabsTrigger>
             <TabsTrigger value="reel" className="gap-1.5">
               <Video /> Reel
             </TabsTrigger>
+            <TabsTrigger value="text_generation" className="gap-1.5">
+              <MessageSquareText />
+              <span className="hidden sm:inline">Push Notifications</span>
+              <span className="sm:hidden">Push</span>
+            </TabsTrigger>
           </TabsList>
         </Tabs>
         <p className="text-xs text-muted-foreground">
           {format === "poster"
             ? "A single still image ad, ready in seconds."
-            : "A short video ad cut from your own footage — takes a minute or two."}
+            : format === "reel"
+              ? "A short video ad cut from your own footage — takes a minute or two."
+              : "Generate concise marketing copy. Push notifications are available now."}
         </p>
       </div>
 
+      {format === "text_generation" ? (
+        <PushNotificationWorkspace embedded />
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-6" noValidate>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="business_name">Business name</Label>
@@ -304,7 +319,9 @@ export function CampaignForm() {
         <Sparkles className="size-4" />
         Generate {format === "poster" ? "poster" : "reel"}
       </Button>
-    </form>
+        </form>
+      )}
+    </div>
   );
 }
 

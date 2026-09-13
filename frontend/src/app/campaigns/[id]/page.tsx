@@ -10,6 +10,7 @@ import { ArtifactViewer } from "@/components/artifact-viewer";
 import { VerificationBadge } from "@/components/verification-badge";
 import { MetaPreviewCard } from "@/components/meta-preview-card";
 import { CreatePausedCampaign } from "@/components/create-paused-campaign";
+import { ShareToSlack } from "@/components/share-to-slack";
 import {
   Card,
   CardContent,
@@ -127,6 +128,12 @@ export default function CampaignReviewPage() {
                   </ul>
                 </AlertDescription>
               </Alert>
+            )}
+            {run.artifact.format === "poster" && (
+              <ShareToSlack
+                runId={run.id}
+                posterSrc={artifactUrl(run.id)}
+              />
             )}
           </CardContent>
         </Card>

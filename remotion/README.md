@@ -24,7 +24,7 @@ new themes and variants are opt-in.
 ## Render locally
 
 ```powershell
-npm install
+npm ci
 npm run video:prepare
 npm run video:studio
 npm run video:render
@@ -34,7 +34,7 @@ Prepared media is cached in `remotion/public/` and stays out of Git. To rebuild
 only one changed source range:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\prepare_remotion_media.py fixtures\reel-academy-remotion-v1.json --shot belong --force
+uv run python scripts/prepare_remotion_media.py fixtures/reel-academy-remotion-v1.json --shot belong --force
 ```
 
 ## Editing vocabulary implemented

@@ -1,4 +1,9 @@
-import type { CampaignRun, CreatePausedResult } from "./types";
+import type {
+  CampaignRun,
+  CreatePausedResult,
+  SlackChannel,
+  SlackShareResult,
+} from "./types";
 
 /**
  * Base URL for the FastAPI backend. Defaults to the port the backend uses
@@ -69,4 +74,32 @@ export async function createPausedCampaign(id: string): Promise<CreatePausedResu
   );
   if (!res.ok) throw new ApiError(res.status, await extractErrorMessage(res));
   return (await res.json()) as CreatePausedResult;
+}
+
+/** GET eligible public Slack channels for a generated poster. */
+export async function listSlackChannels(id: string): Promise<SlackChannel[]> {
+  const res = await fetch(
+    `${API_BASE_URL}/api/campaigns/${encodeURIComponent(id)}/slack/channels`,
+    { cache: "no-store" },
+  );
+  if (!res.ok) throw new ApiError(res.status, await extractErrorMessage(res));
+  return (await res.json()) as SlackChannel[];
+}
+
+/** Send the generated poster and message to one public Slack channel. */
+export async function sharePosterToSlack(
+  id: string,
+  channelId: string,
+  message: string,
+): Promise<SlackShareResult> {
+  const res = await fetch(
+    `${API_BASE_URL}/api/campaigns/${encodeURIComponent(id)}/slack`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ channel_id: channelId, message }),
+    },
+  );
+  if (!res.ok) throw new ApiError(res.status, await extractErrorMessage(res));
+  return (await res.json()) as SlackShareResult;
 }
