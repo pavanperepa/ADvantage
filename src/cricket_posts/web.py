@@ -33,6 +33,7 @@ from .models import (
 )
 from .renderer import ASSET_DIR, PROJECT_ROOT, TEMPLATE_DIR
 from .studio import PosterStudio
+from .text_generation_api import router as text_generation_router
 
 
 WEB_TEMPLATE_DIR = TEMPLATE_DIR / "web"
@@ -152,6 +153,7 @@ def create_app(studio: PosterStudio | None = None) -> FastAPI:
         allow_headers=["*"],
     )
     app.include_router(campaign_router)
+    app.include_router(text_generation_router)
 
     @app.get("/healthz")
     def healthz() -> dict[str, str]:

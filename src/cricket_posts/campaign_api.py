@@ -5,8 +5,7 @@ only). This is intentionally a thin HTTP wrapper around
 ``advantage``'s already-tested ``run_campaign()`` -- no new
 business logic lives here.
 
-No persistence layer exists yet (P1-02 is deliberately deferred), so runs
-live in an in-memory dict for the life of the server process. `run_campaign`
+Campaign runs live in an in-memory dict for the life of the server. `run_campaign`
 executes synchronously in the request handler (a poster takes ~2-3s, a reel
 roughly a minute) -- there is no background job queue, matching that same
 scope cut.
@@ -23,7 +22,7 @@ from typing import Any
 from dotenv import load_dotenv
 from fastapi import APIRouter, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse, RedirectResponse, Response
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from advantage import (
     PALETTE_SWATCHES,
@@ -64,6 +63,12 @@ from advantage.integrations.google_drive import (
 from advantage.integrations.google_oauth import GoogleOAuthError, resolve_google_drive_access_token
 from .renderer import PROJECT_ROOT
 from .run_store import BlobRunStore, RunStoreError, StoredRun
+from .slack_sharing import (
+    SlackChannelUnavailableError,
+    SlackNotConfiguredError,
+    SlackSharingError,
+    SlackSharingService,
+)
 
 # `cli.run_serve` never loads .env (only the one-shot CLI commands and the Meta
 # adapters do), so under `uvicorn` the whole process would otherwise start with
@@ -178,6 +183,31 @@ class CreatePausedOut(BaseModel):
     ad_set_id: str | None
     ad_id: str | None
     status: str
+
+
+class SlackChannelOut(BaseModel):
+    id: str
+    name: str
+
+
+class SlackShareIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    channel_id: str = Field(min_length=1, max_length=64)
+    message: str = Field(min_length=1, max_length=4000)
+
+    @field_validator("channel_id", "message")
+    @classmethod
+    def must_not_be_blank(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("must not be blank")
+        return value
+
+class SlackShareOut(BaseModel):
+    status: str
+    channel_id: str
+    channel_name: str
+    file_id: str | None
 
 
 def _to_out(run_id: str, result: CampaignResult) -> CampaignRunOut:
@@ -678,6 +708,55 @@ def get_campaign_artifact(run_id: str) -> Response:
         raise HTTPException(404, "Artifact file is no longer on disk.")
     media_type = "image/png" if result.artifact.format == CreativeFormat.POSTER else "video/mp4"
     return FileResponse(path, media_type=media_type)
+
+
+def _slack_service() -> SlackSharingService:
+    try:
+        return SlackSharingService.from_env()
+    except SlackNotConfiguredError as exc:
+        raise HTTPException(503, str(exc)) from exc
+
+
+def _poster_path(run_id: str) -> tuple[CampaignResult, Path]:
+    result = _get_run(run_id)
+    if result.artifact.format != CreativeFormat.POSTER:
+        raise HTTPException(422, "Only generated posters can be shared to Slack.")
+    path = Path(result.artifact.file_path)
+    if not path.is_file():
+        raise HTTPException(404, "The generated poster is no longer on disk.")
+    return result, path
+
+
+@router.get("/{run_id}/slack/channels", response_model=list[SlackChannelOut])
+def list_slack_channels(run_id: str) -> list[SlackChannelOut]:
+    _poster_path(run_id)
+    try:
+        channels = _slack_service().list_public_channels()
+    except SlackSharingError as exc:
+        raise HTTPException(502, str(exc)) from exc
+    return [SlackChannelOut(id=channel.id, name=channel.name) for channel in channels]
+
+
+@router.post("/{run_id}/slack", response_model=SlackShareOut)
+def share_campaign_poster_to_slack(run_id: str, payload: SlackShareIn) -> SlackShareOut:
+    result, poster_path = _poster_path(run_id)
+    try:
+        receipt = _slack_service().share_poster(
+            channel_id=payload.channel_id,
+            message=payload.message,
+            poster_path=poster_path,
+            title=f"{result.request.business_name} — ADvantage poster",
+        )
+    except SlackChannelUnavailableError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    except SlackSharingError as exc:
+        raise HTTPException(502, str(exc)) from exc
+    return SlackShareOut(
+        status="sent",
+        channel_id=receipt.channel_id,
+        channel_name=receipt.channel_name,
+        file_id=receipt.file_id,
+    )
 
 
 @router.post("/{run_id}/create-paused-campaign", response_model=CreatePausedOut)

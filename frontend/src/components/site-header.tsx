@@ -4,12 +4,17 @@ import { Megaphone } from "lucide-react";
 export function SiteHeader() {
   return (
     <header className="border-b border-border/70">
-      <div className="mx-auto flex h-14 w-full max-w-3xl items-center px-4 sm:px-6">
+      <div className="mx-auto flex h-16 w-full max-w-3xl items-center px-4 sm:h-18 sm:px-6">
         <Link
           href="/"
-          className="flex items-center gap-2 text-sm font-medium tracking-tight"
+          aria-label="ADvantage home"
+          className="flex items-center gap-2.5 text-lg font-semibold tracking-tight sm:text-xl"
         >
-          <Megaphone className="size-4 text-primary" aria-hidden />
+          <Megaphone
+            className="size-6 shrink-0 text-primary sm:size-7"
+            strokeWidth={2.25}
+            aria-hidden
+          />
           <span>ADvantage</span>
         </Link>
       </div>

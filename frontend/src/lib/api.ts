@@ -7,6 +7,8 @@ import type {
   InterviewResponse,
   Palette,
   RegenerateRequest,
+  SlackChannel,
+  SlackShareResult,
 } from "./types";
 
 /**
@@ -145,4 +147,32 @@ export async function regenerateCampaign(
   );
   if (!res.ok) throw new ApiError(res.status, await extractErrorMessage(res));
   return (await res.json()) as CampaignRun;
+}
+
+/** GET eligible public Slack channels for a generated poster. */
+export async function listSlackChannels(id: string): Promise<SlackChannel[]> {
+  const res = await fetch(
+    `${API_BASE_URL}/api/campaigns/${encodeURIComponent(id)}/slack/channels`,
+    { cache: "no-store" },
+  );
+  if (!res.ok) throw new ApiError(res.status, await extractErrorMessage(res));
+  return (await res.json()) as SlackChannel[];
+}
+
+/** Send the generated poster and message to one public Slack channel. */
+export async function sharePosterToSlack(
+  id: string,
+  channelId: string,
+  message: string,
+): Promise<SlackShareResult> {
+  const res = await fetch(
+    `${API_BASE_URL}/api/campaigns/${encodeURIComponent(id)}/slack`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ channel_id: channelId, message }),
+    },
+  );
+  if (!res.ok) throw new ApiError(res.status, await extractErrorMessage(res));
+  return (await res.json()) as SlackShareResult;
 }

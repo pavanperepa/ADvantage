@@ -8,6 +8,7 @@ import {
   Film,
   FolderOpen,
   ImageIcon,
+  MessageSquareText,
   ListChecks,
   Loader2,
   Plus,
@@ -22,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PushNotificationWorkspace } from "@/components/push-notification-workspace";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -52,6 +54,11 @@ const KNOWN_STRING_ANSWER_KEYS = [
 
 const STEP_TITLES = ["Brief", "A few questions", "Budget & destination"] as const;
 
+// Text generation is a third thing the owner can create, but unlike a poster
+// or a reel it produces copy rather than a rendered artifact, so it bypasses
+// the three-step flow entirely and hands over to its own workspace.
+type CreationFormat = CreativeFormat | "text_generation";
+
 interface FieldErrors {
   business_name?: string;
   brief_text?: string;
@@ -71,7 +78,10 @@ export function CampaignForm() {
 
   const [step, setStep] = React.useState<1 | 2 | 3>(1);
 
-  const [format, setFormat] = React.useState<CreativeFormat>("poster");
+  const [format, setFormat] = React.useState<CreationFormat>("poster");
+  // Narrowed view of `format` for the poster/reel-only paths below. Text
+  // generation bails out of both before either is reached.
+  const creativeFormat: CreativeFormat = format === "text_generation" ? "poster" : format;
   const [businessName, setBusinessName] = React.useState("");
   const [briefText, setBriefText] = React.useState("");
   const [contactPhone, setContactPhone] = React.useState("");
@@ -172,7 +182,7 @@ export function CampaignForm() {
       const res = await fetchInterviewQuestions(
         businessName.trim(),
         briefText.trim(),
-        format,
+        creativeFormat,
         accumulated,
       );
       const nextAnswers = res.answers ?? accumulated;
@@ -259,7 +269,7 @@ export function CampaignForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (step !== 3 || submitting) return;
+    if (step !== 3 || submitting || format === "text_generation") return;
 
     const nextErrors = validateDetails();
     setErrors(nextErrors);
@@ -317,7 +327,7 @@ export function CampaignForm() {
   }
 
   if (submitting) {
-    return <GenerationProgress format={format} />;
+    return <GenerationProgress format={creativeFormat} />;
   }
 
   return (
@@ -336,22 +346,34 @@ export function CampaignForm() {
         <div className="space-y-6">
           <div className="space-y-1.5">
             <Label htmlFor="format">Format</Label>
-            <Tabs value={format} onValueChange={(v) => setFormat(v as CreativeFormat)}>
-              <TabsList className="grid w-full grid-cols-2">
+            <Tabs value={format} onValueChange={(v) => setFormat(v as CreationFormat)}>
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="poster" className="gap-1.5">
                   <ImageIcon /> Poster
                 </TabsTrigger>
                 <TabsTrigger value="reel" className="gap-1.5">
                   <Video /> Reel
                 </TabsTrigger>
+                <TabsTrigger value="text_generation" className="gap-1.5">
+                  <MessageSquareText /> Text
+                </TabsTrigger>
               </TabsList>
             </Tabs>
             <p className="text-xs text-muted-foreground">
               {format === "poster"
                 ? "A single still image ad, ready in seconds."
-                : "A short video ad cut from your own footage — takes a minute or two."}
+                : format === "reel"
+                  ? "A short video ad cut from your own footage — takes a minute or two."
+                  : "Push and campaign copy, generated as text — no artwork rendered."}
             </p>
           </div>
+
+          {/* Text generation has no brief/asset/budget steps of its own, so it
+              takes over the rest of the form rather than continuing to step 2. */}
+          {format === "text_generation" ? (
+            <PushNotificationWorkspace embedded />
+          ) : (
+          <>
 
           <div className="space-y-1.5">
             <Label htmlFor="business_name">Business name</Label>
@@ -498,6 +520,9 @@ export function CampaignForm() {
             {interviewLoading && <Loader2 className="size-4 animate-spin" />}
             Continue
           </Button>
+
+          </>
+          )}
         </div>
       )}
 

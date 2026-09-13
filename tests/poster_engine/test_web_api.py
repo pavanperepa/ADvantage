@@ -14,6 +14,22 @@ def test_healthcheck(tmp_path):
     assert response.json() == {"status": "ok"}
 
 
+def test_home_page_renders_the_poster_studio(tmp_path):
+    studio = PosterStudio(
+        database_path=tmp_path / "studio.db",
+        output_root=tmp_path / "projects",
+    )
+    studio.ensure_default_brand()
+    client = TestClient(create_app(studio))
+
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert "ADvantage" in response.text
+    assert "Paste your event or academy details" in response.text
+    assert "/assets/studio-app.css" in response.text
+
+
 def test_structured_api_workflow_generates_and_exports_one_poster(
     tmp_path,
     load_content,

@@ -15,6 +15,7 @@ import { CreatePausedCampaign } from "@/components/create-paused-campaign";
 import { ActivityPanel } from "@/components/activity-panel";
 import { CritiqueCard } from "@/components/critique-card";
 import { RegeneratePanel } from "@/components/regenerate-panel";
+import { ShareToSlack } from "@/components/share-to-slack";
 import {
   Card,
   CardContent,
@@ -135,6 +136,12 @@ export default function CampaignReviewPage() {
                   </ul>
                 </AlertDescription>
               </Alert>
+            )}
+            {run.artifact.format === "poster" && (
+              <ShareToSlack
+                runId={run.id}
+                posterSrc={artifactUrl(run.id)}
+              />
             )}
           </CardContent>
         </Card>

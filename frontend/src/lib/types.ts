@@ -181,3 +181,15 @@ export interface DriveFolder {
   id: string;
   name: string;
 }
+
+export interface SlackChannel {
+  id: string;
+  name: string;
+}
+
+export interface SlackShareResult {
+  status: "sent";
+  channel_id: string;
+  channel_name: string;
+  file_id: string | null;
+}
