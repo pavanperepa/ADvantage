@@ -176,7 +176,12 @@ def run_score(
     fixture_dir = fixture_dir or PROJECT_ROOT / "fixtures"
     output_dir = output_dir or PROJECT_ROOT / "output" / "calibration"
     output_dir.mkdir(parents=True, exist_ok=True)
-    fixtures = sorted(fixture_dir.glob("*.json"))
+    fixtures = []
+    for path in sorted(fixture_dir.glob("*.json")):
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        content = payload.get("content", payload) if isinstance(payload, dict) else payload
+        if isinstance(content, dict) and "content_type" in content:
+            fixtures.append(path)
     if not fixtures:
         raise ValueError(f"No fixtures found in {fixture_dir}")
 

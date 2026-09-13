@@ -130,9 +130,9 @@ def _generate_background(
 def create_app(studio: PosterStudio | None = None) -> FastAPI:
     studio = studio or PosterStudio()
     app = FastAPI(
-        title="Hybrid Cricket Poster Studio",
+        title="ADvantage Creative Studio",
         version="1.0.0",
-        description="One-page cricket poster generation with exact deterministic copy.",
+        description="Verified static-ad production with exact deterministic copy.",
     )
     app.state.studio = studio
     templates = Jinja2Templates(directory=WEB_TEMPLATE_DIR)

@@ -1,4 +1,3 @@
-"""Cricket Post Studio."""
+"""ADvantage creative production engine."""
 
 __version__ = "0.1.0"
-

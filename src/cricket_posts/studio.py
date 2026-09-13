@@ -63,7 +63,7 @@ class PosterStudio:
             return brands[0]
         return self.database.save_brand(
             BrandProfile(
-                name="CRICKET POST STUDIO",
+                name="ADvantage",
                 logo_path=str(ASSET_DIR / "mark.svg"),
             )
         )

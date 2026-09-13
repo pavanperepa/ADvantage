@@ -1,0 +1,139 @@
+{
+  "version": 3,
+  "name": "practice-match-attention-reel-sept-15",
+  "director": {
+    "personality": "confident_match_day",
+    "intent": "Stop the scroll with live play, then show that coached practice matches build decisions, confidence and match readiness.",
+    "selectionSource": "TwelveLabs index academy-practice-match-reel-2026",
+    "rules": [
+      "Deliver the hook in the first three seconds while live action is already happening.",
+      "Hold every match passage for roughly four to five seconds so viewers can follow the play.",
+      "Use a single persuasive story, not numbered instructional steps.",
+      "Mute camera audio so no incidental voices appear beneath the instrumental music bed.",
+      "End on live footage with a direct claim-your-free-trial deadline."
+    ]
+  },
+  "canvas": {"width": 1080, "height": 1920, "fps": 30},
+  "brand": {
+    "academy": "22YARDS CRICKET ACADEMY",
+    "location": "HOUSTON, TEXAS",
+    "phone": "+1 (713) 498-2155",
+    "registrationUrl": "axon22yards.com/join?location=houston",
+    "primary": "#8CC63F",
+    "accent": "#FFD437",
+    "ink": "#07130A"
+  },
+  "music": {
+    "source": "assets/music/houston-sports-pulse-instrumental.wav",
+    "file": "music/houston-sports-pulse-instrumental.wav",
+    "title": "Houston Sports Pulse",
+    "artist": "Original 22Yards instrumental",
+    "sourceUrl": "local/original",
+    "license": "Original instrumental; no vocals",
+    "baseVolume": 0.32,
+    "duckVolume": 0.32,
+    "duckStart": 0.9,
+    "duckEnd": 17.4,
+    "fadeIn": 0.65,
+    "fadeOut": 1.1
+  },
+  "shots": [
+    {
+      "id": "match-day-hook",
+      "source": "vids/practice-match3.mp4",
+      "media": "practice-match/media/01-match-day-hook.mp4",
+      "sourceStart": 2.3,
+      "sourceEnd": 5.9,
+      "speed": 1.0,
+      "timelineStart": 0.0,
+      "duration": 3.6,
+      "focusX": 0.5,
+      "motion": "hero_push",
+      "transition": "none",
+      "audio": 0.0,
+      "semanticPurpose": "A complete delivery, run and fielding reaction creates an immediate action hook."
+    },
+    {
+      "id": "real-match-setup",
+      "source": "vids/practice-match1.mp4",
+      "media": "practice-match/media/02-real-match-setup.mp4",
+      "sourceStart": 0.0,
+      "sourceEnd": 3.9,
+      "speed": 1.0,
+      "timelineStart": 3.35,
+      "duration": 3.9,
+      "focusX": 0.5,
+      "motion": "gentle_drift_right",
+      "transition": "impact_cut",
+      "audio": 0.0,
+      "semanticPurpose": "Batter, wicket, field and coach establish a supervised practice match rather than a drill."
+    },
+    {
+      "id": "coached-in-play",
+      "source": "vids/practice-match2.mp4",
+      "media": "practice-match/media/03-coached-in-play.mp4",
+      "sourceStart": 0.05,
+      "sourceEnd": 4.8,
+      "speed": 1.0,
+      "timelineStart": 6.95,
+      "duration": 4.75,
+      "focusX": 0.48,
+      "motion": "slow_push",
+      "transition": "brand_wipe",
+      "audio": 0.0,
+      "semanticPurpose": "The coach observes the match so feedback happens in the context of real decisions."
+    },
+    {
+      "id": "skills-under-pressure",
+      "source": "vids/practice-match1.mp4",
+      "media": "practice-match/media/04-skills-under-pressure.mp4",
+      "sourceStart": 4.65,
+      "sourceEnd": 8.15,
+      "speed": 1.0,
+      "timelineStart": 11.45,
+      "duration": 3.5,
+      "focusX": 0.5,
+      "motion": "gentle_drift_left",
+      "transition": "soft_dissolve",
+      "audio": 0.0,
+      "semanticPurpose": "A full fielding chase shows reaction, movement and communication under pressure."
+    },
+    {
+      "id": "bowling-reset",
+      "source": "vids/practice-match1.mp4",
+      "media": "practice-match/media/05-bowling-reset.mp4",
+      "sourceStart": 8.15,
+      "sourceEnd": 11.55,
+      "speed": 1.0,
+      "timelineStart": 14.7,
+      "duration": 3.4,
+      "focusX": 0.5,
+      "motion": "hero_push",
+      "transition": "impact_cut",
+      "audio": 0.0,
+      "semanticPurpose": "A fresh bowling reset adds pace while keeping the match sequence understandable."
+    },
+    {
+      "id": "match-ready-close",
+      "source": "vids/practice-match3.mp4",
+      "media": "practice-match/media/06-match-ready-close.mp4",
+      "sourceStart": 8.25,
+      "sourceEnd": 12.4,
+      "speed": 1.0,
+      "timelineStart": 17.7,
+      "duration": 4.15,
+      "focusX": 0.5,
+      "motion": "none",
+      "transition": "brand_wipe",
+      "audio": 0.0,
+      "semanticPurpose": "Live match play remains visible while the result and free-trial CTA land."
+    }
+  ],
+  "overlays": [
+    {"type": "hero_title", "start": 0.12, "duration": 3.9, "eyebrow": "WHEN THE PRESSURE IS REAL", "line1": "WILL THEY BE", "line2": "READY?"},
+    {"type": "chapter", "start": 4.1, "duration": 5.45, "number": "", "label": "", "title": "OUR WEEKLY ACADEMY TOURNAMENTS.", "detail": ""},
+    {"type": "chapter", "start": 9.95, "duration": 5.85, "number": "", "label": "", "title": "SO MATCH DAY FEELS FAMILIAR.", "detail": ""},
+    {"type": "deadline", "start": 14.7, "duration": 1.45, "label": "FREE TRIAL DEADLINE", "date": "SEPT 15"},
+    {"type": "closing", "start": 16.15, "duration": 5.7, "headline": "DON'T WAIT FOR MATCH DAY", "action": "CLAIM YOUR FREE TRIAL BEFORE", "deadlineMonth": "SEPT", "deadlineDay": "15"}
+  ]
+}

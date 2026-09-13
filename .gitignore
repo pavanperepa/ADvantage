@@ -9,6 +9,9 @@ studio.db
 .uv-cache/
 .mypy_cache/
 .pytest_cache/
+.claude/settings.local.json
+node_modules/
+remotion/public/
 *.freespace.json
 
 # Student photography. Source frames (163MB) and the cut-outs derived from them
@@ -17,4 +20,5 @@ studio.db
 # children are not something to make permanent in a git history by default.
 # The manifest is tracked, so the bank stays described and reproducible.
 real-photo/
+vids/
 assets/subjects/*.png

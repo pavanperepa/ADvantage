@@ -1,0 +1,64 @@
+{
+  "brand": {
+    "name": "22 YARDS HOUSTON CRICKET ACADEMY",
+    "tagline": "",
+    "location": "Houston, TX 77082",
+    "contact_lines": [],
+    "palette": {
+      "ink": "#063D7C",
+      "surface": "#F8FBFF",
+      "accent": "#F5C400",
+      "highlight": "#2E7BFF"
+    },
+    "logo_path": "assets/brand/22yards-houston.png",
+    "registration_url": "https://axon22yards.com/join?location=houston"
+  },
+  "content": {
+    "content_type": "coaching",
+    "organization": "22 YARDS HOUSTON",
+    "eyebrow": "CRICKET ACADEMY",
+    "title": "BETTER CRICKETER.\nSTRONGER ATHLETE.",
+    "subtitle": "AGE-APPROPRIATE STRENGTH TRAINING — BUILT INTO EVERY PROGRAM.",
+    "tagline": "NOT JUST CRICKET SKILLS. WE BUILD THE ATHLETE TOO.",
+    "detail_lines": [
+      "U5-U13",
+      "BEGINNERS & INTERMEDIATE"
+    ],
+    "location_lines": [
+      "22 Yards Houston Cricket Facility",
+      "14929 Westpark Dr, Suite 300",
+      "Houston, TX 77082"
+    ],
+    "contacts": [
+      {
+        "display_text": "+1 (713) 498-2155"
+      },
+      {
+        "display_text": "axon22yards.com/join"
+      }
+    ],
+    "sections": [
+      {
+        "heading": "TRAIN THE WHOLE ATHLETE",
+        "text": "Cricket technique works better when strength, balance and movement develop with it.",
+        "items": [
+          "STRENGTH, BALANCE & CORE",
+          "SPEED, MOVEMENT & COORDINATION",
+          "A STRONGER FOUNDATION FOR CRICKET"
+        ]
+      }
+    ],
+    "cta_lines": [
+      "FREE TRIAL",
+      "CLAIM YOUR SPOT BY SEPTEMBER 15",
+      "CALL OR WHATSAPP"
+    ],
+    "protected_copy": [
+      "BETTER CRICKETER.",
+      "STRONGER ATHLETE.",
+      "FREE TRIAL",
+      "CLAIM YOUR SPOT BY SEPTEMBER 15",
+      "+1 (713) 498-2155"
+    ]
+  }
+}

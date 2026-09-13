@@ -1,0 +1,140 @@
+{
+  "version": 1,
+  "name": "academy-intro-remotion-v1",
+  "director": {
+    "personality": "academy_cinematic",
+    "intent": "Introduce the academy by showing the coaching loop: demonstrate, correct, apply.",
+    "rules": [
+      "Let actions breathe for at least three seconds.",
+      "Use transitions only when the story changes chapter.",
+      "Never cover the coach or player with headline text.",
+      "Preserve real coaching audio during instruction.",
+      "End on the child running past the camera at natural speed while the brand and call to action remain over the live footage."
+    ]
+  },
+  "canvas": {"width": 1080, "height": 1920, "fps": 30},
+  "brand": {
+    "academy": "22YARDS CRICKET ACADEMY",
+    "location": "HOUSTON, TEXAS",
+    "phone": "(713) 570-9054",
+    "registrationUrl": "22yardshouston.com/registrations",
+    "primary": "#8CC63F",
+    "accent": "#F4D03F",
+    "ink": "#07130A"
+  },
+  "music": {
+    "source": "assets/music/mixkit-dirty-thinkin-989.mp3",
+    "file": "music/dirty-thinkin.mp3",
+    "title": "Dirty Thinkin'",
+    "artist": "Michael Ramir C.",
+    "sourceUrl": "https://mixkit.co/free-stock-music/",
+    "license": "Mixkit Stock Music Free License",
+    "baseVolume": 0.17,
+    "duckVolume": 0.055,
+    "duckStart": 10.5,
+    "duckEnd": 15.8,
+    "fadeIn": 0.8,
+    "fadeOut": 1.15
+  },
+  "shots": [
+    {
+      "id": "atmosphere",
+      "source": "vids/AP7A4296.MP4",
+      "media": "media/01-atmosphere.mp4",
+      "sourceStart": 0.35,
+      "sourceEnd": 3.75,
+      "speed": 1.0,
+      "timelineStart": 0.0,
+      "duration": 3.4,
+      "focusX": 0.5,
+      "motion": "slow_push",
+      "transition": "none",
+      "audio": 0.18,
+      "semanticPurpose": "academy atmosphere and warm-up"
+    },
+    {
+      "id": "demonstrate",
+      "source": "vids/AP7A4298.MP4",
+      "media": "media/02-demonstrate.mp4",
+      "sourceStart": 0.15,
+      "sourceEnd": 4.05,
+      "speed": 1.0,
+      "timelineStart": 3.1,
+      "duration": 3.9,
+      "focusX": 0.5,
+      "motion": "gentle_drift_right",
+      "transition": "soft_dissolve",
+      "audio": 0.22,
+      "semanticPurpose": "coach demonstrates the bat path"
+    },
+    {
+      "id": "correct",
+      "source": "vids/AP7A4309.MP4",
+      "media": "media/03-correct.mp4",
+      "sourceStart": 0.25,
+      "sourceEnd": 4.7,
+      "speed": 1.0,
+      "timelineStart": 6.75,
+      "duration": 4.45,
+      "focusX": 0.5,
+      "motion": "slow_push",
+      "transition": "brand_wipe",
+      "audio": 0.38,
+      "semanticPurpose": "coach corrects stance and foot placement"
+    },
+    {
+      "id": "explain",
+      "source": "vids/AP7A4318.MP4",
+      "media": "media/04-explain.mp4",
+      "sourceStart": 10.8,
+      "sourceEnd": 15.7,
+      "speed": 1.0,
+      "timelineStart": 10.95,
+      "duration": 4.9,
+      "focusX": 0.5,
+      "motion": "gentle_drift_left",
+      "transition": "soft_dissolve",
+      "audio": 1.0,
+      "semanticPurpose": "coach explains what to change while player watches"
+    },
+    {
+      "id": "apply",
+      "source": "vids/AP7A4314.MP4",
+      "media": "media/05-apply.mp4",
+      "sourceStart": 3.45,
+      "sourceEnd": 6.48,
+      "speed": 0.86,
+      "timelineStart": 15.6,
+      "duration": 3.52,
+      "focusX": 0.5,
+      "motion": "hero_push",
+      "transition": "brand_wipe",
+      "audio": 0.32,
+      "semanticPurpose": "player implements the correction in restrained slow motion"
+    },
+    {
+      "id": "belong",
+      "source": "vids/AP7A4281.MP4",
+      "media": "media/06-belong.mp4",
+      "sourceStart": 0.0,
+      "sourceEnd": 3.48,
+      "speed": 1.0,
+      "freeze": 0.0,
+      "interpolateSlowmo": false,
+      "timelineStart": 18.87,
+      "duration": 3.48,
+      "focusX": 0.42,
+      "motion": "none",
+      "transition": "soft_dissolve",
+      "audio": 0.42,
+      "semanticPurpose": "children run naturally toward and past the camera, followed by the live aftermath under the CTA"
+    }
+  ],
+  "overlays": [
+    {"type": "hero_title", "start": 0.25, "duration": 2.6, "eyebrow": "AT 22YARDS", "line1": "HERE'S HOW", "line2": "WE COACH"},
+    {"type": "chapter", "start": 3.45, "duration": 2.8, "number": "01", "title": "WE SHOW", "detail": "See how it's done"},
+    {"type": "chapter", "start": 7.15, "duration": 3.1, "number": "02", "title": "WE CORRECT", "detail": "Fix the small things"},
+    {"type": "chapter", "start": 16.0, "duration": 2.7, "number": "03", "title": "YOU APPLY", "detail": "Put it into practice"},
+    {"type": "closing", "start": 19.2, "duration": 3.15, "headline": "READY TO GET STARTED?", "action": "CALL FOR MORE INFORMATION"}
+  ]
+}

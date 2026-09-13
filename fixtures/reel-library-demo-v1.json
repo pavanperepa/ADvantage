@@ -1,0 +1,147 @@
+{
+  "version": 1,
+  "name": "reel-library-demo-v1",
+  "director": {
+    "personality": "match_day_component_demo",
+    "intent": "Exercise the reusable JSON-driven component, motion and transition vocabulary over existing prepared footage.",
+    "rules": [
+      "This is a component demonstration, not a publish-ready advertisement.",
+      "Keep all camera audio muted.",
+      "Use only existing prepared footage and original instrumental music."
+    ]
+  },
+  "canvas": {"width": 1080, "height": 1920, "fps": 30},
+  "style": {
+    "theme": "match_day",
+    "showBrandRail": true,
+    "transitionColor": "#FFD437",
+    "defaultOverlayAnimation": "spring"
+  },
+  "brand": {
+    "academy": "22YARDS CRICKET ACADEMY",
+    "location": "HOUSTON, TEXAS",
+    "phone": "+1 (713) 498-2155",
+    "registrationUrl": "axon22yards.com/join?location=houston",
+    "primary": "#8CC63F",
+    "accent": "#FFD437",
+    "ink": "#07130A"
+  },
+  "music": {
+    "source": "assets/music/houston-sports-pulse-instrumental.wav",
+    "file": "music/houston-sports-pulse-instrumental.wav",
+    "title": "Houston Sports Pulse",
+    "artist": "Original 22Yards instrumental",
+    "sourceUrl": "local/original",
+    "license": "Original instrumental; no vocals",
+    "baseVolume": 0.3,
+    "duckVolume": 0.3,
+    "duckStart": 0,
+    "duckEnd": 18,
+    "fadeIn": 0.5,
+    "fadeOut": 0.8
+  },
+  "shots": [
+    {
+      "id": "demo-hook",
+      "media": "practice-match/media/01-match-day-hook.mp4",
+      "timelineStart": 0,
+      "duration": 3.6,
+      "motion": "hero_push",
+      "transition": "none",
+      "audio": 0
+    },
+    {
+      "id": "demo-stats",
+      "media": "practice-match/media/02-real-match-setup.mp4",
+      "timelineStart": 3.35,
+      "duration": 3.9,
+      "motion": "zoom_out",
+      "transition": "wipe_left",
+      "audio": 0
+    },
+    {
+      "id": "demo-score",
+      "media": "practice-match/media/03-coached-in-play.mp4",
+      "timelineStart": 7,
+      "duration": 4.75,
+      "motion": "pan_up",
+      "transition": "bars",
+      "audio": 0
+    },
+    {
+      "id": "demo-caption",
+      "media": "practice-match/media/04-skills-under-pressure.mp4",
+      "timelineStart": 11.5,
+      "duration": 3.5,
+      "motion": "handheld",
+      "transition": "flash",
+      "audio": 0
+    },
+    {
+      "id": "demo-close",
+      "media": "practice-match/media/06-match-ready-close.mp4",
+      "timelineStart": 14.75,
+      "duration": 4.15,
+      "motion": "slow_push",
+      "transition": "iris",
+      "audio": 0
+    }
+  ],
+  "overlays": [
+    {
+      "type": "hero_title",
+      "start": 0.12,
+      "duration": 3.3,
+      "variant": "highlight",
+      "animation": "impact",
+      "eyebrow": "REUSABLE REEL SYSTEM",
+      "line1": "ONE LIBRARY",
+      "line2": "MANY STORIES"
+    },
+    {
+      "type": "stat",
+      "start": 3.7,
+      "duration": 3.2,
+      "variant": "glass",
+      "animation": "slide_up",
+      "heading": "PROGRAM FOCUS",
+      "value": "3",
+      "label": "CORE OUTCOMES",
+      "items": [
+        {"value": "SKILL", "label": "Cricket technique"},
+        {"value": "FITNESS", "label": "Athletic movement"},
+        {"value": "DECISIONS", "label": "Match awareness"}
+      ],
+      "columns": 3
+    },
+    {
+      "type": "scoreboard",
+      "start": 7.4,
+      "duration": 3.6,
+      "animation": "mask",
+      "homeName": "22YARDS",
+      "awayName": "CHALLENGERS",
+      "homeScore": "84",
+      "awayScore": "81",
+      "status": "PRACTICE MATCH"
+    },
+    {
+      "type": "caption",
+      "start": 11.8,
+      "duration": 2.8,
+      "variant": "karaoke",
+      "position": "bottom",
+      "text": "Build skills, fitness and match awareness.",
+      "emphasis": ["skills", "fitness", "awareness"]
+    },
+    {
+      "type": "closing",
+      "start": 15.05,
+      "duration": 3.85,
+      "variant": "banner",
+      "animation": "slide_left",
+      "headline": "READY TO LEARN MORE?",
+      "action": "VIEW PROGRAM DETAILS"
+    }
+  ]
+}

@@ -17,7 +17,17 @@ from cricket_posts.layout import poster_copy_lines
 from cricket_posts.models import BrandProfile, parse_editable_content
 from cricket_posts.renderer import PROJECT_ROOT
 
-FIXTURES = sorted(path.name for path in (PROJECT_ROOT / "fixtures").glob("*.json"))
+def poster_fixture_names() -> list[str]:
+    names: list[str] = []
+    for path in sorted((PROJECT_ROOT / "fixtures").glob("*.json")):
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        content = payload.get("content", payload) if isinstance(payload, dict) else payload
+        if isinstance(content, dict) and "content_type" in content:
+            names.append(path.name)
+    return names
+
+
+FIXTURES = poster_fixture_names()
 
 
 def load(name: str):

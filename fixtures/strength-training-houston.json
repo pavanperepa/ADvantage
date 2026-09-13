@@ -1,0 +1,57 @@
+{
+  "brand": {
+    "name": "22 YARDS HOUSTON CRICKET FACILITY",
+    "tagline": "",
+    "location": "Houston, TX 77082",
+    "contact_lines": [],
+    "palette": {
+      "ink": "#080D1F",
+      "surface": "#F4F7FF",
+      "accent": "#FFD100",
+      "highlight": "#2E7BFF"
+    },
+    "logo_path": "assets/brand/22yards-houston.png",
+    "registration_url": "https://axon22yards.com/join?location=houston"
+  },
+  "content": {
+    "content_type": "coaching",
+    "organization": "22 YARDS",
+    "eyebrow": "HOUSTON\nCRICKET ACADEMY",
+    "title": "WE TRAIN THE ATHLETE,\nNOT JUST THE BATTER.",
+    "subtitle": "STRENGTH & CONDITIONING, BUILT INTO EVERY SESSION",
+    "tagline": "FREE TRIAL CLASS — BOOK BY SEPT 12.",
+    "price_line": "FREE TRIAL CLASS",
+    "detail_lines": [
+      "AGES 7-13",
+      "TWICE WEEKLY",
+      "60 MIN CRICKET + 30 MIN S&C"
+    ],
+    "location_lines": [
+      "22 Yards Houston Cricket Facility",
+      "14929 Westpark Dr, Suite 300",
+      "Houston, TX 77082"
+    ],
+    "contacts": [],
+    "sections": [
+      {
+        "heading": "WHY STRENGTH FIRST",
+        "text": "",
+        "items": [
+          "AGE-APPROPRIATE STRENGTH & MOVEMENT WORK",
+          "SPEED, BALANCE AND CORE IN EVERY SESSION",
+          "BODIES THAT HOLD UP TO HARD-BALL CRICKET",
+          "A STRENGTH COACH ALONGSIDE THE CRICKET COACH"
+        ]
+      }
+    ],
+    "cta_lines": [
+      "CLAIM YOUR FREE TRIAL",
+      "TAP ‘SIGN UP’ BELOW",
+      "OFFER ENDS SEPT 12"
+    ],
+    "protected_copy": [
+      "FREE TRIAL CLASS",
+      "OFFER ENDS SEPT 12"
+    ]
+  }
+}

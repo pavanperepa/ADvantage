@@ -1,0 +1,9 @@
+import {Config} from '@remotion/cli/config';
+
+Config.setEntryPoint('./remotion/index.tsx');
+Config.setPublicDir('./remotion/public');
+Config.setVideoImageFormat('jpeg');
+Config.setJpegQuality(92);
+Config.setPixelFormat('yuv420p');
+Config.setCodec('h264');
+Config.setOverwriteOutput(true);

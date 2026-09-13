@@ -1,4 +1,38 @@
-# Hybrid Cricket Poster Studio
+# ADvantage
+
+ADvantage is a manifest-led agent that turns a small business's
+rough request and supplied assets into verified static ads and reels/videos,
+then prepares a paused Meta campaign for human approval. The working 22Yards
+poster studio and Remotion reels are the current proof case and implementation
+foundation.
+
+## Start here
+
+- `AGENTS.md` — safety, approval, privacy, and verification rules.
+- `PROJECT_MEMORY.md` — current business context, deliverables, decisions, and
+  known inconsistencies.
+- `docs/CORE_PROJECT_FILES.md` — the canonical files we are keeping and what
+  each part of the current system does.
+- `docs/FUTURE_SCOPE.md` — the hackathon product scope, implementation plan,
+  demo sequence, evaluation strategy, and explicit non-goals.
+
+The remainder of this README documents the implemented poster engine in detail.
+
+## Current implementation: Hybrid Cricket Poster Studio
+
+## Project context for future agents
+
+This repository now includes poster generation, Remotion reels, and Houston Meta
+Ads tooling. Future GPT/Astra sessions should begin with:
+
+- `AGENTS.md` for operating and safety rules;
+- `PROJECT_MEMORY.md` for business context, current assets, decisions, history,
+  and known inconsistencies;
+- `docs/CORE_PROJECT_FILES.md` for the active keep-set and file responsibilities;
+- `docs/FUTURE_SCOPE.md` for the prioritized roadmap.
+
+These documents cover newer campaign work that is not yet fully represented in
+the Git history or the poster-focused sections below.
 
 A local one-page poster workflow for cricket academies, tournaments, coaching,
 and lane rental. It has two generation modes:

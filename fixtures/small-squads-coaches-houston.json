@@ -1,0 +1,57 @@
+{
+  "brand": {
+    "name": "22 YARDS HOUSTON CRICKET FACILITY",
+    "tagline": "",
+    "location": "Houston, TX 77082",
+    "contact_lines": [],
+    "palette": {
+      "ink": "#080D1F",
+      "surface": "#F4F7FF",
+      "accent": "#FFD100",
+      "highlight": "#2E7BFF"
+    },
+    "logo_path": "assets/brand/22yards-houston.png",
+    "registration_url": "https://axon22yards.com/join?location=houston"
+  },
+  "content": {
+    "content_type": "coaching",
+    "organization": "22 YARDS",
+    "eyebrow": "HOUSTON\nCRICKET ACADEMY",
+    "title": "SMALL SQUADS.\nNAMED COACHES.",
+    "subtitle": "YOUR CHILD IS COACHED, NOT SUPERVISED",
+    "tagline": "FREE TRIAL CLASS — BOOK BY SEPT 12.",
+    "price_line": "FREE TRIAL CLASS",
+    "detail_lines": [
+      "AGES 5-13",
+      "NEVER MORE THAN 8 TO A COACH",
+      "SAME COACH EVERY WEEK"
+    ],
+    "location_lines": [
+      "22 Yards Houston Cricket Facility",
+      "14929 Westpark Dr, Suite 300",
+      "Houston, TX 77082"
+    ],
+    "contacts": [],
+    "sections": [
+      {
+        "heading": "WHAT A SMALL SQUAD BUYS",
+        "text": "",
+        "items": [
+          "CAPPED GROUPS — NO CHILD LOST AT THE BACK",
+          "THE SAME NAMED COACH, WEEK AFTER WEEK",
+          "QUALIFIED, BACKGROUND-CHECKED COACHING STAFF",
+          "SPOKEN FEEDBACK FOR EVERY PLAYER, EVERY SESSION"
+        ]
+      }
+    ],
+    "cta_lines": [
+      "CLAIM YOUR FREE TRIAL",
+      "TAP ‘SIGN UP’ BELOW",
+      "OFFER ENDS SEPT 12"
+    ],
+    "protected_copy": [
+      "FREE TRIAL CLASS",
+      "OFFER ENDS SEPT 12"
+    ]
+  }
+}
