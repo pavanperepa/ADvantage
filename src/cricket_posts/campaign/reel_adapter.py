@@ -5,16 +5,26 @@ JSON contract `remotion/types.ts` and `remotion/AcademyIntro.tsx` already
 know how to render), then shells out to the two CLI steps a human already
 runs by hand for every other reel in this repo --
 `scripts/prepare_remotion_media.py` followed by `remotion render` -- against
-a new generic Remotion composition (`GeneratedReel` in `remotion/Root.tsx`)
-that derives its duration/canvas from the supplied spec via
-`calculateMetadata` instead of a hardcoded fixture import.
+a generic Remotion composition (`GeneratedReel` in `remotion/Root.tsx`) that
+derives its duration/canvas from the supplied spec via `calculateMetadata`
+instead of a hardcoded fixture import.
 
 Deliberately simple, per hackathon scope: one shot per footage asset, in the
-order given, straight cuts, one closing/CTA overlay. No shot-selection
-scoring, no multi-take assembly, no per-request brand palette or logo (the
-existing `prepare_remotion_media.py` always stamps the bundled 22Yards logo
-and fonts -- see its `main()` -- which this adapter does not attempt to
-override).
+order given, straight cuts between them. No shot-selection scoring, no
+multi-take assembly, no per-request brand palette or logo (the existing
+`prepare_remotion_media.py` always stamps the bundled 22Yards logo and fonts
+-- see its `main()` -- which this adapter does not attempt to override).
+
+One deliberate exception to "deliberately simple": the shot motion/transition
+and overlays are NOT flat "none"/a single bare CTA card. `remotion/library/`
+(imported for free by `AcademyIntro.tsx` via `OverlayRenderer`) already ships
+a real component catalog -- 16 overlay types, 9 motion styles, 18 transitions
+-- so using a `hero_title` hook over the opening shot and a small motion/
+transition cycle costs nothing beyond picking different string values in the
+EditSpec. That is the one narrative-arc concession kept from the "Hook -> ...
+-> CTA" editorial process described in `remotion/README.md`; everything more
+editorial than that (shot scoring, per-request palettes, richer overlay
+types like stat/quote/deadline) stays cut for now.
 """
 
 from __future__ import annotations
@@ -27,9 +37,9 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from .campaign import CampaignArtifact, CampaignRequest, CreativeFormat
+from .models import CampaignArtifact, CampaignRequest, CreativeFormat
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 PREPARE_SCRIPT = REPO_ROOT / "scripts" / "prepare_remotion_media.py"
 REMOTION_ENTRY = REPO_ROOT / "remotion" / "index.tsx"
 REMOTION_CLI_ENTRY = REPO_ROOT / "node_modules" / "@remotion" / "cli" / "remotion-cli.js"
@@ -48,6 +58,13 @@ MIN_SHOT_SECONDS = 3.0
 MAX_SHOT_SECONDS = 6.0
 DEFAULT_SHOT_SECONDS = 4.0
 MAX_TOTAL_SECONDS = 25.0
+
+# See remotion/library/catalog.ts: shotMotionCatalog / transitionCatalog. A
+# small fixed cycle, not a scoring algorithm -- picking varied values instead
+# of one flat "none" is free (same renderer, just different EditSpec strings).
+SHOT_MOTION_CYCLE = ("slow_push", "gentle_drift_left", "gentle_drift_right")
+SHOT_TRANSITION = "soft_dissolve"
+HERO_OVERLAY_MAX_SECONDS = 3.0
 
 # Same bundled, licensed bed used by the existing practice-match fixtures
 # (fixtures/reel-practice-match-v1.json). Reused as-is rather than accepting
@@ -125,8 +142,8 @@ def build_edit_spec(request: CampaignRequest) -> dict[str, Any]:
                 "timelineStart": round(timeline, 3),
                 "duration": round(length, 3),
                 "focusX": 0.5,
-                "motion": "none",
-                "transition": "none",
+                "motion": SHOT_MOTION_CYCLE[(index - 1) % len(SHOT_MOTION_CYCLE)],
+                "transition": SHOT_TRANSITION,
                 "audio": 0.7,
             }
         )
@@ -138,9 +155,38 @@ def build_edit_spec(request: CampaignRequest) -> dict[str, Any]:
             "(all clips resolved to zero usable duration)."
         )
 
+    # Nothing follows the last shot, so it has no transition to carry.
+    shots[-1]["transition"] = "none"
+
     last_shot = shots[-1]
     headline = (request.offer_text or f"COME TRAIN WITH {request.business_name}").strip().upper()
     action = "TAP THE LINK TO SIGN UP" if request.destination_url else "TAP TO LEARN MORE"
+
+    overlays: list[dict[str, Any]] = []
+    if len(shots) > 1:
+        # A single shot is too short to carry both a hook and a CTA without
+        # them colliding on screen; only add the opening hook when there's a
+        # later shot for the CTA to live on instead.
+        first_shot = shots[0]
+        overlays.append(
+            {
+                "type": "hero_title",
+                "start": first_shot["timelineStart"],
+                "duration": min(first_shot["duration"], HERO_OVERLAY_MAX_SECONDS),
+                "eyebrow": (request.audience or "NEW THIS SEASON").upper(),
+                "line1": request.business_name.upper(),
+                "line2": (request.offer_text or request.brief_text).strip()[:60],
+            }
+        )
+    overlays.append(
+        {
+            "type": "closing",
+            "start": last_shot["timelineStart"],
+            "duration": last_shot["duration"],
+            "headline": headline[:60],
+            "action": action,
+        }
+    )
 
     return {
         "name": f"reel-adapter-{slug}",
@@ -156,15 +202,7 @@ def build_edit_spec(request: CampaignRequest) -> dict[str, Any]:
         },
         "music": dict(DEFAULT_MUSIC),
         "shots": shots,
-        "overlays": [
-            {
-                "type": "closing",
-                "start": last_shot["timelineStart"],
-                "duration": last_shot["duration"],
-                "headline": headline[:60],
-                "action": action,
-            }
-        ],
+        "overlays": overlays,
     }
 
 

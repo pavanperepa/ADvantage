@@ -1,7 +1,7 @@
 """Meta Ads preview and paused-creation adapter for the simplified campaign flow.
 
 Two entry points, matching today's hackathon-day contract in
-``src/cricket_posts/campaign.py``:
+``src/cricket_posts/campaign/models.py``:
 
 * :func:`build_meta_preview` -- pure, makes no network calls, and derives the
   Meta ad payload fields (campaign name, objective, budget, copy, CTA,
@@ -56,7 +56,7 @@ from typing import Any
 import requests
 from dotenv import load_dotenv
 
-from .campaign import (
+from .models import (
     CampaignArtifact,
     CampaignRequest,
     CreativeFormat,
@@ -64,7 +64,7 @@ from .campaign import (
     MetaAdResult,
 )
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 GRAPH_ROOT = "https://graph.facebook.com"
 DEFAULT_API_VERSION = "v24.0"
 

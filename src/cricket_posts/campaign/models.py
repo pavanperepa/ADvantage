@@ -12,7 +12,7 @@ from enum import Enum
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .drive_intake import IntakeAsset
+from ..drive_intake import IntakeAsset
 
 
 class CreativeFormat(str, Enum):

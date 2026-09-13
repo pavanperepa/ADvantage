@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from cricket_posts import reel_adapter
+from cricket_posts.campaign import reel_adapter
 from cricket_posts.campaign import CampaignRequest, CreativeFormat, CampaignArtifact
 from cricket_posts.drive_intake import AssetKind, IntakeAsset, IntakeStatus
 
@@ -59,11 +59,13 @@ def test_build_edit_spec_single_clip():
     assert shot["timelineStart"] == 0.0
     assert shot["duration"] == 5.0  # within the 3-6s band, so left as-is
     assert shot["media"].startswith("media/reel-adapter-22-yards-cricket-academy/")
+    assert shot["transition"] == "none"  # nothing follows the only shot
 
     assert spec["brand"]["academy"] == "22 YARDS CRICKET ACADEMY"
     assert spec["brand"]["phone"] == "+1 (713) 498-2155"
     assert spec["brand"]["registrationUrl"] == "https://axon22yards.com/join?location=houston"
 
+    # A single shot is too short to carry both a hook and a CTA -- just the CTA.
     assert len(spec["overlays"]) == 1
     overlay = spec["overlays"][0]
     assert overlay["type"] == "closing"
@@ -91,19 +93,33 @@ def test_build_edit_spec_multiple_clips_are_straight_cut_and_clamped():
     # Straight cuts: each shot starts exactly where the previous one ends, no overlap.
     starts = [shot["timelineStart"] for shot in spec["shots"]]
     assert starts == [0.0, 2.0, 8.0]
-    for shot in spec["shots"]:
-        assert shot["motion"] == "none"
-        assert shot["transition"] == "none"
+
+    # Shots use a varied motion cycle (remotion/library's catalog), not one
+    # flat "none" -- and only the last shot has no transition, since nothing
+    # follows it.
+    motions = [shot["motion"] for shot in spec["shots"]]
+    assert motions == ["slow_push", "gentle_drift_left", "gentle_drift_right"]
+    assert [shot["transition"] for shot in spec["shots"][:-1]] == ["soft_dissolve", "soft_dissolve"]
+    assert spec["shots"][-1]["transition"] == "none"
 
     # Media paths are unique per shot.
     media_paths = [shot["media"] for shot in spec["shots"]]
     assert len(set(media_paths)) == 3
 
-    # Closing overlay rides over the last shot only.
+    # Multiple shots: a brief hero hook over the opening shot, plus the
+    # closing CTA over the last shot -- the Hook -> ... -> CTA shape from
+    # remotion/README.md, without any shot-selection scoring behind it.
+    assert [o["type"] for o in spec["overlays"]] == ["hero_title", "closing"]
+    first_shot = spec["shots"][0]
+    hero = spec["overlays"][0]
+    assert hero["start"] == first_shot["timelineStart"]
+    assert hero["duration"] <= first_shot["duration"]
+    assert hero["line1"] == request.business_name.upper()
+
     last_shot = spec["shots"][-1]
-    overlay = spec["overlays"][0]
-    assert overlay["start"] == last_shot["timelineStart"]
-    assert overlay["duration"] == last_shot["duration"]
+    closing = spec["overlays"][1]
+    assert closing["start"] == last_shot["timelineStart"]
+    assert closing["duration"] == last_shot["duration"]
 
 
 def test_build_edit_spec_empty_footage_raises_clear_blocker():

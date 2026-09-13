@@ -13,9 +13,9 @@ from unittest.mock import Mock
 
 import pytest
 
-import cricket_posts.meta_adapter as meta_adapter
+import cricket_posts.campaign.meta_adapter as meta_adapter
 from cricket_posts.campaign import CampaignArtifact, CampaignRequest, CreativeFormat
-from cricket_posts.meta_adapter import (
+from cricket_posts.campaign.meta_adapter import (
     MissingBudgetError,
     build_meta_preview,
     create_paused_campaign,
