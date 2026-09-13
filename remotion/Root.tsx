@@ -69,5 +69,32 @@ export const RemotionRoot: React.FC = () => (
       height={practiceMatchLibrarySpec.canvas.height}
       defaultProps={{spec: practiceMatchLibrarySpec}}
     />
+    {/*
+      Generic reel composition: unlike the four above (each locked to a
+      statically-imported fixture at module-eval time), this one derives its
+      duration/fps/canvas from whatever `spec` is supplied at render time via
+      `--props=<file>.json` (see Remotion's calculateMetadata docs:
+      https://www.remotion.dev/docs/calculate-metadata). That makes it usable
+      for any business's EditSpec without editing this file. `defaultProps`
+      below only feeds Studio/typechecking when no --props is given.
+    */}
+    <Composition
+      id="GeneratedReel"
+      component={AcademyIntro}
+      calculateMetadata={({props}) => {
+        const generatedSpec = props.spec;
+        const generatedDuration = Math.ceil(
+          Math.max(...generatedSpec.shots.map((shot) => shot.timelineStart + shot.duration)) *
+            generatedSpec.canvas.fps,
+        );
+        return {
+          durationInFrames: generatedDuration,
+          fps: generatedSpec.canvas.fps,
+          width: generatedSpec.canvas.width,
+          height: generatedSpec.canvas.height,
+        };
+      }}
+      defaultProps={{spec: practiceMatchSpec}}
+    />
   </>
 );
