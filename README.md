@@ -15,6 +15,13 @@ foundation.
   each part of the current system does.
 - `docs/FUTURE_SCOPE.md` — the hackathon product scope, implementation plan,
   demo sequence, evaluation strategy, and explicit non-goals.
+- [Hackathon and beta MVP 1 execution plan](docs/HACKATHON_BETA_MVP1_PLAN.md) —
+  reviewed gaps, happy path, delivery phases, evaluation and release gates.
+- [P0-02 baseline validation](docs/P0_02_BASELINE_VALIDATION.md) — branch,
+  source inventory, focused test/render evidence, integration preflight, and
+  the remaining demo-readiness gates.
+- [GitHub Project backlog](docs/GITHUB_PROJECT_BACKLOG.md) — ticket index,
+  acceptance criteria, dependencies, priorities, and links to the execution board.
 
 The remainder of this README documents the implemented poster engine in detail.
 

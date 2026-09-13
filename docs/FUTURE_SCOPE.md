@@ -1,5 +1,9 @@
 # ADvantage: campaign production for small businesses
 
+Execution companion: [Hackathon and beta MVP 1 plan](HACKATHON_BETA_MVP1_PLAN.md)
+reviews this scope against the current code and event requirements, and defines
+the narrow happy path, phase gates, evaluation cases and private-beta rollout.
+
 > **Hackathon product plan** — the target product is business-generic. 22Yards
 > Houston Cricket Academy is the current proof case, not a product constraint.
 
