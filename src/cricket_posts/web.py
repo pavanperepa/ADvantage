@@ -14,11 +14,13 @@ from fastapi import (
     UploadFile,
     status,
 )
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, ConfigDict
 
+from .campaign_api import router as campaign_router
 from .layout import layout_summary
 from .models import (
     BrandProfile,
@@ -137,6 +139,16 @@ def create_app(studio: PosterStudio | None = None) -> FastAPI:
     app.state.studio = studio
     templates = Jinja2Templates(directory=WEB_TEMPLATE_DIR)
     app.mount("/assets", StaticFiles(directory=ASSET_DIR), name="assets")
+
+    # The Next.js frontend (P1-06 UI work) runs on its own dev server and
+    # calls this JSON API directly rather than through a proxy/rewrite.
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["http://localhost:3000"],
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    app.include_router(campaign_router)
 
     @app.get("/", response_class=HTMLResponse)
     def home(request: Request) -> HTMLResponse:
