@@ -103,3 +103,15 @@ class MetaAdResult(BaseModel):
     ad_set_id: str | None = None
     ad_id: str | None = None
     status: str
+
+
+class CampaignResult(BaseModel):
+    """The bundle `orchestrator.run_campaign()` returns: one request's worth
+    of generate + verify + (budget permitting) suggest, nothing published."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    request: CampaignRequest
+    artifact: CampaignArtifact
+    verification: VerificationResult
+    meta_preview: MetaAdPreview | None = None
