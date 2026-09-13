@@ -1,5 +1,7 @@
 # ADvantage
 
+**Demo:** _<!-- add demo link here -->_
+
 ADvantage is a manifest-led agent that turns a small business's
 rough request and supplied assets into verified static ads and reels/videos,
 then prepares a paused Meta campaign for human approval. The working 22Yards
@@ -8,6 +10,54 @@ foundation.
 
 For hosting, see the [Vercel deployment guide](docs/VERCEL_DEPLOYMENT.md) and
 the repository Services configuration in `vercel.json`.
+
+## How it works
+
+An owner writes one rough brief. Everything after that is the system's job.
+
+```
+brief -> interview -> generate -> verify -> review -> paused Meta campaign
+```
+
+1. **Interview** (`application/interview.py`) reads the brief, fills in
+   whatever it can infer, and asks at most two questions per round with a
+   drafted answer attached. The question set is deterministic; an LLM only
+   rewords it, and is validated against the same enums the request model
+   uses, so it cannot invent a field or a choice.
+2. **Generate** dispatches on format. A poster (`adapters/poster_ideogram.py`)
+   gets text-free Ideogram artwork with every piece of copy stamped
+   deterministically on top, so dates and phone numbers can never drift. A
+   reel (`adapters/reel_plan.py`) maps a requested *feel* onto the Remotion
+   component library — theme, pacing, transitions, and an overlay arc — then
+   renders through `remotion/`.
+3. **Verify** (`application/verification.py`) checks the file is structurally
+   correct: dimensions, copy present, nothing clipped.
+4. **Review** (`application/critique.py`) is a separate pass asking whether
+   the result is any *good*. Deterministic pixel measurements run first and
+   always report; an optional vision model adds narrative on top but can
+   never suppress a measured defect.
+5. **Explain** (`application/rationale.py`) says why the campaign is set up
+   the way it is, marking each claim with its source and only citing account
+   history when a real Meta read returned a number.
+
+Nothing is published. `create_paused_campaign` is a separate, explicitly
+clicked action — producing a creative and publishing one stay two different
+permissions.
+
+## Layout
+
+| Path | What lives there |
+|---|---|
+| `src/advantage/` | The product: domain models, adapters, application services |
+| `src/cricket_posts/` | The deterministic poster engine and the FastAPI app |
+| `remotion/` | The reel renderer and its component library |
+| `frontend/` | Next.js owner UI |
+| `scripts/` | Operational entry points (intake, media, Meta, demo) |
+| `reference/` | Superseded material kept for provenance, not imported |
+
+Two rules shape most of the code: **degrade, never block** — a missing API key
+falls back to a working path rather than failing the request — and **never
+invent a fact**, so business copy is only ever the owner's own words.
 
 ## Start here
 
