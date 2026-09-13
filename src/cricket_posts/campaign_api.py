@@ -22,7 +22,7 @@ from typing import Any
 
 from dotenv import load_dotenv
 from fastapi import APIRouter, Form, HTTPException, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse, Response
 from pydantic import BaseModel
 
 from advantage import (
@@ -63,6 +63,7 @@ from advantage.integrations.google_drive import (
 )
 from advantage.integrations.google_oauth import GoogleOAuthError, resolve_google_drive_access_token
 from .renderer import PROJECT_ROOT
+from .run_store import BlobRunStore, RunStoreError, StoredRun
 
 # `cli.run_serve` never loads .env (only the one-shot CLI commands and the Meta
 # adapters do), so under `uvicorn` the whole process would otherwise start with
@@ -78,6 +79,8 @@ UPLOADS_DIR = PROJECT_ROOT / "output" / "campaign_uploads"
 
 # In-memory only -- see module docstring. Keyed by run id.
 _RUNS: dict[str, CampaignResult] = {}
+_RUN_STORE = BlobRunStore.from_environment()
+_STORED_RUNS: dict[str, StoredRun] = {}
 
 _IMAGE_TYPES = {"image/png", "image/jpeg", "image/webp"}
 _VIDEO_TYPES = {"video/mp4", "video/quicktime", "video/webm"}
@@ -179,6 +182,7 @@ class CreatePausedOut(BaseModel):
 
 def _to_out(run_id: str, result: CampaignResult) -> CampaignRunOut:
     artifact = result.artifact
+    stored = _STORED_RUNS.get(run_id)
     return CampaignRunOut(
         id=run_id,
         artifact=ArtifactOut(
@@ -186,7 +190,7 @@ def _to_out(run_id: str, result: CampaignResult) -> CampaignRunOut:
             width=artifact.width,
             height=artifact.height,
             duration_seconds=artifact.duration_seconds,
-            url=f"/api/campaigns/{run_id}/artifact",
+            url=stored.artifact.url if stored else f"/api/campaigns/{run_id}/artifact",
         ),
         verification=VerificationOut(
             passed=result.verification.passed, findings=result.verification.findings
@@ -424,15 +428,60 @@ def create_campaign(
     except (OrchestratorError, PosterAdapterError, ReelAdapterError) as exc:
         raise HTTPException(422, str(exc)) from exc
 
-    _RUNS[run_id] = result
+    _remember_run(run_id, result)
     return _to_out(run_id, result)
 
 
 def _get_run(run_id: str) -> CampaignResult:
     result = _RUNS.get(run_id)
+    if result is None and _RUN_STORE is not None:
+        try:
+            stored = _RUN_STORE.load(run_id)
+        except RunStoreError as exc:
+            raise HTTPException(502, str(exc)) from exc
+        if stored is not None:
+            result = stored.result
+            _RUNS[run_id] = result
+            _STORED_RUNS[run_id] = stored
     if result is None:
-        raise HTTPException(404, f"No campaign run {run_id!r} (runs don't survive a server restart).")
+        raise HTTPException(404, f"No campaign run {run_id!r} was found.")
     return result
+
+
+def _remember_run(run_id: str, result: CampaignResult) -> None:
+    """Cache a run locally and persist it when deployment storage is enabled."""
+    _RUNS[run_id] = result
+    if _RUN_STORE is None:
+        return
+    try:
+        _STORED_RUNS[run_id] = _RUN_STORE.save(run_id, result)
+    except RunStoreError as exc:
+        raise HTTPException(
+            502,
+            "The creative was generated, but durable storage failed. " + str(exc),
+        ) from exc
+
+
+def _restore_inputs_if_needed(run_id: str) -> None:
+    stored = _STORED_RUNS.get(run_id)
+    if stored is None or _RUN_STORE is None:
+        return
+    try:
+        _RUN_STORE.materialize_inputs(stored, RUNS_DIR / run_id / "restored-inputs")
+    except RunStoreError as exc:
+        raise HTTPException(502, str(exc)) from exc
+
+
+def _restore_artifact_if_needed(run_id: str) -> None:
+    stored = _STORED_RUNS.get(run_id)
+    if stored is None or _RUN_STORE is None:
+        return
+    if Path(stored.result.artifact.file_path).is_file():
+        return
+    try:
+        _RUN_STORE.materialize_artifact(stored, RUNS_DIR / run_id / "restored-artifact")
+    except RunStoreError as exc:
+        raise HTTPException(502, str(exc)) from exc
 
 
 class PaletteOut(BaseModel):
@@ -583,6 +632,7 @@ def regenerate(run_id: str, body: RegenerateIn) -> CampaignRunOut:
     facts) carries over from the original request.
     """
     previous = _get_run(run_id)
+    _restore_inputs_if_needed(run_id)
 
     overrides: dict[str, Any] = {}
     if body.refinement_notes and body.refinement_notes.strip():
@@ -608,7 +658,7 @@ def regenerate(run_id: str, body: RegenerateIn) -> CampaignRunOut:
     except (OrchestratorError, PosterAdapterError, ReelAdapterError) as exc:
         raise HTTPException(422, str(exc)) from exc
 
-    _RUNS[new_run_id] = result
+    _remember_run(new_run_id, result)
     return _to_out(new_run_id, result)
 
 
@@ -618,8 +668,11 @@ def get_campaign(run_id: str) -> CampaignRunOut:
 
 
 @router.get("/{run_id}/artifact")
-def get_campaign_artifact(run_id: str) -> FileResponse:
+def get_campaign_artifact(run_id: str) -> Response:
     result = _get_run(run_id)
+    stored = _STORED_RUNS.get(run_id)
+    if stored is not None:
+        return RedirectResponse(stored.artifact.url, status_code=307)
     path = Path(result.artifact.file_path)
     if not path.exists():
         raise HTTPException(404, "Artifact file is no longer on disk.")
@@ -631,6 +684,7 @@ def get_campaign_artifact(run_id: str) -> FileResponse:
 def create_paused(run_id: str) -> CreatePausedOut:
     """Real external action: creates PAUSED Meta objects. Never called automatically."""
     result = _get_run(run_id)
+    _restore_artifact_if_needed(run_id)
     if result.meta_preview is None:
         raise HTTPException(422, "No Meta preview available for this run (budget_usd was not set).")
     meta_result: MetaAdResult = create_paused_campaign(

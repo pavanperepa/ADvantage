@@ -11,9 +11,10 @@ import type {
 
 /**
  * Browser-visible base URL for the FastAPI backend. It is relative by default,
- * so Next.js can proxy `/api` over Render's private network (and to port 8000
- * during local development). Set NEXT_PUBLIC_API_BASE_URL only when the API is
- * deliberately hosted at a separate public origin.
+ * so the deployment router can send `/api` to the backend service (and Next.js
+ * can proxy to port 8000 during standalone local development). Set
+ * NEXT_PUBLIC_API_BASE_URL only when deliberately exposing the backend at a
+ * separate public origin.
  */
 export const API_BASE_URL = (
   process.env.NEXT_PUBLIC_API_BASE_URL ?? ""

@@ -113,7 +113,10 @@ export default function CampaignReviewPage() {
             <VerificationBadge passed={run.verification.passed} />
           </CardHeader>
           <CardContent className="space-y-4">
-            <ArtifactViewer artifact={run.artifact} src={artifactUrl(run.id)} />
+            <ArtifactViewer
+              artifact={run.artifact}
+              src={run.artifact.url || artifactUrl(run.id)}
+            />
             {run.artifact.duration_seconds != null && (
               <p className="text-center text-xs text-muted-foreground">
                 {run.artifact.duration_seconds.toFixed(1)}s &middot; {run.artifact.width}&times;

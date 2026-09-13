@@ -13,7 +13,7 @@ export interface CampaignArtifact {
   height: number;
   /** Present (seconds) for a reel, `null` for a poster. */
   duration_seconds: number | null;
-  /** Relative API path, e.g. `/api/campaigns/{id}/artifact`. */
+  /** Relative API path locally, or a direct public Vercel Blob URL when deployed. */
   url: string;
 }
 

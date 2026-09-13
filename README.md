@@ -6,8 +6,8 @@ then prepares a paused Meta campaign for human approval. The working 22Yards
 poster studio and Remotion reels are the current proof case and implementation
 foundation.
 
-For hosting, see the [Render deployment guide](docs/RENDER_DEPLOYMENT.md) and
-the repository Blueprint in `render.yaml`.
+For hosting, see the [Vercel deployment guide](docs/VERCEL_DEPLOYMENT.md) and
+the repository Services configuration in `vercel.json`.
 
 ## Start here
 
