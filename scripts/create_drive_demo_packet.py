@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import subprocess
 from pathlib import Path
 
 import imageio_ffmpeg
@@ -57,8 +58,16 @@ def create_photo(path: Path) -> None:
 
 
 def create_clip(path: Path, *, index: int, accent: str) -> None:
+    # imageio_ffmpeg.write_frames only writes a video stream. Real camera/
+    # phone footage always carries an audio track (even if a downstream
+    # policy later mutes it), and scripts/prepare_remotion_media.py's ffmpeg
+    # filter graph unconditionally references an [0:a] stream -- so a
+    # video-only synthetic clip fails there with "matches no streams"
+    # instead of exercising the real pipeline. Write video-only to a temp
+    # path, then mux in a silent track so these clips are representative.
+    silent_video = path.with_name(path.stem + ".video-only.mp4")
     writer = imageio_ffmpeg.write_frames(
-        str(path),
+        str(silent_video),
         (WIDTH, HEIGHT),
         fps=FPS,
         codec="libx264",
@@ -94,6 +103,33 @@ def create_clip(path: Path, *, index: int, accent: str) -> None:
             writer.send(image.tobytes())
     finally:
         writer.close()
+
+    ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
+    subprocess.run(
+        [
+            ffmpeg,
+            "-y",
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-i",
+            str(silent_video),
+            "-f",
+            "lavfi",
+            "-i",
+            "anullsrc=channel_layout=stereo:sample_rate=44100",
+            "-shortest",
+            "-c:v",
+            "copy",
+            "-c:a",
+            "aac",
+            "-b:a",
+            "128k",
+            str(path),
+        ],
+        check=True,
+    )
+    silent_video.unlink()
 
 
 def create_brief(path: Path) -> None:

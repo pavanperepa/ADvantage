@@ -122,6 +122,28 @@ def test_build_edit_spec_multiple_clips_are_straight_cut_and_clamped():
     assert closing["duration"] == last_shot["duration"]
 
 
+def test_build_edit_spec_hero_line2_stays_short_even_for_a_long_offer():
+    """Regression test: HookTitle's line2 has no wrap/overflow protection and
+    was observed (via a real render) to overflow badly past ~20 chars, unlike
+    the closing card's headline which wraps cleanly at any length. line2 must
+    stay short and word-boundary-clipped, never a full sentence."""
+    long_offer = "One free introductory class -- claim by October 1, 2026."
+    request = _request(
+        offer_text=long_offer,
+        footage_assets=[_asset(local_ref="clips/one.mp4"), _asset(local_ref="clips/two.mp4")],
+    )
+
+    spec = reel_adapter.build_edit_spec(request)
+
+    hero = next(o for o in spec["overlays"] if o["type"] == "hero_title")
+    assert len(hero["line2"]) <= reel_adapter.HERO_LINE2_MAX_CHARS
+    assert long_offer.upper().startswith(hero["line2"])
+    # The full offer still appears in full on the closing card, which does
+    # handle long text cleanly.
+    closing = next(o for o in spec["overlays"] if o["type"] == "closing")
+    assert closing["headline"] == long_offer.upper()[:60]
+
+
 def test_build_edit_spec_empty_footage_raises_clear_blocker():
     request = _request(footage_assets=[])
 

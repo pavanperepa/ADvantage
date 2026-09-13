@@ -66,6 +66,15 @@ SHOT_MOTION_CYCLE = ("slow_push", "gentle_drift_left", "gentle_drift_right")
 SHOT_TRANSITION = "soft_dissolve"
 HERO_OVERLAY_MAX_SECONDS = 3.0
 
+# remotion/library/overlays.tsx's HookTitle sizes `line2` at 120px when it is
+# <=20 chars, 82px otherwise -- with no wrapping/overflow protection at all
+# (unlike ClosingOverlay's headline, which wraps cleanly at any length). A
+# full offer sentence there was observed to overflow past the hook's own
+# region and visually collide with whatever renders next. `line2` is a punch
+# line, not a sentence -- the full offer still appears cleanly on the closing
+# card's `headline`, which does handle long text.
+HERO_LINE2_MAX_CHARS = 20
+
 # Same bundled, licensed bed used by the existing practice-match fixtures
 # (fixtures/reel-practice-match-v1.json). Reused as-is rather than accepting
 # per-request music, which the CampaignRequest contract has no field for.
@@ -175,7 +184,7 @@ def build_edit_spec(request: CampaignRequest) -> dict[str, Any]:
                 "duration": min(first_shot["duration"], HERO_OVERLAY_MAX_SECONDS),
                 "eyebrow": (request.audience or "NEW THIS SEASON").upper(),
                 "line1": request.business_name.upper(),
-                "line2": (request.offer_text or request.brief_text).strip()[:60],
+                "line2": _short_hook(request.offer_text or request.brief_text),
             }
         )
     overlays.append(
@@ -262,6 +271,16 @@ def _shot_length(duration_seconds: float | None) -> float:
     length = min(duration_seconds, MAX_SHOT_SECONDS)
     length = max(length, min(MIN_SHOT_SECONDS, duration_seconds))
     return length
+
+
+def _short_hook(text: str) -> str:
+    """Clip to a real word boundary within HERO_LINE2_MAX_CHARS -- never a
+    fabricated phrase, just less of the business's own supplied text."""
+    text = text.strip().upper()
+    if len(text) <= HERO_LINE2_MAX_CHARS:
+        return text
+    truncated = text[:HERO_LINE2_MAX_CHARS].rsplit(" ", 1)[0]
+    return truncated or text[:HERO_LINE2_MAX_CHARS]
 
 
 def _slugify(value: str) -> str:
