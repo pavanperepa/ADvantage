@@ -292,7 +292,7 @@ rendering, QA, review, and Meta preparation.
 adapter without copying facts manually.
 
 **Progress (`campaign-flow` branch, 2026-09-13):** substituted with a
-deliberately simplified `CampaignRequest` (`src/cricket_posts/campaign/models.py`)
+deliberately simplified `CampaignRequest` (`src/advantage/domain/models.py`)
 rather than the full versioned manifest — a scope cut made explicitly with the
 project owner, not a partial miss. It models the core facts (business, brief,
 format, contact, destination, offer, audience, budget) and the
@@ -362,7 +362,8 @@ draft.
 and no imported text can authorize an external write.
 
 **Progress (`campaign-flow` branch, 2026-09-13):** the strongest-covered P1
-ticket — `src/cricket_posts/drive_intake.py` and `tests/test_drive_intake.py`
+ticket — `src/advantage/integrations/google_drive.py` and
+`tests/advantage/test_drive_intake.py`
 (built before this branch, frozen into it as the P0-02 baseline) satisfy
 essentially all of the above: bounded allow-list ingestion, hashing/dedup,
 sanitized refs, actionable questions for missing logo/footage/conflicting

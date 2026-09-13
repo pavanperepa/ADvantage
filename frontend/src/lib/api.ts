@@ -1,4 +1,10 @@
-import type { CampaignRun, CreatePausedResult } from "./types";
+import type {
+  CampaignRun,
+  CreatePausedResult,
+  CreativeFormat,
+  InterviewAnswers,
+  InterviewResponse,
+} from "./types";
 
 /**
  * Base URL for the FastAPI backend. Defaults to the port the backend uses
@@ -45,6 +51,32 @@ export async function createCampaign(formData: FormData): Promise<CampaignRun> {
   });
   if (!res.ok) throw new ApiError(res.status, await extractErrorMessage(res));
   return (await res.json()) as CampaignRun;
+}
+
+/**
+ * POST /api/campaigns/interview -- the agentic intake loop. Call with
+ * `answers: {}` for the first batch of questions, then POST the accumulated
+ * answers back for the next batch. At most 4 questions come back at a time;
+ * `ready: true` means it's time to generate.
+ */
+export async function fetchInterviewQuestions(
+  businessName: string,
+  briefText: string,
+  format: CreativeFormat,
+  answers: InterviewAnswers,
+): Promise<InterviewResponse> {
+  const res = await fetch(`${API_BASE_URL}/api/campaigns/interview`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      business_name: businessName,
+      brief_text: briefText,
+      format,
+      answers,
+    }),
+  });
+  if (!res.ok) throw new ApiError(res.status, await extractErrorMessage(res));
+  return (await res.json()) as InterviewResponse;
 }
 
 /** GET /api/campaigns/{id} -- fetch a run's current record. */

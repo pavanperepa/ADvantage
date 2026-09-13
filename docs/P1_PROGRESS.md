@@ -61,12 +61,12 @@ surfaced two real integration bugs no mocked test could have caught, both
 fixed on this branch:
 
 1. **Missing audio track broke ffmpeg prep.** The synthetic demo clips had no
-   audio stream at all; `scripts/prepare_remotion_media.py`'s ffmpeg filter
+   audio stream at all; `scripts/media/prepare_remotion_media.py`'s ffmpeg filter
    graph unconditionally references `[0:a]`, so it failed on any video-only
    input with "matches no streams." Real camera/phone footage always has an
    audio track (even if a policy later mutes it), so the fix was muxing a
    silent track into the synthetic clips at generation time
-   (`scripts/create_drive_demo_packet.py`), not touching the shared,
+   (`scripts/demo/create_drive_demo_packet.py`), not touching the shared,
    already-tested filter graph other reels also depend on.
 2. **The opening hook overlay overlapped and became unreadable.**
    `remotion/library`'s `HookTitle` component sizes its `line2` field at
@@ -102,6 +102,21 @@ meant to cover, and that step is one of the ones we cut.
 P1-06 — the FastAPI UI wiring a request form, a combined review screen, and a
 "create paused campaign" action to `orchestrator.run_campaign()` and
 `meta_adapter.create_paused_campaign()` — is the last piece before there's
-something to click through in a browser. Everything it needs to call now
-exists, is tested, and has been proven against a real render for both
-formats.
+something to click through in a browser. The render and preview calls exist,
+are tested, and have been proven against a real render for both formats. The
+application/job and approval boundaries listed below still need to be built
+before those calls are exposed through HTTP.
+
+## Repository organization update
+
+Later on September 13, the active flow moved from `src/cricket_posts/campaign/`
+to the product package under `src/advantage/`. The deterministic poster engine
+remains under `src/cricket_posts/` because it is still an active adapter
+dependency. Superseded scripts, reel plans, and unreferenced Houston imagery now
+live under `reference/main/`.
+
+Versioned owner-UI request/response models are defined in
+`src/advantage/api/contracts.py`; `docs/API_CONTRACTS.md` records the proposed
+HTTP surface. These are contracts, not implemented routes. The Drive-to-job
+mapper, persistent run service, asset-driven brand handling, stronger QA, and
+approval-bound paused creation remain pre-UI application work.

@@ -27,7 +27,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/cricket_posts"]
+packages = ["src/advantage", "src/cricket_posts"]
 
 [dependency-groups]
 dev = [
@@ -46,6 +46,7 @@ video = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["src"]
 addopts = "-q"
 markers = [
     "live: uses paid external OpenAI or Ideogram APIs",

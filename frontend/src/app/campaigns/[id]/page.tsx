@@ -9,6 +9,8 @@ import { PageSection } from "@/components/page-section";
 import { ArtifactViewer } from "@/components/artifact-viewer";
 import { VerificationBadge } from "@/components/verification-badge";
 import { MetaPreviewCard } from "@/components/meta-preview-card";
+import { CreativePlanCard } from "@/components/creative-plan-card";
+import { RationaleCard } from "@/components/rationale-card";
 import { CreatePausedCampaign } from "@/components/create-paused-campaign";
 import {
   Card,
@@ -144,7 +146,35 @@ export default function CampaignReviewPage() {
         </Card>
       </PageSection>
 
-      <PageSection delay={0.15}>
+      {run.plan && (
+        <PageSection delay={0.15}>
+          <Card>
+            <CardHeader>
+              <CardTitle>Creative plan</CardTitle>
+              <CardDescription>What the system decided about the creative, and why.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <CreativePlanCard plan={run.plan} />
+            </CardContent>
+          </Card>
+        </PageSection>
+      )}
+
+      {run.rationale && (
+        <PageSection delay={0.2}>
+          <Card>
+            <CardHeader>
+              <CardTitle>Why this campaign</CardTitle>
+              <CardDescription>The reasoning behind the settings above.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <RationaleCard rationale={run.rationale} />
+            </CardContent>
+          </Card>
+        </PageSection>
+      )}
+
+      <PageSection delay={0.25}>
         <Card>
           <CardHeader>
             <CardTitle>Publish</CardTitle>

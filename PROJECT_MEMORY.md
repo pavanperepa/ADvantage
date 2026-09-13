@@ -56,7 +56,8 @@ leads, trials, and enrollments.
 - Current reel palette uses green `#8CC63F`, yellow `#FFD437`, and very dark ink.
 
 There is a contact inconsistency to resolve before the next Meta launch:
-`scripts/meta_ads_create_campaign.py` still contains `+1 (713) 570-9054`, while
+`reference/main/scripts/meta_ads_create_campaign.py` still contains
+`+1 (713) 570-9054`, while
 the latest approved creative uses `+1 (713) 498-2155`. The latest user-approved
 value is the latter, but the campaign script must be reviewed rather than run as
 is.
@@ -96,7 +97,7 @@ mistake them for the current files.
 ### Current implementation sources
 
 - Poster compositor:
-  `scripts/create_strength_training_ideogram_poster.py`
+  `scripts/campaigns/22yards/create_strength_training_ideogram_poster.py`
 - Reusable text-free poster artwork:
   `output/posters/strength-training-ideogram-artwork.png`
 - Poster content fixture:
@@ -131,6 +132,19 @@ only as a deliberate cleanup, because other scripts may reference them.
   typography, dates, phone numbers, and URLs should be composed locally.
 
 ## 4. System architecture
+
+### ADvantage application boundary
+
+The owner-facing product flow now lives under `src/advantage/`: strict API
+contracts, campaign domain models, orchestration/verification, creative and
+Meta adapters, and Google Drive integration. The earlier
+`src/cricket_posts/campaign/` and `src/cricket_posts/drive_intake.py` paths are
+compatibility imports only.
+
+The deterministic poster engine remains under `src/cricket_posts/`, and the
+EditSpec video engine remains under `remotion/`; both are active dependencies,
+not legacy archives. Superseded experiments and historical inputs moved to
+`reference/main/`. See `docs/ARCHITECTURE.md` and `docs/API_CONTRACTS.md`.
 
 ### Poster studio
 
@@ -187,13 +201,14 @@ Prepared clips are cached under `remotion/public/` and excluded from Git.
 
 ### Meta Ads system
 
-- `scripts/meta_ads_full_export.py`: read-only full Houston export, filtered by
+- `scripts/meta/meta_ads_full_export.py`: read-only full Houston export, filtered by
   ad-set geography rather than campaign naming.
 - `output/meta_ads_houston/`: exported aggregate data, manifest, and audit.
-- `scripts/meta_ads_create_campaign.py`: dry-run-first creator; actual execution
-  creates paused objects.
-- `scripts/meta_ads_monitor.py`: read-only threshold monitor.
-- `scripts/meta_ads_pause.py`: explicit-ID pause/reactivate helper with state
+- `reference/main/scripts/meta_ads_create_campaign.py`: older dry-run-first
+  creator retained only as a payload reference.
+- `src/advantage/adapters/meta_ads.py`: active dry-run-first paused-creation adapter.
+- `scripts/meta/meta_ads_monitor.py`: read-only threshold monitor.
+- `scripts/meta/meta_ads_pause.py`: explicit-ID pause/reactivate helper with state
   verification.
 
 The current creator is oriented toward a single video lead ad. It is not yet a
@@ -340,7 +355,7 @@ uv run pytest
 Current strength poster, reusing existing artwork without an API call:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\create_strength_training_ideogram_poster.py
+.\.venv\Scripts\python.exe scripts\campaigns\22yards\create_strength_training_ideogram_poster.py
 ```
 
 Only add `--generate` when new Ideogram artwork is intentionally authorized.
@@ -355,8 +370,8 @@ npm run practice:render
 Meta read-only export and monitoring:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\meta_ads_full_export.py
-.\.venv\Scripts\python.exe scripts\meta_ads_monitor.py --campaign-id <ID>
+.\.venv\Scripts\python.exe scripts\meta\meta_ads_full_export.py
+.\.venv\Scripts\python.exe scripts\meta\meta_ads_monitor.py --campaign-id <ID>
 ```
 
 Campaign creation must begin with the creator's default dry run. `--execute`

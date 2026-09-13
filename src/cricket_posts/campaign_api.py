@@ -2,7 +2,7 @@
 
 Separate from the legacy poster-studio routes in web.py (paste-text -> poster
 only). This is intentionally a thin HTTP wrapper around
-``cricket_posts.campaign``'s already-tested ``run_campaign()`` -- no new
+``advantage``'s already-tested ``run_campaign()`` -- no new
 business logic lives here.
 
 No persistence layer exists yet (P1-02 is deliberately deferred), so runs
@@ -19,14 +19,17 @@ import uuid
 from pathlib import Path
 from typing import Any
 
+from dotenv import load_dotenv
 from fastapi import APIRouter, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-from .campaign import (
+from advantage import (
+    CampaignRationale,
     CampaignRequest,
     CampaignResult,
     CreativeFormat,
+    CreativePlan,
     MetaAdResult,
     OrchestratorError,
     PosterAdapterError,
@@ -34,8 +37,21 @@ from .campaign import (
     create_paused_campaign,
     run_campaign,
 )
-from .drive_intake import AssetKind, IntakeAsset, IntakeStatus
+from advantage.application.interview import (
+    AnswerValidationError,
+    apply_answers,
+    enrich_questions,
+    next_questions,
+)
+from advantage.integrations.google_drive import AssetKind, IntakeAsset, IntakeStatus
 from .renderer import PROJECT_ROOT
+
+# `cli.run_serve` never loads .env (only the one-shot CLI commands and the Meta
+# adapters do), so under `uvicorn` the whole process would otherwise start with
+# no IDEOGRAM_API_KEY / OPENAI_API_KEY -- silently downgrading every poster to
+# the free compose fallback and every interview to un-reworded questions.
+# `override=False` keeps a real environment variable authoritative over the file.
+load_dotenv(PROJECT_ROOT / ".env", override=False)
 
 router = APIRouter(prefix="/api/campaigns", tags=["campaigns"])
 
@@ -79,6 +95,41 @@ class CampaignRunOut(BaseModel):
     artifact: ArtifactOut
     verification: VerificationOut
     meta_preview: MetaPreviewOut | None
+    # Both are None on runs where the planner/rationale step produced nothing
+    # (e.g. no Meta preview to explain); the UI renders them only when present.
+    plan: CreativePlan | None = None
+    rationale: CampaignRationale | None = None
+
+
+class QuestionChoiceOut(BaseModel):
+    """One selectable answer. The interview module speaks bare enum values;
+    the UI needs a display label alongside, so the label is derived here
+    rather than duplicating a label table in the domain layer."""
+
+    value: str
+    label: str
+
+
+class QuestionOut(BaseModel):
+    id: str
+    prompt: str
+    kind: str
+    choices: list[QuestionChoiceOut] | None
+    why: str
+    required: bool
+
+
+class InterviewIn(BaseModel):
+    business_name: str
+    brief_text: str
+    format: CreativeFormat
+    answers: dict[str, Any] = {}
+
+
+class InterviewOut(BaseModel):
+    questions: list[QuestionOut]
+    answers: dict[str, Any]
+    ready: bool
 
 
 class CreatePausedOut(BaseModel):
@@ -106,6 +157,74 @@ def _to_out(run_id: str, result: CampaignResult) -> CampaignRunOut:
         meta_preview=(
             MetaPreviewOut(**result.meta_preview.model_dump()) if result.meta_preview else None
         ),
+        plan=result.plan,
+        rationale=result.rationale,
+    )
+
+
+def _humanize(value: str) -> str:
+    """`high_energy` -> `High energy`. Display only; `value` stays canonical."""
+    return value.replace("_", " ").capitalize()
+
+
+@router.post("/interview", response_model=InterviewOut)
+def interview(body: InterviewIn) -> InterviewOut:
+    """Ask the owner the next small batch of questions for their format.
+
+    Stateless: the client posts back every answer collected so far, and gets
+    the next batch (or `ready`) in return. Nothing is generated or written
+    here -- this is the intake conversation only.
+
+    The draft below is a throwaway `CampaignRequest` built purely so
+    `next_questions`/`apply_answers` can see which fields are still missing;
+    it is never rendered or published. `brief_text` needs a non-empty
+    placeholder because the model requires one, and an owner may legitimately
+    reach this endpoint before typing a brief.
+    """
+    try:
+        draft = CampaignRequest(
+            business_name=body.business_name or "Untitled business",
+            brief_text=body.brief_text or "(not provided yet)",
+            format=body.format,
+        )
+    except Exception as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+    answers = dict(body.answers)
+    if answers:
+        try:
+            merged = apply_answers(draft, answers)
+        except AnswerValidationError as exc:
+            raise HTTPException(422, str(exc)) from exc
+        try:
+            draft = CampaignRequest.model_validate(merged)
+        except Exception as exc:
+            raise HTTPException(422, str(exc)) from exc
+
+    questions = next_questions(draft, format=body.format)
+    # Rewording is a garnish: enrich_questions returns the deterministic set
+    # unchanged whenever OpenAI is unavailable or answers oddly, so a missing
+    # key or a flaky call can never block the intake flow.
+    questions = enrich_questions(questions, brief_text=body.brief_text or "")
+
+    return InterviewOut(
+        questions=[
+            QuestionOut(
+                id=question.id,
+                prompt=question.prompt,
+                kind=question.kind,
+                choices=(
+                    [QuestionChoiceOut(value=c, label=_humanize(c)) for c in question.choices]
+                    if question.choices
+                    else None
+                ),
+                why=question.why,
+                required=question.required,
+            )
+            for question in questions
+        ],
+        answers=answers,
+        ready=not questions,
     )
 
 
@@ -153,6 +272,13 @@ def create_campaign(
     audience: str | None = Form(None),
     budget_usd: float | None = Form(None),
     campaign_days: int = Form(4),
+    # Creative direction collected by POST /interview. All optional: a caller
+    # that skips the interview entirely still gets a working campaign.
+    reel_feel: str | None = Form(None),
+    poster_style: str | None = Form(None),
+    art_direction_notes: str | None = Form(None),
+    proof_point: str | None = Form(None),
+    key_benefits: list[str] | None = Form(None),
     logo: UploadFile | None = None,
     footage: list[UploadFile] | None = None,
 ) -> CampaignRunOut:
@@ -185,6 +311,11 @@ def create_campaign(
             audience=audience or None,
             budget_usd=budget_usd,
             campaign_days=campaign_days,
+            reel_feel=reel_feel or None,
+            poster_style=poster_style or None,
+            art_direction_notes=art_direction_notes or None,
+            proof_point=proof_point or None,
+            key_benefits=[b.strip() for b in (key_benefits or []) if b.strip()],
             logo_asset=logo_asset,
             footage_assets=footage_assets,
         )

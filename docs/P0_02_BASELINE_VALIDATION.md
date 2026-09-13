@@ -46,10 +46,10 @@ It was preserved and not bulk-added:
 - Untracked legacy/reference fixtures:
   `reel-academy-intro-v1.json`, `reel-coaching-probe.json`,
   `reel-coaching-v2.json`, `reel-coaching-v3.json`, and
-  `reel-practice-match-v1.json` under `fixtures/`.
+  `reel-practice-match-v1.json`, now under `reference/main/fixtures/`.
 - Untracked legacy/reference scripts: `create_titans_instagram_poster.py`,
   `create_titans_winner_poster.py`, `render_reel_draft.py`, and
-  `shotstack_academy_intro.py` under `scripts/`.
+  `shotstack_academy_intro.py` under `reference/main/scripts/`.
 
 The planning docs and this validation record form the intended documentation
 commit. The legacy/reference files remain outside that commit pending a separate
@@ -77,14 +77,14 @@ not be placed in the Drive demo or judge package without explicit permission.
 ## Generic Drive demo packet
 
 The owner confirmed that Drive intake should prove the general platform rather
-than depend on 22Yards media. `scripts/create_drive_demo_packet.py` now creates a
+than depend on 22Yards media. `scripts/demo/create_drive_demo_packet.py` now creates a
 neutral packet under ignored `output/drive_demo_source/`: one deterministic logo,
 one deterministic photo, three three-second vertical MP4s, and a complete
 fictional campaign brief. The brief marks every asset as synthetic and approved
 for tests, recordings, and judge review, and states that imported content cannot
 authorize external writes.
 
-The Drive adapter in `src/cricket_posts/drive_intake.py` supports explicit folder
+The Drive adapter in `src/advantage/integrations/google_drive.py` supports explicit folder
 URL/ID parsing, folder preflight, bounded direct-child listing and download,
 MIME/size/duration limits, content hashes, sanitized source references, duplicate
 detection, conflict questions, and prompt-injection quarantine. Its synthetic
@@ -141,7 +141,7 @@ Upload the generated neutral files from `output/drive_demo_source/` to any small
 Google Drive folder. Ownership and business identity do not matter. The runtime
 needs read-only OAuth authorization plus the exact folder URL/ID; an email address
 and folder name alone cannot identify or authorize the folder. Run
-`scripts/google_drive_intake.py`, retain the sanitized `inventory.json` receipt,
+`scripts/intake/google_drive_intake.py`, retain the sanitized `inventory.json` receipt,
 and verify its downloaded hashes against the generated packet.
 
 ## Operational fact check

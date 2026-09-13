@@ -13,6 +13,10 @@ foundation.
   known inconsistencies.
 - `docs/CORE_PROJECT_FILES.md` — the canonical files we are keeping and what
   each part of the current system does.
+- `docs/ARCHITECTURE.md` — active product, reusable-engine, operations, and
+  reference boundaries.
+- `docs/API_CONTRACTS.md` — versioned request/response contracts prepared for
+  the owner-facing UI.
 - `docs/FUTURE_SCOPE.md` — the hackathon product scope, implementation plan,
   demo sequence, evaluation strategy, and explicit non-goals.
 - [Hackathon and beta MVP 1 execution plan](docs/HACKATHON_BETA_MVP1_PLAN.md) —
@@ -22,6 +26,19 @@ foundation.
   the remaining demo-readiness gates.
 - [GitHub Project backlog](docs/GITHUB_PROJECT_BACKLOG.md) — ticket index,
   acceptance criteria, dependencies, priorities, and links to the execution board.
+
+## Repository layout
+
+- `src/advantage/` is the active product: API contracts, campaign domain,
+  application orchestration, integrations, and adapters.
+- `src/cricket_posts/` and `remotion/` are reusable rendering engines called by
+  those adapters.
+- `scripts/` contains maintained operator commands grouped by responsibility.
+- `reference/main/` contains superseded experiments and examples retained from
+  the earlier repository; production code does not import it.
+
+New application imports should start at `advantage`. The old
+`cricket_posts.campaign` path remains only as a compatibility bridge.
 
 The remainder of this README documents the implemented poster engine in detail.
 
@@ -133,7 +150,7 @@ Create a permission-safe neutral packet for a live Drive demo:
 
 ```powershell
 uv sync --group video
-uv run python scripts/create_drive_demo_packet.py
+uv run python scripts/demo/create_drive_demo_packet.py
 ```
 
 Upload the files under `output/drive_demo_source/` to a small test folder. After
@@ -141,7 +158,7 @@ completing read-only Google OAuth, keep the short-lived access token only in the
 ignored `.env`, then run:
 
 ```powershell
-uv run python scripts/google_drive_intake.py --folder "<folder URL or ID>"
+uv run python scripts/intake/google_drive_intake.py --folder "<folder URL or ID>"
 ```
 
 The command writes downloaded files and `inventory.json` under the ignored

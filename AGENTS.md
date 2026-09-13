@@ -47,8 +47,10 @@ creating external objects.
 - Treat Meta reads, campaign creation, activation, budget changes, and pausing as
   different permission levels. A request to analyze data does not authorize a
   campaign mutation.
-- `scripts/meta_ads_create_campaign.py` defaults to a dry run and creates objects
-  paused when `--execute` is supplied. Keep that safety behavior.
+- `advantage.adapters.meta_ads.create_paused_campaign` defaults to a dry run and
+  creates objects paused only when execution is explicitly supplied. The older
+  `reference/main/scripts/meta_ads_create_campaign.py` is reference-only. Keep
+  the active adapter's safety behavior.
 - Never activate or unpause a campaign without the user's explicit approval of
   the final creative, copy, dates, audience, budget, form, and destination.
 - Use explicit IDs for Meta mutations. Do not add a broad pause/delete mode.
