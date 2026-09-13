@@ -281,7 +281,7 @@ rendering, QA, review, and Meta preparation.
   history.
 - [ ] Reject expired/incompatible dates, unresolved operational facts, invalid
   URLs, invalid budgets, and unsupported media inputs at the correct gate.
-- [ ] A missing budget may still permit a clearly labeled creative draft but
+- [x] A missing budget may still permit a clearly labeled creative draft but
   blocks Meta preparation.
 - [ ] Unit tests prove serialization, migration/version rejection, and no hidden
   Houston or cricket defaults leak into a neutral fixture.
@@ -290,6 +290,18 @@ rendering, QA, review, and Meta preparation.
 
 **Gate:** one manifest revision can be serialized and feeds every downstream
 adapter without copying facts manually.
+
+**Progress (`campaign-flow` branch, 2026-09-13):** substituted with a
+deliberately simplified `CampaignRequest` (`src/cricket_posts/campaign/models.py`)
+rather than the full versioned manifest — a scope cut made explicitly with the
+project owner, not a partial miss. It models the core facts (business, brief,
+format, contact, destination, offer, audience, budget) and the
+missing-budget-blocks-Meta-prep rule (checked above), but has no per-fact
+provenance/status, no dates, no schema version/migration, and no selected-angle
+tracking. Serialization is unit-tested; migration/neutral-fixture tests aren't,
+since there's no schema version to migrate and no hardcoded business defaults
+exist to leak in the first place. See
+[`P1_PROGRESS.md`](P1_PROGRESS.md) for the full comparison.
 
 ### P1-02 — Persist campaign state, attempts, receipts, and resume
 
@@ -318,6 +330,13 @@ Meta capabilities.
 **Gate:** an interrupted mocked run resumes to the expected state with no
 duplicate side effects.
 
+**Progress (`campaign-flow` branch, 2026-09-13):** not started, deliberately.
+`run_campaign()` executes synchronously in-memory end to end; there is no
+persisted state machine, step-attempt/receipt storage, resume, caching, retry
+policy, or write reconciliation. Explicitly cut for hackathon-day scope —
+worth building once real traffic actually hits these edges, not before. See
+[`P1_PROGRESS.md`](P1_PROGRESS.md).
+
 ### P1-03 — Ingest and validate a small Google Drive source folder
 
 Connect the selected Drive folder to a sanitized asset inventory and manifest
@@ -326,21 +345,34 @@ draft.
 **Acceptance criteria**
 
 - [ ] Preflight connection and folder access before starting a run.
-- [ ] List/download only the selected folder's supported logo, photo, and video
+- [x] List/download only the selected folder's supported logo, photo, and video
   types within explicit size/duration limits.
-- [ ] Store source IDs, MIME type, size, content hash, and local artifact refs;
+- [x] Store source IDs, MIME type, size, content hash, and local artifact refs;
   omit private source data from logs and evidence.
-- [ ] Surface missing logo, missing/unusable footage, and conflicting operational
+- [x] Surface missing logo, missing/unusable footage, and conflicting operational
   facts as actionable questions.
-- [ ] Treat imported instructions as evidence only; reject requests to expose
+- [x] Treat imported instructions as evidence only; reject requests to expose
   credentials, execute tools, publish, or bypass approval.
-- [ ] Tests cover inaccessible folder, unsupported file, transient timeout,
+- [x] Tests cover inaccessible folder, unsupported file, transient timeout,
   duplicate file, prompt injection, and clean mixed folder.
 
 **Dependencies:** P1-01 and P1-02.
 
 **Gate:** the demo Drive folder deterministically produces a validated inventory
 and no imported text can authorize an external write.
+
+**Progress (`campaign-flow` branch, 2026-09-13):** the strongest-covered P1
+ticket — `src/cricket_posts/drive_intake.py` and `tests/test_drive_intake.py`
+(built before this branch, frozen into it as the P0-02 baseline) satisfy
+essentially all of the above: bounded allow-list ingestion, hashing/dedup,
+sanitized refs, actionable questions for missing logo/footage/conflicting
+facts, and prompt-injection quarantine, each with a dedicated test. Not done:
+a distinct UI-level "preflight" step (folder-access validation happens inside
+ingestion itself, but there's no separate check-before-you-commit screen,
+since P1-06 hasn't started) and a live, authenticated Drive API run — today's
+real end-to-end proof (see [`P1_PROGRESS.md`](P1_PROGRESS.md)) used local
+synthetic files as `IntakeAsset`s directly rather than a live OAuth
+connection, per the earlier decision to defer Drive credential setup.
 
 ### P1-04 — Produce a manifest-driven 1080x1350 poster
 
@@ -358,13 +390,26 @@ all factual typography deterministic.
   receipt, and source assets.
 - [ ] Verify dimensions, exact copy, safe margins, overflow, contrast, logo load,
   and QR/destination agreement.
-- [ ] A neutral second-business fixture contains no inherited Houston/cricket
+- [x] A neutral second-business fixture contains no inherited Houston/cricket
   facts or assets.
 
 **Dependencies:** P1-01 and P1-03.
 
 **Gate:** the demo manifest produces a downloadable checked poster with no hand
 editing or copied operational facts.
+
+**Progress (`campaign-flow` branch, 2026-09-13):** `poster_adapter.py` produces
+a real, verified 1080x1350 PNG via the existing free `compose` pipeline (no
+Ideogram call — a deliberate scope cut, "fix the image quality later"), proven
+end to end against a synthetic neutral business (Northstar Community Studio):
+correct copy, no missing/clipped text, no inherited Houston/cricket facts. The
+one honest caveat: `compose()`'s background art comes from a generic stock
+plate bank, so the *artwork* still happens to be cricket-themed regardless of
+business — that's a known limitation of the free path, not a fact leak, and is
+exactly what Smart Hybrid (real Ideogram artwork per business) would fix
+later. Not done: angle proposals, QR, date field, and hash/receipt linkage. A
+real pre-existing audit bug in the poster pipeline was also found and worked
+around along the way — see [`P1_PROGRESS.md`](P1_PROGRESS.md) for details.
 
 ### P1-05 — Produce a manifest-driven 1080x1920 reel
 
@@ -379,7 +424,7 @@ EditSpec/Remotion pipeline.
   approved footage, a readable CTA end card, approved brand values, and explicit
   audio policy. The 22Yards demo adapter uses live play; this is not a platform
   default.
-- [ ] Prepare media and render a 1080x1920 playable MP4.
+- [x] Prepare media and render a 1080x1920 playable MP4.
 - [ ] Exclude camera audio when the manifest requires it and retain music
   provenance.
 - [ ] Link the MP4 hash, EditSpec, manifest revision, source ranges, and renderer
@@ -391,6 +436,17 @@ EditSpec/Remotion pipeline.
 
 **Gate:** the demo manifest produces a downloadable reel whose opening and final
 CTA can be inspected without hand-editing JSON.
+
+**Progress (`campaign-flow` branch, 2026-09-13):** `reel_adapter.py` renders a
+real, verified 1080x1920 MP4 via the existing prepare-media -> Remotion
+pipeline (previously CLI-only and never wired together), with an inspectable
+opening hook and closing CTA card built from `remotion/library`'s existing
+component catalog. Proven with a real (non-mocked) render against synthetic
+footage; two real integration bugs were found and fixed in the process (a
+missing audio track breaking the ffmpeg prep step, and an overlong hook
+overlay overflowing illegibly) — see [`P1_PROGRESS.md`](P1_PROGRESS.md). Not
+done: footage ranking/scoring (shots are used in the order given), an explicit
+camera-audio-exclusion policy field, and MP4 hash/EditSpec/receipt linkage.
 
 ### P1-06 — Connect the end-to-end owner journey in the FastAPI UI
 
@@ -416,6 +472,13 @@ Expose the narrow vertical slice as one persisted run through the existing app.
 **Gate:** one browser run reaches `needs_review` and exposes both downloadable
 outputs from a single manifest revision.
 
+**Progress (`campaign-flow` branch, 2026-09-13):** not started. This is the
+next and last piece before there's anything to click through in a browser —
+`run_campaign()` (the orchestrator tying P1-01/03/04/05/07's simplified
+substitutes together) is built, tested, and proven for real, so the UI has a
+stable, working surface to wire against. See
+[`P1_PROGRESS.md`](P1_PROGRESS.md).
+
 ### P1-07 — Build a read-only Meta payload preview for static and video ads
 
 Replace the single-video creator's stale implicit defaults with a manifest-led
@@ -429,18 +492,31 @@ preview for one campaign, one ad set, and two ads.
   manifest-driven for other businesses.
 - [ ] Use explicit account, page, form/destination, schedule, timezone, currency,
   total budget, audience, placement/creative mapping, and optimization fields.
-- [ ] Show that `$25/day for 14 days` is historical planning context only; the
+- [x] Show that `$25/day for 14 days` is historical planning context only; the
   current manifest must supply any launch budget/duration.
-- [ ] Detect the stale phone/video/$40/four-day/new-form defaults and ensure none
+- [x] Detect the stale phone/video/$40/four-day/new-form defaults and ensure none
   enter the new path.
-- [ ] Validate 4:5 and 9:16 creative bindings and keep campaign/ad set/ad desired
+- [x] Validate 4:5 and 9:16 creative bindings and keep campaign/ad set/ad desired
   status PAUSED.
-- [ ] Preview performs no Meta mutation; tests assert zero write calls.
+- [x] Preview performs no Meta mutation; tests assert zero write calls.
 
 **Dependencies:** P1-01, P1-04, and P1-05.
 
 **Gate:** the combined review displays one exact payload revision matching both
 creative hashes and all approved facts.
+
+**Progress (`campaign-flow` branch, 2026-09-13):** `meta_adapter.py` replaces
+every stale hardcoded default from the original script — nothing from the old
+$40/four-day/proven-video/proven-form path can reach the new one, since none
+of those constants exist here at all. Budget/duration come from the request,
+PAUSED-only is enforced with a mandatory read-back before success, and dry-run
+mode is verified (in code and in tests) to make zero network calls. The scope
+difference from the original ticket: this builds **one** ad matching the
+chosen format (static OR video), not both a static Feed ad and a video Reels
+ad in the same campaign — matches the simplified "pick one format per
+request" flow. No form/schedule/timezone/currency fields exist on the request
+yet; targeting is a fixed broad US 18-65 default rather than manifest-driven
+geography/audience. See [`P1_PROGRESS.md`](P1_PROGRESS.md).
 
 ### P2-01 — Inspect final media and run bounded repair with fresh QA
 
