@@ -1,6 +1,6 @@
 # ADvantage
 
-**Demo:** _<!-- add demo link here -->_
+**Demo:** [Watch the ADvantage demo video on YouTube](https://youtu.be/Kbym8k_zppA)
 
 ADvantage is a manifest-led agent that turns a small business's
 rough request and supplied assets into verified static ads and reels/videos,
