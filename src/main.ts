@@ -96,6 +96,7 @@ function initHero() {
         offsetX: 4.3,
         autoIntro: true,
         reducedMotion,
+        theme: 'light',
       })
     : null;
 
@@ -230,6 +231,56 @@ function initSteps() {
   );
 }
 
+// ---------------------------------------------------------------- capabilities
+// Desktop: a sticky mock screen switches panels as each capability scrolls
+// past. Narrow screens: each capability carries its own copy of its panel.
+function initCaps() {
+  const root = $('[data-caps]');
+  if (!root) return;
+  const caps = $$('.cap', root);
+  const panels = $$('.panel', root);
+  const title = $('[data-screen-title]', root);
+
+  for (const [i, cap] of caps.entries()) {
+    const panel = panels.at(i);
+    if (!panel) continue;
+    const inline = document.createElement('div');
+    inline.className = 'cap-inline';
+    inline.setAttribute('aria-hidden', 'true');
+    inline.innerHTML = `<div class="screen dark"><div class="screen-bar"><i></i><i></i><i></i><span>${panel.dataset.title}</span><em>Illustrative</em></div><div class="screen-body"></div></div>`;
+    const copy = panel.cloneNode(true) as HTMLElement;
+    copy.classList.remove('is-active');
+    $('.screen-body', inline)!.appendChild(copy);
+    $('.cap-body', cap)!.appendChild(inline);
+    ScrollTrigger.create({
+      trigger: inline,
+      start: 'top 85%',
+      once: true,
+      onEnter: () => copy.classList.add('is-active'),
+    });
+  }
+
+  let current = 0;
+  const show = (i: number) => {
+    caps.forEach((c, k) => c.classList.toggle('is-active', k === i));
+    if (i === current) return;
+    panels.at(current)?.classList.remove('is-active');
+    panels.at(i)?.classList.add('is-active');
+    if (title) title.textContent = panels.at(i)?.dataset.title ?? '';
+    current = i;
+  };
+  show(0);
+
+  for (const [i, cap] of caps.entries()) {
+    ScrollTrigger.create({
+      trigger: cap,
+      start: 'top 55%',
+      end: 'bottom 55%',
+      onToggle: (self) => self.isActive && show(i),
+    });
+  }
+}
+
 // ---------------------------------------------------------------- CTA orbit
 function initCta() {
   const canvas = $<HTMLCanvasElement>('[data-cta-canvas]');
@@ -239,7 +290,8 @@ function initCta() {
     offsetX: 0,
     autoIntro: false,
     reducedMotion,
-    opacity: 0.5,
+    opacity: 0.55,
+    theme: 'light',
   });
 }
 
@@ -253,6 +305,7 @@ function initPointer() {
   window.addEventListener('pointermove', (e) => {
     gx(e.clientX);
     gy(e.clientY);
+    glow.classList.add('is-on');
   });
 
   for (const btn of $$('.magnetic')) {
@@ -329,6 +382,7 @@ initHero();
 initReveals();
 initResults();
 initSteps();
+initCaps();
 initCta();
 initPointer();
 initNav();

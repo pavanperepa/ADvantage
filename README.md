@@ -1,10 +1,15 @@
 # ADvantage website
 
-Single-page marketing site for ADvantage, the enrollment growth partner for
-youth academies. Its one job is to get an academy owner to book a free
-15-minute ads and enrollment review. Copy and positioning come from the
-"ADvantage: Growth Operator Strategy" doc (Positioning, Packages and Website
-sections).
+Single-page marketing site for ADvantage, the all-in-one growth assistant for
+youth academies: it builds an academy's presence, learns its audience, runs its
+campaigns and keeps families engaged while the owner focuses on coaching. Its
+one job is to get an owner to book a free 15-minute growth review.
+
+Section content follows the "ADvantage: Growth Operator Strategy" doc. The
+headline positioning (growth assistant rather than done-for-you enrollment
+partner) is newer than the doc's Positioning section.
+
+Light theme. The mock product screens use the `.dark` token scope.
 
 Stack: Vite + TypeScript, Three.js (hero and closing orbit), GSAP ScrollTrigger
 (reveals, counters, step progress) and Lenis (smooth scroll). Animations are

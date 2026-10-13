@@ -88,6 +88,8 @@ export interface OrbitOptions {
   reducedMotion: boolean;
   /** Overall brightness, 0 to 1. Lower it when text sits on top. */
   opacity?: number;
+  /** Light pages need normal blending: additive glow vanishes on white. */
+  theme?: 'light' | 'dark';
 }
 
 export interface Orbit {
@@ -127,6 +129,7 @@ export function createOrbit(canvas: HTMLCanvasElement, opts: OrbitOptions): Orbi
     return null;
   }
   renderer.setClearColor(0x000000, 0);
+  const light = opts.theme === 'light';
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
@@ -201,8 +204,8 @@ export function createOrbit(canvas: HTMLCanvasElement, opts: OrbitOptions): Orbi
     uPixelRatio: { value: 1 },
     uSpread: { value: 0 },
     uOpacity: { value: 1 },
-    uColorA: { value: new THREE.Color('#d4ff3f') },
-    uColorB: { value: new THREE.Color('#4fd8ff') },
+    uColorA: { value: new THREE.Color(light ? '#7cbf00' : '#d4ff3f') },
+    uColorB: { value: new THREE.Color(light ? '#1e9bd7' : '#4fd8ff') },
   };
 
   const points = new THREE.Points(
@@ -213,13 +216,13 @@ export function createOrbit(canvas: HTMLCanvasElement, opts: OrbitOptions): Orbi
       uniforms,
       transparent: true,
       depthWrite: false,
-      blending: THREE.AdditiveBlending,
+      blending: light ? THREE.NormalBlending : THREE.AdditiveBlending,
     }),
   );
   system.add(points);
 
   // Faint orbit lines
-  const ringMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.07 });
+  const ringMat = new THREE.LineBasicMaterial({ color: light ? 0x0c0e14 : 0xffffff, transparent: true, opacity: light ? 0.09 : 0.07 });
   for (const ring of RINGS) {
     const pts: THREE.Vector3[] = [];
     for (let k = 0; k <= 160; k++) {
@@ -237,20 +240,24 @@ export function createOrbit(canvas: HTMLCanvasElement, opts: OrbitOptions): Orbi
   // The academy at the centre
   const core = new THREE.Sprite(
     new THREE.SpriteMaterial({
-      map: glowTexture('rgba(255,255,255,1)', 'rgba(212,255,63,0.35)'),
+      map: light
+        ? glowTexture('rgba(150,215,0,0.95)', 'rgba(170,235,20,0.3)')
+        : glowTexture('rgba(255,255,255,1)', 'rgba(212,255,63,0.35)'),
       transparent: true,
       depthWrite: false,
-      blending: THREE.AdditiveBlending,
+      blending: light ? THREE.NormalBlending : THREE.AdditiveBlending,
     }),
   );
   core.scale.setScalar(2.6);
   system.add(core);
   const halo = new THREE.Sprite(
     new THREE.SpriteMaterial({
-      map: glowTexture('rgba(79,216,255,0.35)', 'rgba(79,216,255,0.08)'),
+      map: light
+        ? glowTexture('rgba(56,189,248,0.22)', 'rgba(56,189,248,0.07)')
+        : glowTexture('rgba(79,216,255,0.35)', 'rgba(79,216,255,0.08)'),
       transparent: true,
       depthWrite: false,
-      blending: THREE.AdditiveBlending,
+      blending: light ? THREE.NormalBlending : THREE.AdditiveBlending,
     }),
   );
   halo.scale.setScalar(9);
