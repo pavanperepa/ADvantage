@@ -128,30 +128,18 @@ function initHero() {
   });
 }
 
-// ---------------------------------------------------------------- work photos
+// ---------------------------------------------------------------- work types
+// The kinds of business, set large, arriving one after another.
 function initWork() {
   if (reducedMotion) return;
-  const photos = $$('.work-strip .photo');
-  gsap.from(photos, {
-    y: 48,
+  gsap.from('.work-types span', {
+    yPercent: 60,
     opacity: 0,
-    duration: 1.2,
+    duration: 1,
     ease: EASE,
     stagger: 0.08,
-    scrollTrigger: { trigger: '.work-strip', start: 'top 85%' },
+    scrollTrigger: { trigger: '.work-types', start: 'top 85%' },
   });
-  for (const img of $$('.work-strip img')) {
-    gsap.fromTo(
-      img,
-      { scale: 1.18, yPercent: -4 },
-      {
-        scale: 1.04,
-        yPercent: 4,
-        ease: 'none',
-        scrollTrigger: { trigger: img, start: 'top bottom', end: 'bottom top', scrub: true },
-      },
-    );
-  }
 }
 
 // ---------------------------------------------------------------- connect hub

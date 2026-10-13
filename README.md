@@ -10,7 +10,7 @@ Built to the taste-skill rules (tasteskill.dev): one ground (`#f2f1ec`), one
 ink (`#121316`), one accent (`#c5f03c`) used on the action and on the people
 who light up in the hero. One typeface, Instrument Sans. Surfaces separate by a
 step in tone, never by lines, shadows or gradients. No eyebrow labels, no index
-numbers. Each section has its own composition; the strategy section changes the
+numbers, no stock photography. Each section has its own composition; the strategy section changes the
 whole field to ink and the closing call to action changes it to the accent.
 
 Signature move (`src/hero.ts`, Three.js): the business sits at the centre of a
@@ -18,7 +18,7 @@ faint crowd. Every four seconds it sends its work out as a pulse; as the pulse
 passes, the right people light up and travel in to orbit it.
 
 Other motion uses GSAP (ScrollTrigger, SplitText, DrawSVG) and Lenis: headings
-rise line by line, photos drift, the app hub draws its connections, the
+rise line by line, the business types arrive one by one, the app hub draws its connections, the
 platform section keeps a product screen pinned while its panels change, the
 strategy section scrolls sideways while pinned, and the outcomes chart draws in
 and re-animates as the sliders move. Everything has a reduced-motion fallback.
@@ -41,8 +41,6 @@ Needs Node 18+. Deploys as static files (Vercel, Netlify, Cloudflare Pages).
 - No client results. Mock screens say "Illustrative", the strategy row says
   "Example plan", and the calculator only does arithmetic on the visitor's own
   inputs. Add real results only with the client's written consent.
-- Photos are Unsplash stock of business types, never presented as client work.
-  Sources and licence: `public/photos/ASSETS.md`.
 - App icons come from the `simple-icons` package and are used only to name the
   tools the service connects to.
 
