@@ -41,6 +41,8 @@ Needs Node 18+. Deploys as static files (Vercel, Netlify, Cloudflare Pages).
 - No client results. Mock screens say "Illustrative", the strategy row says
   "Example plan", and the calculator only does arithmetic on the visitor's own
   inputs. Add real results only with the client's written consent.
+- The "Trusted by" strip under the hero lists kinds of business, not client
+  names. Keep it to kinds of business you actually serve.
 - App icons come from the `simple-icons` package and are used only to name the
   tools the service connects to.
 

@@ -290,7 +290,7 @@ h3 {
 /* ------------------------------------------------------------ hero */
 .hero {
   position: relative;
-  min-height: 100svh;
+  min-height: calc(100svh - 86px);
   display: flex;
   align-items: center;
   padding: 120px 0 80px;
@@ -339,6 +339,90 @@ h3 {
   .hero {
     align-items: flex-end;
     padding-top: 44svh;
+  }
+}
+
+/* ------------------------------------------------------------ trusted by */
+.trusted {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  padding: 26px 0 26px max(var(--margin), calc((100% - var(--wrap)) / 2 + var(--margin)));
+  background: var(--tone);
+}
+
+.trusted-label {
+  flex-shrink: 0;
+  font-size: var(--t-small);
+  font-weight: 500;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.trusted-rail {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+}
+
+.trusted-track {
+  display: flex;
+  width: max-content;
+  animation: trusted 48s linear infinite;
+}
+
+.trusted:hover .trusted-track {
+  animation-play-state: paused;
+}
+
+.trusted ul {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.trusted li {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  padding-right: 36px;
+  font-size: clamp(20px, 2.2vw, 28px);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+
+.trusted li:nth-child(even) {
+  color: var(--ink-2);
+}
+
+.trusted li::after {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+
+@keyframes trusted {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 640px) {
+  .trusted {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 22px 0;
+  }
+  .trusted-label {
+    padding-left: var(--margin);
+  }
+  .trusted-rail {
+    width: 100%;
   }
 }
 
@@ -1850,5 +1934,8 @@ h3 {
   .panel,
   .panel.is-active {
     transform: none;
+  }
+  .trusted-track {
+    animation: none;
   }
 }
