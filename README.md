@@ -30,7 +30,12 @@ Needs Node 18+. Deploys as static files (Vercel, Netlify, Cloudflare Pages).
   "Book a free review" button scrolls to the contact section.
 - Prices in Packages are "from" figures taken from the low end of the price
   ranges to test. Confirm them after the first owner interviews.
-- The results section says "a Houston cricket academy". Name 22Yards only with
-  their written consent.
+- The page shows no client results. Mock screens are labelled "Illustrative",
+  the season plan is labelled "Example season", and the outcome calculator only
+  does arithmetic on the visitor's own inputs. Add real results only with the
+  client's written consent.
+- Some promised capabilities are not built yet (Google Business Profile
+  updates, scheduled posting, review requests, WhatsApp/SMS messaging).
+  Deliver them by hand or soften the copy before launch.
 - FAQ answers on contract terms, start time and the second-month-free guarantee
   are proposed policy; confirm them before launch.

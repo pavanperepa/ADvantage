@@ -167,41 +167,130 @@ function initReveals() {
   });
 }
 
-// ---------------------------------------------------------------- results
-function initResults() {
-  const counters = $$('[data-count-to]');
-  const bars = $$('.bar-fill');
-  if (reducedMotion) {
-    for (const c of counters) c.textContent = Number(c.dataset.countTo).toFixed(Number(c.dataset.decimals ?? 0));
-    for (const b of bars) b.style.transform = 'scaleX(1)';
-    return;
-  }
-  for (const c of counters) {
-    const from = Number(c.dataset.countFrom);
-    const to = Number(c.dataset.countTo);
-    const decimals = Number(c.dataset.decimals ?? 0);
-    const state = { v: from };
-    gsap.to(state, {
-      v: to,
-      duration: 2.2,
-      ease: 'power4.inOut',
-      scrollTrigger: { trigger: c, start: 'top 80%', once: true },
-      onUpdate: () => {
-        c.textContent = state.v.toFixed(decimals);
+// ---------------------------------------------------------------- connect hub
+// Places the app chips on a circle and draws a line from each to the core.
+function initHub() {
+  const hub = $('[data-hub]');
+  const svg = $<SVGSVGElement>('[data-hub-lines]');
+  if (!hub || !svg) return;
+  const apps = $$('.hub-apps li', hub);
+  const ns = 'http://www.w3.org/2000/svg';
+  svg.innerHTML =
+    '<defs><linearGradient id="hub-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7fb800"/><stop offset="1" stop-color="#0ea5e9"/></linearGradient></defs>';
+  // A tighter ring on phones keeps the outer chips on screen.
+  const radius = hub.clientWidth < 480 ? 35 : 42;
+  apps.forEach((li, i) => {
+    const angle = (i / apps.length) * Math.PI * 2 - Math.PI / 2;
+    const x = 50 + Math.cos(angle) * radius;
+    const y = 50 + Math.sin(angle) * radius;
+    li.style.left = `${x}%`;
+    li.style.top = `${y}%`;
+    for (const cls of ['line-base', 'line-flow']) {
+      const line = document.createElementNS(ns, 'line');
+      line.setAttribute('x1', String(x));
+      line.setAttribute('y1', String(y));
+      line.setAttribute('x2', '50');
+      line.setAttribute('y2', '50');
+      line.setAttribute('class', cls);
+      if (cls === 'line-flow') line.style.animationDelay = `${-i * 0.37}s`;
+      svg.appendChild(line);
+    }
+  });
+  // Take over the CSS centring so GSAP's scale tween keeps it on resize.
+  gsap.set([...apps, $('.hub-core', hub)], { xPercent: -50, yPercent: -50, x: 0, y: 0 });
+  if (reducedMotion) return;
+  const tl = gsap.timeline({ scrollTrigger: { trigger: hub, start: 'top 75%', once: true } });
+  tl.from('.hub-core', { scale: 0.6, opacity: 0, duration: 1, ease: 'back.out(1.6)' })
+    .from(apps, { scale: 0.4, opacity: 0, duration: 0.7, ease: 'back.out(2)', stagger: 0.06 }, 0.2)
+    .from('.line-flow', { opacity: 0, duration: 0.8, stagger: 0.05 }, 0.5);
+}
+
+// ---------------------------------------------------------------- strategy season
+// Desktop: the section pins and the season scrolls sideways. Narrow screens
+// keep a native, swipeable row.
+function initSeason() {
+  const section = $('[data-season]');
+  const track = $('[data-season-track]');
+  const progress = $('[data-season-progress]');
+  if (!section || !track || reducedMotion) return;
+  const mm = gsap.matchMedia();
+  mm.add('(min-width: 1001px)', () => {
+    const distance = () => Math.max(0, track.scrollWidth - window.innerWidth);
+    gsap.to(track, {
+      x: () => -distance(),
+      ease: 'none',
+      scrollTrigger: {
+        trigger: section,
+        start: 'top top',
+        end: () => `+=${distance()}`,
+        pin: true,
+        scrub: 0.8,
+        // Created after triggers further down the page; refresh it first so
+        // their positions include the pin's added scroll distance.
+        refreshPriority: 1,
+        invalidateOnRefresh: true,
+        onUpdate: (self) => {
+          if (progress) progress.style.transform = `scaleX(${0.12 + self.progress * 0.88})`;
+        },
       },
     });
-  }
-  gsap.fromTo(
-    bars,
-    { scaleX: 0 },
-    {
-      scaleX: 1,
-      duration: 1.8,
-      ease: 'expo.out',
-      stagger: 0.35,
-      scrollTrigger: { trigger: '.bars', start: 'top 85%', once: true },
-    },
-  );
+  });
+}
+
+// ---------------------------------------------------------------- outcome calculator
+function initCalc() {
+  const root = $('[data-calc]');
+  if (!root) return;
+  const inputs = $$<HTMLInputElement>('[data-in]', root);
+  const val = (k: string) => Number(inputs.find((i) => i.dataset.in === k)?.value ?? 0);
+  const show = (k: string, text: string) => {
+    const el = $(`[data-show="${k}"]`, root);
+    if (el) el.textContent = text;
+  };
+  const money = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`;
+  const shown: Record<string, number> = {};
+  const out = (k: string, n: number, fmt: (n: number) => string) => {
+    const el = $(`[data-out="${k}"]`, root);
+    if (!el) return;
+    const from = shown[k] ?? n;
+    shown[k] = n;
+    if (reducedMotion || from === n) {
+      el.textContent = fmt(n);
+      return;
+    }
+    const state = { v: from };
+    gsap.to(state, { v: n, duration: 0.5, ease: 'power2.out', onUpdate: () => (el.textContent = fmt(state.v)) });
+  };
+  const oneDecimal = (n: number) => (Math.round(n * 10) / 10).toLocaleString('en-US', { maximumFractionDigits: 1 });
+
+  const update = () => {
+    for (const i of inputs) {
+      const pct = ((Number(i.value) - Number(i.min)) / (Number(i.max) - Number(i.min))) * 100;
+      i.style.setProperty('--fill', `${pct}%`);
+    }
+    const inquiries = val('inquiries');
+    const trial = val('trial') / 100;
+    const enroll = val('enroll') / 100;
+    const fee = val('fee');
+    const months = val('months');
+    show('inquiries', String(inquiries));
+    show('trial', `${Math.round(trial * 100)}%`);
+    show('enroll', `${Math.round(enroll * 100)}%`);
+    show('fee', money(fee));
+    show('months', String(months));
+
+    const trials = inquiries * trial;
+    const students = trials * enroll;
+    out('trials', trials, oneDecimal);
+    out('students', students, oneDecimal);
+    out('monthly', students * fee, money);
+    out('lifetime', students * fee * months, money);
+    const lever = inquiries * 0.1 * enroll;
+    out('lever', lever, oneDecimal);
+    out('leverValue', lever * fee * months, money);
+  };
+  for (const i of inputs) i.addEventListener('input', update);
+  update();
 }
 
 // ---------------------------------------------------------------- steps
@@ -380,9 +469,11 @@ wireContact();
 initScroll();
 initHero();
 initReveals();
-initResults();
 initSteps();
 initCaps();
+initHub();
+initSeason();
+initCalc();
 initCta();
 initPointer();
 initNav();
