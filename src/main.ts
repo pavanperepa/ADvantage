@@ -1,21 +1,36 @@
 import './style.css';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { SplitText } from 'gsap/SplitText';
+import { DrawSVGPlugin } from 'gsap/DrawSVGPlugin';
 import Lenis from 'lenis';
-import { createOrbit } from './orbit';
+import {
+  siCalendly,
+  siFacebook,
+  siGmail,
+  siGoogle,
+  siGoogledrive,
+  siGooglesheets,
+  siHubspot,
+  siInstagram,
+  siMeta,
+  siWhatsapp,
+  type SimpleIcon,
+} from 'simple-icons';
+import { createHero } from './hero';
 import { site } from './config';
 
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger, SplitText, DrawSVGPlugin);
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const finePointer = window.matchMedia('(pointer: fine)').matches;
 const $ = <T extends Element = HTMLElement>(sel: string, root: ParentNode = document) => root.querySelector<T>(sel);
 const $$ = <T extends Element = HTMLElement>(sel: string, root: ParentNode = document) =>
   Array.from(root.querySelectorAll<T>(sel));
+const EASE = 'expo.out';
 
 // ---------------------------------------------------------------- contact
 function wireContact() {
-  const href = site.bookingUrl || (site.email ? `mailto:${site.email}?subject=Free%20enrollment%20review` : '#contact');
+  const href = site.bookingUrl || (site.email ? `mailto:${site.email}?subject=Free%20growth%20review` : '#contact');
   for (const a of $$<HTMLAnchorElement>('[data-booking]')) {
     a.href = href;
     if (site.bookingUrl) {
@@ -25,166 +40,168 @@ function wireContact() {
   }
   const lines = $('[data-contact-lines]');
   if (!lines) return;
-  if (site.email) {
-    lines.insertAdjacentHTML('beforeend', `<li><span>Email</span><a href="mailto:${site.email}">${site.email}</a></li>`);
-  }
-  if (site.whatsapp) {
-    lines.insertAdjacentHTML(
-      'beforeend',
-      `<li><span>WhatsApp</span><a href="https://wa.me/${site.whatsapp}" target="_blank" rel="noopener">+${site.whatsapp}</a></li>`,
-    );
-  }
-}
-
-// ---------------------------------------------------------------- split headings into words
-function splitWords(el: HTMLElement) {
-  const walk = (node: Node) => {
-    for (const child of Array.from(node.childNodes)) {
-      if (child.nodeType === Node.TEXT_NODE) {
-        const parts = (child.textContent ?? '').split(/(\s+)/);
-        const frag = document.createDocumentFragment();
-        for (const part of parts) {
-          if (!part) continue;
-          if (/^\s+$/.test(part)) {
-            frag.appendChild(document.createTextNode(part));
-          } else {
-            const outer = document.createElement('span');
-            outer.className = 'word';
-            const inner = document.createElement('span');
-            inner.className = 'word-inner';
-            inner.textContent = part;
-            outer.appendChild(inner);
-            frag.appendChild(outer);
-          }
-        }
-        child.replaceWith(frag);
-      } else if (child.nodeType === Node.ELEMENT_NODE) {
-        walk(child);
-      }
+  const add = (label: string, text: string, url: string, external = false) => {
+    const li = document.createElement('li');
+    const span = document.createElement('span');
+    span.textContent = label;
+    const a = document.createElement('a');
+    a.href = url;
+    a.textContent = text;
+    if (external) {
+      a.target = '_blank';
+      a.rel = 'noopener';
     }
+    li.append(span, a);
+    lines.appendChild(li);
   };
-  walk(el);
-  return $$('.word-inner', el);
+  if (site.email) add('Email', site.email, `mailto:${site.email}`);
+  if (site.whatsapp) add('WhatsApp', `+${site.whatsapp}`, `https://wa.me/${site.whatsapp}`, true);
 }
 
 // ---------------------------------------------------------------- smooth scroll
 function initScroll() {
-  if (reducedMotion) return null;
-  const lenis = new Lenis({ lerp: 0.1, wheelMultiplier: 1 });
+  if (reducedMotion) return;
+  const lenis = new Lenis({ lerp: 0.1 });
   lenis.on('scroll', ScrollTrigger.update);
   gsap.ticker.add((t) => lenis.raf(t * 1000));
   gsap.ticker.lagSmoothing(0);
   for (const a of $$<HTMLAnchorElement>('a[href^="#"]')) {
     a.addEventListener('click', (e) => {
       const id = a.getAttribute('href')!;
-      if (id === '#' || id.length < 2) return;
-      const target = $(id);
+      const target = id.length > 1 ? $(id) : null;
       if (!target) return;
       e.preventDefault();
-      lenis.scrollTo(target as HTMLElement, { offset: id === '#top' ? 0 : -72, duration: 1.4 });
+      lenis.scrollTo(target, { offset: id === '#top' ? 0 : -76, duration: 1.4 });
     });
   }
-  return lenis;
+}
+
+// ---------------------------------------------------------------- entrances
+// Headings rise line by line, then their text and pictures follow, staggered.
+function initEntrances() {
+  if (reducedMotion) return;
+  for (const el of $$('[data-split]')) {
+    const split = SplitText.create(el, { type: 'lines', mask: 'lines', linesClass: 'split-line-inner' });
+    for (const mask of split.masks) (mask as HTMLElement).classList.add('split-line');
+    const hero = el.classList.contains('hero-title');
+    gsap.from(split.lines, {
+      yPercent: 110,
+      duration: hero ? 1.3 : 1.05,
+      ease: EASE,
+      stagger: 0.09,
+      delay: hero ? 0.15 : 0,
+      scrollTrigger: hero ? undefined : { trigger: el, start: 'top 85%' },
+    });
+  }
+
+  const hero = $$('.hero [data-rise]');
+  gsap.from(hero, { y: 24, opacity: 0, duration: 1.1, ease: EASE, stagger: 0.08, delay: 0.55 });
+  gsap.from('.nav-inner > *', { y: -16, opacity: 0, duration: 1, ease: EASE, stagger: 0.07 });
+
+  const rest = $$('[data-rise]').filter((el) => !el.closest('.hero'));
+  gsap.set(rest, { y: 24, opacity: 0 });
+  ScrollTrigger.batch(rest, {
+    start: 'top 88%',
+    once: true,
+    onEnter: (batch) => gsap.to(batch, { y: 0, opacity: 1, duration: 1, ease: EASE, stagger: 0.075, overwrite: true }),
+  });
 }
 
 // ---------------------------------------------------------------- hero
 function initHero() {
   const canvas = $<HTMLCanvasElement>('[data-hero-canvas]');
-  const orbit = canvas
-    ? createOrbit(canvas, {
-        count: window.innerWidth < 700 ? 2600 : 5200,
-        offsetX: 4.3,
-        autoIntro: true,
-        reducedMotion,
-        theme: 'light',
-      })
-    : null;
-
-  const title = $('.hero-title')!;
-  const words = splitWords(title);
-
-  if (reducedMotion) return;
-
-  const tl = gsap.timeline({ defaults: { ease: 'expo.out' } });
-  tl.from('.nav', { y: -30, opacity: 0, duration: 1.2 }, 0.1)
-    .from(words, { yPercent: 115, rotate: 4, duration: 1.3, stagger: 0.08 }, 0.25)
-    .from('.hero-reveal', { y: 26, opacity: 0, duration: 1.1, stagger: 0.1 }, 0.6)
-    .from('.scroll-cue', { opacity: 0, duration: 1 }, 1.4);
-
-  if (orbit) {
-    ScrollTrigger.create({
-      trigger: '.hero',
-      start: 'top top',
-      end: 'bottom top',
-      scrub: true,
-      onUpdate: (self) => orbit.setSpread(self.progress * 0.9),
-    });
-  }
+  if (!canvas) return;
+  const hero = createHero(canvas, { count: window.innerWidth < 700 ? 2200 : 4200, reducedMotion });
+  if (!hero || reducedMotion) return;
+  ScrollTrigger.create({
+    trigger: '.hero',
+    start: 'top top',
+    end: 'bottom top',
+    scrub: true,
+    onUpdate: (self) => hero.setSpread(self.progress * 0.8),
+  });
   gsap.to('.hero-inner', {
-    yPercent: -18,
-    opacity: 0.2,
+    y: -80,
+    opacity: 0.15,
     ease: 'none',
     scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true },
   });
 }
 
-// ---------------------------------------------------------------- section reveals
-function initReveals() {
-  const headings = $$('[data-split]').filter((el) => !el.classList.contains('hero-title'));
-  for (const h of headings) {
-    const words = splitWords(h);
-    if (reducedMotion) continue;
-    gsap.from(words, {
-      yPercent: 110,
-      duration: 1.1,
-      ease: 'expo.out',
-      stagger: 0.05,
-      scrollTrigger: { trigger: h, start: 'top 85%' },
-    });
-  }
+// ---------------------------------------------------------------- work photos
+function initWork() {
   if (reducedMotion) return;
-
-  for (const el of $$('.reveal')) {
-    gsap.from(el, {
-      y: 24,
-      opacity: 0,
-      duration: 1,
-      ease: 'power3.out',
-      scrollTrigger: { trigger: el, start: 'top 88%' },
-    });
-  }
-
-  gsap.set('.reveal-card', { opacity: 0 });
-  ScrollTrigger.batch('.reveal-card', {
-    start: 'top 90%',
-    once: true,
-    onEnter: (batch) =>
-      gsap.fromTo(
-        batch,
-        { y: 48, opacity: 0, scale: 0.97 },
-        { y: 0, opacity: 1, scale: 1, duration: 1.1, ease: 'expo.out', stagger: 0.09, overwrite: true },
-      ),
+  const photos = $$('.work-strip .photo');
+  gsap.from(photos, {
+    y: 48,
+    opacity: 0,
+    duration: 1.2,
+    ease: EASE,
+    stagger: 0.08,
+    scrollTrigger: { trigger: '.work-strip', start: 'top 85%' },
   });
+  for (const img of $$('.work-strip img')) {
+    gsap.fromTo(
+      img,
+      { scale: 1.18, yPercent: -4 },
+      {
+        scale: 1.04,
+        yPercent: 4,
+        ease: 'none',
+        scrollTrigger: { trigger: img, start: 'top bottom', end: 'bottom top', scrub: true },
+      },
+    );
+  }
 }
 
 // ---------------------------------------------------------------- connect hub
-// Places the app chips on a circle and draws a line from each to the core.
+const APPS: { icon: SimpleIcon; label: string }[] = [
+  { icon: siMeta, label: 'Meta Ads' },
+  { icon: siInstagram, label: 'Instagram' },
+  { icon: siFacebook, label: 'Facebook' },
+  { icon: siWhatsapp, label: 'WhatsApp' },
+  { icon: siGoogle, label: 'Google Business' },
+  { icon: siGmail, label: 'Gmail' },
+  { icon: siGoogledrive, label: 'Google Drive' },
+  { icon: siGooglesheets, label: 'Google Sheets' },
+  { icon: siHubspot, label: 'HubSpot' },
+  { icon: siCalendly, label: 'Calendly' },
+];
+
 function initHub() {
   const hub = $('[data-hub]');
   const svg = $<SVGSVGElement>('[data-hub-lines]');
-  if (!hub || !svg) return;
-  const apps = $$('.hub-apps li', hub);
+  const list = $('[data-hub-apps]');
+  if (!hub || !svg || !list) return;
   const ns = 'http://www.w3.org/2000/svg';
-  svg.innerHTML =
-    '<defs><linearGradient id="hub-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7fb800"/><stop offset="1" stop-color="#0ea5e9"/></linearGradient></defs>';
-  // A tighter ring on phones keeps the outer chips on screen.
-  const radius = hub.clientWidth < 480 ? 35 : 42;
-  apps.forEach((li, i) => {
-    const angle = (i / apps.length) * Math.PI * 2 - Math.PI / 2;
+  const radius = hub.clientWidth < 480 ? 38 : 41;
+  const flows: SVGLineElement[] = [];
+  const items: HTMLLIElement[] = [];
+
+  APPS.forEach(({ icon, label }, i) => {
+    const angle = (i / APPS.length) * Math.PI * 2 - Math.PI / 2;
     const x = 50 + Math.cos(angle) * radius;
     const y = 50 + Math.sin(angle) * radius;
+
+    const li = document.createElement('li');
     li.style.left = `${x}%`;
     li.style.top = `${y}%`;
+    const disc = document.createElement('span');
+    disc.className = 'hub-icon';
+    const iconSvg = document.createElementNS(ns, 'svg');
+    iconSvg.setAttribute('viewBox', '0 0 24 24');
+    iconSvg.setAttribute('aria-hidden', 'true');
+    const path = document.createElementNS(ns, 'path');
+    path.setAttribute('d', icon.path);
+    path.setAttribute('fill', `#${icon.hex}`);
+    iconSvg.appendChild(path);
+    disc.appendChild(iconSvg);
+    const name = document.createElement('span');
+    name.textContent = label;
+    li.append(disc, name);
+    list.appendChild(li);
+    items.push(li);
+
     for (const cls of ['line-base', 'line-flow']) {
       const line = document.createElementNS(ns, 'line');
       line.setAttribute('x1', String(x));
@@ -192,29 +209,83 @@ function initHub() {
       line.setAttribute('x2', '50');
       line.setAttribute('y2', '50');
       line.setAttribute('class', cls);
-      if (cls === 'line-flow') line.style.animationDelay = `${-i * 0.37}s`;
+      if (cls === 'line-flow') {
+        line.style.animationDelay = `${-i * 0.29}s`;
+        flows.push(line);
+      }
       svg.appendChild(line);
     }
   });
-  // Take over the CSS centring so GSAP's scale tween keeps it on resize.
-  gsap.set([...apps, $('.hub-core', hub)], { xPercent: -50, yPercent: -50, x: 0, y: 0 });
+
   if (reducedMotion) return;
+  const bases = $$<SVGLineElement>('.line-base', svg);
   const tl = gsap.timeline({ scrollTrigger: { trigger: hub, start: 'top 75%', once: true } });
-  tl.from('.hub-core', { scale: 0.6, opacity: 0, duration: 1, ease: 'back.out(1.6)' })
-    .from(apps, { scale: 0.4, opacity: 0, duration: 0.7, ease: 'back.out(2)', stagger: 0.06 }, 0.2)
-    .from('.line-flow', { opacity: 0, duration: 0.8, stagger: 0.05 }, 0.5);
+  tl.from('.hub-core', { scale: 0.4, opacity: 0, duration: 1, ease: 'back.out(1.7)' })
+    .from(bases, { drawSVG: '100% 100%', duration: 0.9, ease: 'power2.out', stagger: 0.05 }, 0.2)
+    .from(items, { scale: 0.5, opacity: 0, duration: 0.7, ease: 'back.out(2)', stagger: 0.05 }, 0.3)
+    .from(flows, { opacity: 0, duration: 0.6, stagger: 0.04 }, 0.9);
+}
+
+// ---------------------------------------------------------------- capabilities
+// Desktop: a sticky product screen switches panels as each job scrolls past.
+// Narrow screens: each job carries its own copy of its panel.
+function initCaps() {
+  const root = $('[data-caps]');
+  if (!root) return;
+  const caps = $$('.cap', root);
+  const panels = $$('.panel', root);
+  const title = $('[data-screen-title]', root);
+
+  for (const [i, cap] of caps.entries()) {
+    const panel = panels.at(i);
+    if (!panel) continue;
+    const inline = document.createElement('div');
+    inline.className = 'cap-inline';
+    inline.setAttribute('aria-hidden', 'true');
+    const screen = document.createElement('div');
+    screen.className = 'screen';
+    const bar = document.createElement('div');
+    bar.className = 'screen-bar';
+    bar.innerHTML = '<i></i><i></i><i></i><span></span><em>Illustrative</em>';
+    $('span', bar)!.textContent = panel.dataset.title ?? '';
+    const body = document.createElement('div');
+    body.className = 'screen-body';
+    const copy = panel.cloneNode(true) as HTMLElement;
+    copy.classList.remove('is-active');
+    body.appendChild(copy);
+    screen.append(bar, body);
+    inline.appendChild(screen);
+    cap.appendChild(inline);
+    ScrollTrigger.create({ trigger: inline, start: 'top 85%', once: true, onEnter: () => copy.classList.add('is-active') });
+  }
+
+  let current = 0;
+  const show = (i: number) => {
+    caps.forEach((c, k) => c.classList.toggle('is-active', k === i));
+    if (i === current) return;
+    panels.at(current)?.classList.remove('is-active');
+    panels.at(i)?.classList.add('is-active');
+    if (title) title.textContent = panels.at(i)?.dataset.title ?? '';
+    current = i;
+  };
+  show(0);
+  for (const [i, cap] of caps.entries()) {
+    ScrollTrigger.create({
+      trigger: cap,
+      start: 'top 55%',
+      end: 'bottom 55%',
+      onToggle: (self) => self.isActive && show(i),
+    });
+  }
 }
 
 // ---------------------------------------------------------------- strategy season
-// Desktop: the section pins and the season scrolls sideways. Narrow screens
-// keep a native, swipeable row.
 function initSeason() {
   const section = $('[data-season]');
   const track = $('[data-season-track]');
   const progress = $('[data-season-progress]');
   if (!section || !track || reducedMotion) return;
-  const mm = gsap.matchMedia();
-  mm.add('(min-width: 1001px)', () => {
+  gsap.matchMedia().add('(min-width: 1001px)', () => {
     const distance = () => Math.max(0, track.scrollWidth - window.innerWidth);
     gsap.to(track, {
       x: () => -distance(),
@@ -230,206 +301,275 @@ function initSeason() {
         refreshPriority: 1,
         invalidateOnRefresh: true,
         onUpdate: (self) => {
-          if (progress) progress.style.transform = `scaleX(${0.12 + self.progress * 0.88})`;
+          if (progress) progress.style.transform = `scaleX(${0.1 + self.progress * 0.9})`;
         },
       },
     });
   });
 }
 
-// ---------------------------------------------------------------- outcome calculator
-function initCalc() {
+// ---------------------------------------------------------------- outcomes: calculator + chart
+const money = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`;
+const compact = (n: number) =>
+  n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(1)}M` : n >= 1000 ? `$${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}K` : `$${Math.round(n)}`;
+const oneDecimal = (n: number) => (Math.round(n * 10) / 10).toLocaleString('en-US', { maximumFractionDigits: 1 });
+
+function niceMax(v: number) {
+  if (v <= 0) return 1;
+  const mag = Math.pow(10, Math.floor(Math.log10(v)));
+  const step = [1, 2, 2.5, 5, 10].find((s) => s * mag * 4 >= v)! * mag;
+  return step * 4;
+}
+
+interface Series {
+  base: number[];
+  lift: number[];
+}
+
+function initOutcomes() {
   const root = $('[data-calc]');
-  if (!root) return;
+  const plot = $('[data-chart-plot]');
+  const tableHost = $('[data-chart-table]');
+  if (!root || !plot || !tableHost) return;
   const inputs = $$<HTMLInputElement>('[data-in]', root);
   const val = (k: string) => Number(inputs.find((i) => i.dataset.in === k)?.value ?? 0);
-  const show = (k: string, text: string) => {
-    const el = $(`[data-show="${k}"]`, root);
+  const setText = (sel: string, text: string) => {
+    const el = $(sel, root);
     if (el) el.textContent = text;
   };
-  const money = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`;
-  const shown: Record<string, number> = {};
-  const out = (k: string, n: number, fmt: (n: number) => string) => {
-    const el = $(`[data-out="${k}"]`, root);
-    if (!el) return;
-    const from = shown[k] ?? n;
-    shown[k] = n;
-    if (reducedMotion || from === n) {
-      el.textContent = fmt(n);
+
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('role', 'img');
+  plot.appendChild(svg);
+  const tip = document.createElement('div');
+  tip.className = 'chart-tip';
+  plot.appendChild(tip);
+  plot.tabIndex = 0;
+
+  let shown: Series = { base: Array(12).fill(0), lift: Array(12).fill(0) };
+  let target: Series = shown;
+  let drawn = false;
+  let hoverIndex = -1;
+
+  const compute = (): Series & { customers: number; perCustomer: number; liftYear: number } => {
+    const inquiries = val('inquiries');
+    const conv = val('conv') / 100;
+    const perMonth = (val('spend') * val('visits')) / 12;
+    const base: number[] = [];
+    const lift: number[] = [];
+    const cBase = inquiries * conv;
+    const cLift = inquiries * Math.min(conv + 0.05, 1);
+    for (let m = 1; m <= 12; m++) {
+      // Each month's new customers keep spending for the rest of the year.
+      const months = (m * (m + 1)) / 2;
+      base.push(cBase * perMonth * months);
+      lift.push(cLift * perMonth * months);
+    }
+    return { base, lift, customers: cBase, perCustomer: perMonth * 12, liftYear: lift[11] - base[11] };
+  };
+
+  const render = (s: Series) => {
+    const w = plot.clientWidth;
+    const h = plot.clientHeight;
+    const pad = { l: 52, r: w < 520 ? 64 : 88, t: 12, b: 30 };
+    const iw = Math.max(10, w - pad.l - pad.r);
+    const ih = Math.max(10, h - pad.t - pad.b);
+    const max = niceMax(Math.max(...target.lift, 1));
+    const X = (i: number) => pad.l + (i / 11) * iw;
+    const Y = (v: number) => pad.t + ih - (v / max) * ih;
+    svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    svg.setAttribute(
+      'aria-label',
+      `Revenue from new customers over 12 months: ${money(target.base[11])} with your numbers today, ${money(target.lift[11])} with 5 points more conversion.`,
+    );
+
+    const ticks = [0, 1, 2, 3, 4].map((k) => (max / 4) * k);
+    const months = [0, 2, 5, 8, 11];
+    const line = (arr: number[]) => arr.map((v, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join('');
+    const area = `${line(s.lift)}L${X(11)},${Y(0)}L${X(0)},${Y(0)}Z`;
+
+    const endBase = Y(s.base[11]);
+    let endLift = Y(s.lift[11]);
+    if (endBase - endLift < 18) endLift = endBase - 18;
+
+    svg.innerHTML = `
+      <g class="grid">${ticks.map((t) => `<line x1="${pad.l}" x2="${pad.l + iw}" y1="${Y(t)}" y2="${Y(t)}"/>`).join('')}</g>
+      <g class="axis">
+        ${ticks.map((t) => `<text x="${pad.l - 10}" y="${Y(t) + 4}" text-anchor="end">${compact(t)}</text>`).join('')}
+        ${months.map((m) => `<text x="${X(m)}" y="${h - 6}" text-anchor="middle">${m === 0 ? 'Month 1' : m + 1}</text>`).join('')}
+      </g>
+      <path class="area" d="${area}" fill="var(--series-lift)"/>
+      <path class="series series-base" d="${line(s.base)}" stroke="var(--series-base)"/>
+      <path class="series series-lift" d="${line(s.lift)}" stroke="var(--series-lift)"/>
+      <line class="crosshair" x1="0" x2="0" y1="${pad.t}" y2="${pad.t + ih}"/>
+      <g class="dots"></g>
+      <text class="end-label" x="${X(11) + 10}" y="${endLift + 4}">${compact(s.lift[11])}</text>
+      <text class="end-label" x="${X(11) + 10}" y="${endBase + 4}">${compact(s.base[11])}</text>
+    `;
+    // End markers with a ring in the surface colour.
+    const dots = svg.querySelector('.dots')!;
+    for (const [arr, color] of [
+      [s.base, 'var(--series-base)'],
+      [s.lift, 'var(--series-lift)'],
+    ] as const) {
+      const c = document.createElementNS(ns, 'circle');
+      c.setAttribute('cx', String(X(11)));
+      c.setAttribute('cy', String(Y(arr[11])));
+      c.setAttribute('r', '5');
+      c.setAttribute('fill', color);
+      c.setAttribute('stroke', 'var(--tone)');
+      c.setAttribute('stroke-width', '2');
+      dots.appendChild(c);
+    }
+    if (hoverIndex >= 0) showTip(hoverIndex, X, pad.t, ih);
+    return { X, pad, ih };
+  };
+
+  const showTip = (i: number, X: (i: number) => number, top: number, ih: number) => {
+    const cross = svg.querySelector<SVGLineElement>('.crosshair');
+    if (cross) {
+      cross.setAttribute('x1', String(X(i)));
+      cross.setAttribute('x2', String(X(i)));
+      cross.style.opacity = '1';
+    }
+    tip.replaceChildren();
+    const head = document.createElement('p');
+    head.className = 'tip-head';
+    head.textContent = `By month ${i + 1}`;
+    tip.appendChild(head);
+    for (const [key, label, color] of [
+      ['lift', 'With 5 points more conversion', 'var(--series-lift)'],
+      ['base', 'Your numbers today', 'var(--series-base)'],
+    ] as const) {
+      const row = document.createElement('p');
+      const k = document.createElement('i');
+      k.style.background = color;
+      const b = document.createElement('b');
+      b.textContent = money(target[key][i]);
+      const span = document.createElement('span');
+      span.textContent = label;
+      row.append(k, b, span);
+      tip.appendChild(row);
+    }
+    const x = X(i);
+    const left = x > plot.clientWidth / 2 ? x - tip.offsetWidth - 12 : x + 12;
+    tip.style.left = `${left}px`;
+    tip.style.top = `${top + ih * 0.05}px`;
+    tip.classList.add('is-on');
+  };
+
+  const hide = () => {
+    hoverIndex = -1;
+    tip.classList.remove('is-on');
+    const cross = svg.querySelector<SVGLineElement>('.crosshair');
+    if (cross) cross.style.opacity = '0';
+  };
+
+  const indexAt = (clientX: number) => {
+    const rect = plot.getBoundingClientRect();
+    const w = plot.clientWidth;
+    const padL = 52;
+    const padR = w < 520 ? 64 : 88;
+    const t = (clientX - rect.left - padL) / (w - padL - padR);
+    return Math.max(0, Math.min(11, Math.round(t * 11)));
+  };
+
+  plot.addEventListener('pointermove', (e) => {
+    hoverIndex = indexAt(e.clientX);
+    render(shown);
+  });
+  plot.addEventListener('pointerleave', hide);
+  plot.addEventListener('focus', () => {
+    hoverIndex = 11;
+    render(shown);
+  });
+  plot.addEventListener('blur', hide);
+  plot.addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    e.preventDefault();
+    hoverIndex = Math.max(0, Math.min(11, (hoverIndex < 0 ? 11 : hoverIndex) + (e.key === 'ArrowRight' ? 1 : -1)));
+    render(shown);
+  });
+
+  const renderTable = (s: Series) => {
+    const table = document.createElement('table');
+    const thead = table.createTHead().insertRow();
+    for (const h of ['Month', 'Your numbers today', 'With 5 points more']) {
+      const th = document.createElement('th');
+      th.textContent = h;
+      thead.appendChild(th);
+    }
+    const body = table.createTBody();
+    s.base.forEach((v, i) => {
+      const row = body.insertRow();
+      row.insertCell().textContent = String(i + 1);
+      row.insertCell().textContent = money(v);
+      row.insertCell().textContent = money(s.lift[i]);
+    });
+    tableHost.replaceChildren(table);
+  };
+
+  const animateTo = (next: Series) => {
+    const from = shown;
+    target = next;
+    if (reducedMotion || !drawn) {
+      shown = next;
+      render(shown);
       return;
     }
-    const state = { v: from };
-    gsap.to(state, { v: n, duration: 0.5, ease: 'power2.out', onUpdate: () => (el.textContent = fmt(state.v)) });
+    const state = { t: 0 };
+    gsap.to(state, {
+      t: 1,
+      duration: 0.55,
+      ease: 'power3.out',
+      overwrite: true,
+      onUpdate: () => {
+        shown = {
+          base: from.base.map((v, i) => v + (next.base[i] - v) * state.t),
+          lift: from.lift.map((v, i) => v + (next.lift[i] - v) * state.t),
+        };
+        render(shown);
+      },
+    });
   };
-  const oneDecimal = (n: number) => (Math.round(n * 10) / 10).toLocaleString('en-US', { maximumFractionDigits: 1 });
 
   const update = () => {
     for (const i of inputs) {
       const pct = ((Number(i.value) - Number(i.min)) / (Number(i.max) - Number(i.min))) * 100;
       i.style.setProperty('--fill', `${pct}%`);
     }
-    const inquiries = val('inquiries');
-    const trial = val('trial') / 100;
-    const enroll = val('enroll') / 100;
-    const fee = val('fee');
-    const months = val('months');
-    show('inquiries', String(inquiries));
-    show('trial', `${Math.round(trial * 100)}%`);
-    show('enroll', `${Math.round(enroll * 100)}%`);
-    show('fee', money(fee));
-    show('months', String(months));
-
-    const trials = inquiries * trial;
-    const students = trials * enroll;
-    out('trials', trials, oneDecimal);
-    out('students', students, oneDecimal);
-    out('monthly', students * fee, money);
-    out('lifetime', students * fee * months, money);
-    const lever = inquiries * 0.1 * enroll;
-    out('lever', lever, oneDecimal);
-    out('leverValue', lever * fee * months, money);
+    setText('[data-show="inquiries"]', String(val('inquiries')));
+    setText('[data-show="conv"]', `${val('conv')}%`);
+    setText('[data-show="spend"]', money(val('spend')));
+    setText('[data-show="visits"]', String(val('visits')));
+    const r = compute();
+    setText('[data-out="customers"]', oneDecimal(r.customers));
+    setText('[data-out="perCustomer"]', money(r.perCustomer));
+    const lever = $('[data-out="liftYear"]');
+    if (lever) lever.textContent = money(r.liftYear);
+    animateTo({ base: r.base, lift: r.lift });
+    renderTable(r);
   };
   for (const i of inputs) i.addEventListener('input', update);
   update();
-}
+  new ResizeObserver(() => render(shown)).observe(plot);
 
-// ---------------------------------------------------------------- steps
-function initSteps() {
-  const progress = $('[data-steps-progress]');
-  const steps = $$('.step');
-  if (!progress || reducedMotion) {
-    steps.forEach((s) => s.classList.add('is-active'));
+  if (reducedMotion) {
+    drawn = true;
     return;
   }
-  gsap.fromTo(
-    progress,
-    { '--p': 0 },
-    {
-      '--p': 1,
-      ease: 'none',
-      scrollTrigger: {
-        trigger: '[data-steps]',
-        start: 'top 70%',
-        end: 'bottom 55%',
-        scrub: 0.6,
-        onUpdate: (self) => {
-          steps.forEach((s, i) => s.classList.toggle('is-active', self.progress >= i / steps.length + 0.02));
-        },
-      },
+  ScrollTrigger.create({
+    trigger: plot,
+    start: 'top 80%',
+    once: true,
+    onEnter: () => {
+      drawn = true;
+      render(shown);
+      gsap.from(svg.querySelectorAll('.series'), { drawSVG: '0%', duration: 1.6, ease: 'power2.inOut', stagger: 0.2 });
+      gsap.from(svg.querySelectorAll('.area, .end-label, .dots circle'), { opacity: 0, duration: 0.6, delay: 1.2 });
     },
-  );
-}
-
-// ---------------------------------------------------------------- capabilities
-// Desktop: a sticky mock screen switches panels as each capability scrolls
-// past. Narrow screens: each capability carries its own copy of its panel.
-function initCaps() {
-  const root = $('[data-caps]');
-  if (!root) return;
-  const caps = $$('.cap', root);
-  const panels = $$('.panel', root);
-  const title = $('[data-screen-title]', root);
-
-  for (const [i, cap] of caps.entries()) {
-    const panel = panels.at(i);
-    if (!panel) continue;
-    const inline = document.createElement('div');
-    inline.className = 'cap-inline';
-    inline.setAttribute('aria-hidden', 'true');
-    inline.innerHTML = `<div class="screen dark"><div class="screen-bar"><i></i><i></i><i></i><span>${panel.dataset.title}</span><em>Illustrative</em></div><div class="screen-body"></div></div>`;
-    const copy = panel.cloneNode(true) as HTMLElement;
-    copy.classList.remove('is-active');
-    $('.screen-body', inline)!.appendChild(copy);
-    $('.cap-body', cap)!.appendChild(inline);
-    ScrollTrigger.create({
-      trigger: inline,
-      start: 'top 85%',
-      once: true,
-      onEnter: () => copy.classList.add('is-active'),
-    });
-  }
-
-  let current = 0;
-  const show = (i: number) => {
-    caps.forEach((c, k) => c.classList.toggle('is-active', k === i));
-    if (i === current) return;
-    panels.at(current)?.classList.remove('is-active');
-    panels.at(i)?.classList.add('is-active');
-    if (title) title.textContent = panels.at(i)?.dataset.title ?? '';
-    current = i;
-  };
-  show(0);
-
-  for (const [i, cap] of caps.entries()) {
-    ScrollTrigger.create({
-      trigger: cap,
-      start: 'top 55%',
-      end: 'bottom 55%',
-      onToggle: (self) => self.isActive && show(i),
-    });
-  }
-}
-
-// ---------------------------------------------------------------- CTA orbit
-function initCta() {
-  const canvas = $<HTMLCanvasElement>('[data-cta-canvas]');
-  if (!canvas) return;
-  createOrbit(canvas, {
-    count: window.innerWidth < 700 ? 1800 : 3600,
-    offsetX: 0,
-    autoIntro: false,
-    reducedMotion,
-    opacity: 0.55,
-    theme: 'light',
   });
-}
-
-// ---------------------------------------------------------------- pointer effects
-function initPointer() {
-  if (!finePointer || reducedMotion) return;
-
-  const glow = $('.cursor-glow')!;
-  const gx = gsap.quickTo(glow, 'x', { duration: 0.6, ease: 'power3' });
-  const gy = gsap.quickTo(glow, 'y', { duration: 0.6, ease: 'power3' });
-  window.addEventListener('pointermove', (e) => {
-    gx(e.clientX);
-    gy(e.clientY);
-    glow.classList.add('is-on');
-  });
-
-  for (const btn of $$('.magnetic')) {
-    const mx = gsap.quickTo(btn, 'x', { duration: 0.5, ease: 'elastic.out(1, 0.4)' });
-    const my = gsap.quickTo(btn, 'y', { duration: 0.5, ease: 'elastic.out(1, 0.4)' });
-    btn.addEventListener('pointermove', (e) => {
-      const r = btn.getBoundingClientRect();
-      mx((e.clientX - r.left - r.width / 2) * 0.25);
-      my((e.clientY - r.top - r.height / 2) * 0.35);
-    });
-    btn.addEventListener('pointerleave', () => {
-      mx(0);
-      my(0);
-    });
-  }
-
-  for (const card of $$('[data-tilt]')) {
-    card.addEventListener('pointermove', (e) => {
-      const r = card.getBoundingClientRect();
-      const px = (e.clientX - r.left) / r.width;
-      const py = (e.clientY - r.top) / r.height;
-      card.style.setProperty('--mx', `${px * 100}%`);
-      card.style.setProperty('--my', `${py * 100}%`);
-      gsap.to(card, {
-        rotateY: (px - 0.5) * 7,
-        rotateX: (0.5 - py) * 7,
-        transformPerspective: 900,
-        duration: 0.6,
-        ease: 'power3.out',
-      });
-    });
-    card.addEventListener('pointerleave', () => {
-      gsap.to(card, { rotateX: 0, rotateY: 0, duration: 0.9, ease: 'elastic.out(1, 0.5)' });
-    });
-  }
 }
 
 // ---------------------------------------------------------------- nav
@@ -440,8 +580,7 @@ function initNav() {
     end: 'max',
     onToggle: (self) => nav.classList.toggle('is-scrolled', self.isActive),
   });
-  const links = $$<HTMLAnchorElement>('.nav-links a');
-  for (const link of links) {
+  for (const link of $$<HTMLAnchorElement>('.nav-links a')) {
     const section = $(link.getAttribute('href')!);
     if (!section) continue;
     ScrollTrigger.create({
@@ -464,18 +603,15 @@ function initFaq() {
   }
 }
 
-if (reducedMotion) document.documentElement.classList.add('reduced-motion');
 wireContact();
 initScroll();
 initHero();
-initReveals();
-initSteps();
-initCaps();
+initEntrances();
+initWork();
 initHub();
+initCaps();
 initSeason();
-initCalc();
-initCta();
-initPointer();
+initOutcomes();
 initNav();
 initFaq();
 window.addEventListener('load', () => ScrollTrigger.refresh());

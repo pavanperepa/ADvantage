@@ -1,19 +1,32 @@
 # ADvantage website
 
-Single-page marketing site for ADvantage, the all-in-one growth assistant for
-youth academies: it builds an academy's presence, learns its audience, runs its
-campaigns and keeps families engaged while the owner focuses on coaching. Its
-one job is to get an owner to book a free 15-minute growth review.
+Single-page marketing site for ADvantage: presence, campaigns and customer
+follow-up for local businesses, run for the owner and measured every week. Its
+one job is to get an owner to book a free 15-minute review.
 
-Section content follows the "ADvantage: Growth Operator Strategy" doc. The
-headline positioning (growth assistant rather than done-for-you enrollment
-partner) is newer than the doc's Positioning section.
+## Design
 
-Light theme. The mock product screens use the `.dark` token scope.
+Built to the taste-skill rules (tasteskill.dev): one ground (`#f2f1ec`), one
+ink (`#121316`), one accent (`#c5f03c`) used on the action and on the people
+who light up in the hero. One typeface, Instrument Sans. Surfaces separate by a
+step in tone, never by lines, shadows or gradients. No eyebrow labels, no index
+numbers. Each section has its own composition; the strategy section changes the
+whole field to ink and the closing call to action changes it to the accent.
 
-Stack: Vite + TypeScript, Three.js (hero and closing orbit), GSAP ScrollTrigger
-(reveals, counters, step progress) and Lenis (smooth scroll). Animations are
-disabled for visitors who set "reduce motion".
+Signature move (`src/hero.ts`, Three.js): the business sits at the centre of a
+faint crowd. Every four seconds it sends its work out as a pulse; as the pulse
+passes, the right people light up and travel in to orbit it.
+
+Other motion uses GSAP (ScrollTrigger, SplitText, DrawSVG) and Lenis: headings
+rise line by line, photos drift, the app hub draws its connections, the
+platform section keeps a product screen pinned while its panels change, the
+strategy section scrolls sideways while pinned, and the outcomes chart draws in
+and re-animates as the sliders move. Everything has a reduced-motion fallback.
+
+The outcomes chart follows the dataviz skill: one axis, a 2px line per series,
+legend plus direct end labels, a crosshair tooltip (mouse or arrow keys) and a
+table view. Its two colours were run through the palette validator against the
+panel tone; the grey baseline is a deliberate de-emphasis encoding.
 
 ```bash
 npm install
@@ -23,19 +36,24 @@ npm run build    # static output in dist/
 
 Needs Node 18+. Deploys as static files (Vercel, Netlify, Cloudflare Pages).
 
+## Content rules
+
+- No client results. Mock screens say "Illustrative", the strategy row says
+  "Example plan", and the calculator only does arithmetic on the visitor's own
+  inputs. Add real results only with the client's written consent.
+- Photos are Unsplash stock of business types, never presented as client work.
+  Sources and licence: `public/photos/ASSETS.md`.
+- App icons come from the `simple-icons` package and are used only to name the
+  tools the service connects to.
+
 ## Before going live
 
 - Fill in `src/config.ts`: booking link, business email, WhatsApp number.
-  Empty values are hidden; until a booking link or email is set, every
-  "Book a free review" button scrolls to the contact section.
-- Prices in Packages are "from" figures taken from the low end of the price
-  ranges to test. Confirm them after the first owner interviews.
-- The page shows no client results. Mock screens are labelled "Illustrative",
-  the season plan is labelled "Example season", and the outcome calculator only
-  does arithmetic on the visitor's own inputs. Add real results only with the
-  client's written consent.
-- Some promised capabilities are not built yet (Google Business Profile
-  updates, scheduled posting, review requests, WhatsApp/SMS messaging).
-  Deliver them by hand or soften the copy before launch.
-- FAQ answers on contract terms, start time and the second-month-free guarantee
-  are proposed policy; confirm them before launch.
+  Until a booking link or email is set, every "Book a free review" button
+  scrolls to the closing section.
+- Prices are "from" figures from the price ranges still being tested.
+- Several promised capabilities are not built yet: scheduled posting, Google
+  Business Profile updates, review requests, WhatsApp/SMS messaging, and
+  HubSpot/Calendly connections. Deliver them by hand or soften the copy.
+- FAQ answers on contract terms, start time and the second-month-free
+  guarantee are proposed policy; confirm them before launch.
