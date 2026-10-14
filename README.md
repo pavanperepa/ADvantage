@@ -18,7 +18,7 @@ faint crowd. Every four seconds it sends its work out as a pulse; as the pulse
 passes, the right people light up and travel in to orbit it.
 
 Other motion uses GSAP (ScrollTrigger, SplitText, DrawSVG) and Lenis: headings
-rise line by line, the business types arrive one by one, the app hub draws its connections, the
+rise line by line, the "Trusted by" strip scrolls under the hero, the app hub draws its connections, the
 platform section keeps a product screen pinned while its panels change, the
 strategy section scrolls sideways while pinned, and the outcomes chart draws in
 and re-animates as the sliders move. Everything has a reduced-motion fallback.

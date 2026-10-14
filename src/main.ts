@@ -128,20 +128,6 @@ function initHero() {
   });
 }
 
-// ---------------------------------------------------------------- work types
-// The kinds of business, set large, arriving one after another.
-function initWork() {
-  if (reducedMotion) return;
-  gsap.from('.work-types span', {
-    yPercent: 60,
-    opacity: 0,
-    duration: 1,
-    ease: EASE,
-    stagger: 0.08,
-    scrollTrigger: { trigger: '.work-types', start: 'top 85%' },
-  });
-}
-
 // ---------------------------------------------------------------- connect hub
 const APPS: { icon: SimpleIcon; label: string }[] = [
   { icon: siMeta, label: 'Meta Ads' },
@@ -595,7 +581,6 @@ wireContact();
 initScroll();
 initHero();
 initEntrances();
-initWork();
 initHub();
 initCaps();
 initSeason();
