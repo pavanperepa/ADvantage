@@ -34,7 +34,8 @@ npm run dev      # http://localhost:5173
 npm run build    # static output in dist/
 ```
 
-Needs Node 18+. Deploys as static files (Vercel, Netlify, Cloudflare Pages).
+Needs Node 18+. Deployed on Render as a static site from this branch; see
+`render.yaml` (Blueprint). Pushes to `site` redeploy automatically.
 
 ## Content rules
 

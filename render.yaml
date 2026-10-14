@@ -1,0 +1,49 @@
+# Render Blueprint for the ADvantage marketing site.
+# Docs: https://render.com/docs/blueprint-spec
+#
+# A static site: Render runs the build, then serves dist/ from its CDN with
+# free managed TLS. Static sites cost nothing on Render, paid workspace or not.
+
+services:
+  - type: web
+    runtime: static
+    name: advantage-website
+    branch: site
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    pullRequestPreviewsEnabled: false
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+
+    # Uncomment and set your domain. Listing the apex (example.com) makes Render
+    # add www.example.com too and redirect between them. After syncing, Render's
+    # dashboard (Settings > Custom Domains) shows the DNS records to add at your
+    # registrar.
+    # domains:
+    #   - example.com
+
+    headers:
+      # Vite fingerprints everything in /assets, so it can be cached forever.
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      # The page itself must revalidate so a new deploy shows up immediately.
+      - path: /index.html
+        name: Cache-Control
+        value: no-cache
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+
+    routes:
+      # One-page site: send any unknown path back to the page.
+      - type: rewrite
+        source: /*
+        destination: /index.html
