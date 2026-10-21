@@ -292,21 +292,22 @@ export function createHero(canvas: HTMLCanvasElement, opts: HeroOptions) {
 
   let visible = true;
   let running = false;
-  const clock = new THREE.Clock();
+  let last = 0;
   let elapsed = 0;
-  function frame() {
+  function frame(now: number) {
     if (!visible) {
       running = false;
       return;
     }
-    elapsed += Math.min(clock.getDelta(), 0.05);
+    elapsed += Math.min((now - last) / 1000, 0.05);
+    last = now;
     draw(elapsed);
     requestAnimationFrame(frame);
   }
   function start() {
     if (running) return;
     running = true;
-    clock.getDelta();
+    last = performance.now();
     requestAnimationFrame(frame);
   }
   new IntersectionObserver(([entry]) => {

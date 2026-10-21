@@ -3,24 +3,26 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SplitText } from 'gsap/SplitText';
 import { DrawSVGPlugin } from 'gsap/DrawSVGPlugin';
+import { ScrambleTextPlugin } from 'gsap/ScrambleTextPlugin';
 import Lenis from 'lenis';
 import {
-  siCalendly,
   siFacebook,
   siGmail,
-  siGoogle,
   siGoogledrive,
+  siGooglemaps,
+  siGooglemessages,
   siGooglesheets,
-  siHubspot,
   siInstagram,
   siMeta,
   siWhatsapp,
   type SimpleIcon,
 } from 'simple-icons';
 import { createHero } from './hero';
+import { countUp, decrypt, magnet, scrollVelocity, spotlight } from './bits';
 import { site } from './config';
+import type { NetHandle } from './net';
 
-gsap.registerPlugin(ScrollTrigger, SplitText, DrawSVGPlugin);
+gsap.registerPlugin(ScrollTrigger, SplitText, DrawSVGPlugin, ScrambleTextPlugin);
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $ = <T extends Element = HTMLElement>(sel: string, root: ParentNode = document) => root.querySelector<T>(sel);
@@ -59,9 +61,9 @@ function wireContact() {
 }
 
 // ---------------------------------------------------------------- smooth scroll
-function initScroll() {
-  if (reducedMotion) return;
-  const lenis = new Lenis({ lerp: 0.1 });
+function initScroll(): Lenis | null {
+  if (reducedMotion) return null;
+  const lenis = new Lenis({ lerp: 0.1, touchMultiplier: 1.4 });
   lenis.on('scroll', ScrollTrigger.update);
   gsap.ticker.add((t) => lenis.raf(t * 1000));
   gsap.ticker.lagSmoothing(0);
@@ -74,6 +76,19 @@ function initScroll() {
       lenis.scrollTo(target, { offset: id === '#top' ? 0 : -76, duration: 1.4 });
     });
   }
+  return lenis;
+}
+
+// ---------------------------------------------------------------- React Bits-style effects
+function initBits(lenis: Lenis | null) {
+  if (reducedMotion) return;
+  const track = $('[data-velocity]');
+  if (track) {
+    track.classList.add('is-driven');
+    scrollVelocity(track, lenis);
+  }
+  for (const el of $$('[data-magnet]')) magnet(el);
+  for (const el of $$('[data-spotlight]')) spotlight(el);
 }
 
 // ---------------------------------------------------------------- entrances
@@ -133,13 +148,12 @@ const APPS: { icon: SimpleIcon; label: string }[] = [
   { icon: siMeta, label: 'Meta Ads' },
   { icon: siInstagram, label: 'Instagram' },
   { icon: siFacebook, label: 'Facebook' },
+  { icon: siGooglemessages, label: 'Text messages' },
   { icon: siWhatsapp, label: 'WhatsApp' },
-  { icon: siGoogle, label: 'Google Business' },
-  { icon: siGmail, label: 'Gmail' },
-  { icon: siGoogledrive, label: 'Google Drive' },
-  { icon: siGooglesheets, label: 'Google Sheets' },
-  { icon: siHubspot, label: 'HubSpot' },
-  { icon: siCalendly, label: 'Calendly' },
+  { icon: siGmail, label: 'Email' },
+  { icon: siGoogledrive, label: 'Your footage' },
+  { icon: siGooglesheets, label: 'Lead lists' },
+  { icon: siGooglemaps, label: 'Banner spots' },
 ];
 
 function initHub() {
@@ -230,8 +244,21 @@ function initCaps() {
     screen.append(bar, body);
     inline.appendChild(screen);
     cap.appendChild(inline);
-    ScrollTrigger.create({ trigger: inline, start: 'top 85%', once: true, onEnter: () => copy.classList.add('is-active') });
+    ScrollTrigger.create({
+      trigger: inline,
+      start: 'top 85%',
+      once: true,
+      onEnter: () => {
+        copy.classList.add('is-active');
+        counts(copy);
+      },
+    });
   }
+
+  const counts = (panel: HTMLElement | undefined) => {
+    if (!panel || reducedMotion) return;
+    for (const b of $$('[data-count]', panel)) countUp(b, Number(b.dataset.count));
+  };
 
   let current = 0;
   const show = (i: number) => {
@@ -239,7 +266,12 @@ function initCaps() {
     if (i === current) return;
     panels.at(current)?.classList.remove('is-active');
     panels.at(i)?.classList.add('is-active');
-    if (title) title.textContent = panels.at(i)?.dataset.title ?? '';
+    const next = panels.at(i)?.dataset.title ?? '';
+    if (title) {
+      if (reducedMotion) title.textContent = next;
+      else decrypt(title, next);
+    }
+    counts(panels.at(i));
     current = i;
   };
   show(0);
@@ -259,6 +291,7 @@ function initSeason() {
   const track = $('[data-season-track]');
   const progress = $('[data-season-progress]');
   if (!section || !track || reducedMotion) return;
+  initNet(section);
   gsap.matchMedia().add('(min-width: 1001px)', () => {
     const distance = () => Math.max(0, track.scrollWidth - window.innerWidth);
     gsap.to(track, {
@@ -280,6 +313,30 @@ function initSeason() {
       },
     });
   });
+}
+
+// The Vanta net loads on approach, runs only while the section is on screen
+// and is skipped on small screens, where the cards cover it anyway.
+function initNet(section: HTMLElement) {
+  const host = $('[data-net]', section);
+  if (!host || window.innerWidth < 700) return;
+  let net: NetHandle | null = null;
+  let loading = false;
+  new IntersectionObserver(
+    async ([entry]) => {
+      if (entry.isIntersecting && !net && !loading) {
+        loading = true;
+        const { createNet } = await import('./net');
+        net = createNet(host);
+        loading = false;
+        if (net) gsap.fromTo(host, { opacity: 0 }, { opacity: 1, duration: 1.6, ease: 'power2.out' });
+      } else if (!entry.isIntersecting && net) {
+        net.destroy();
+        net = null;
+      }
+    },
+    { rootMargin: '300px 0px' },
+  ).observe(section);
 }
 
 // ---------------------------------------------------------------- outcomes: calculator + chart
@@ -329,18 +386,20 @@ function initOutcomes() {
   const compute = (): Series & { customers: number; perCustomer: number; liftYear: number } => {
     const inquiries = val('inquiries');
     const conv = val('conv') / 100;
-    const perMonth = (val('spend') * val('visits')) / 12;
+    const fee = val('spend');
+    const stay = val('visits');
     const base: number[] = [];
     const lift: number[] = [];
     const cBase = inquiries * conv;
     const cLift = inquiries * Math.min(conv + 0.05, 1);
     for (let m = 1; m <= 12; m++) {
-      // Each month's new customers keep spending for the rest of the year.
-      const months = (m * (m + 1)) / 2;
-      base.push(cBase * perMonth * months);
-      lift.push(cLift * perMonth * months);
+      // Each month's new students pay the fee every month until they leave.
+      let months = 0;
+      for (let j = 1; j <= m; j++) months += Math.min(m - j + 1, stay);
+      base.push(cBase * fee * months);
+      lift.push(cLift * fee * months);
     }
-    return { base, lift, customers: cBase, perCustomer: perMonth * 12, liftYear: lift[11] - base[11] };
+    return { base, lift, customers: cBase, perCustomer: fee * stay, liftYear: lift[11] - base[11] };
   };
 
   const render = (s: Series) => {
@@ -355,7 +414,7 @@ function initOutcomes() {
     svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
     svg.setAttribute(
       'aria-label',
-      `Revenue from new customers over 12 months: ${money(target.base[11])} with your numbers today, ${money(target.lift[11])} with 5 points more conversion.`,
+      `Fees from new students over 12 months: ${money(target.base[11])} with your numbers today, ${money(target.lift[11])} with 5 points more enrolment.`,
     );
 
     const ticks = [0, 1, 2, 3, 4].map((k) => (max / 4) * k);
@@ -413,7 +472,7 @@ function initOutcomes() {
     head.textContent = `By month ${i + 1}`;
     tip.appendChild(head);
     for (const [key, label, color] of [
-      ['lift', 'With 5 points more conversion', 'var(--series-lift)'],
+      ['lift', 'With 5 points more enrolment', 'var(--series-lift)'],
       ['base', 'Your numbers today', 'var(--series-base)'],
     ] as const) {
       const row = document.createElement('p');
@@ -549,11 +608,11 @@ function initOutcomes() {
 // ---------------------------------------------------------------- nav
 function initNav() {
   const nav = $('[data-nav]')!;
-  ScrollTrigger.create({
-    start: 40,
-    end: 'max',
-    onToggle: (self) => nav.classList.toggle('is-scrolled', self.isActive),
-  });
+  // A plain scroll check: a ScrollTrigger ending at 'max' turns off at the
+  // very bottom of the page and drops the bar's background there.
+  const setScrolled = () => nav.classList.toggle('is-scrolled', window.scrollY > 40);
+  window.addEventListener('scroll', setScrolled, { passive: true });
+  setScrolled();
   for (const link of $$<HTMLAnchorElement>('.nav-links a')) {
     const section = $(link.getAttribute('href')!);
     if (!section) continue;
@@ -578,7 +637,8 @@ function initFaq() {
 }
 
 wireContact();
-initScroll();
+const lenis = initScroll();
+initBits(lenis);
 initHero();
 initEntrances();
 initHub();

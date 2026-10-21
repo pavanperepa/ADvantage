@@ -2,7 +2,8 @@
   ADvantage. One ground, one ink, one accent (taste-skill rules): surfaces
   separate by a step in tone, never by lines, shadows or gradients. One
   typeface. Five type sizes. The accent sits on the action and on the people
-  who light up in the hero.
+  who light up in the hero. The one deliberate exception is the cursor
+  spotlight on cards, a light that only exists under the pointer.
 */
 :root {
   --ground: #f2f1ec;
@@ -61,6 +62,9 @@ body {
   font-size: var(--t-body);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-kerning: normal;
   overflow-x: hidden;
 }
 
@@ -373,8 +377,9 @@ h3 {
   animation: trusted 48s linear infinite;
 }
 
-.trusted:hover .trusted-track {
-  animation-play-state: paused;
+.trusted-track.is-driven {
+  animation: none;
+  will-change: transform;
 }
 
 .trusted ul {
@@ -950,11 +955,27 @@ h3 {
 
 .hbars div {
   display: grid;
-  gap: 6px;
+  grid-template-columns: 1fr auto;
+  gap: 6px 12px;
   font-size: var(--t-small);
 }
 
+.hbars span {
+  grid-area: 1 / 1;
+}
+
+.hbars b {
+  grid-area: 1 / 2;
+  font-weight: 600;
+  color: var(--s-ink-2);
+}
+
+.hbars div:first-child b {
+  color: var(--accent);
+}
+
 .hbars i {
+  grid-column: 1 / -1;
   display: block;
   width: var(--w);
   height: 14px;
@@ -1144,6 +1165,218 @@ h3 {
   font-weight: 600;
 }
 
+.mini-accent {
+  background: var(--accent);
+  color: var(--ink);
+}
+
+.mini-accent span {
+  color: #3d4a12;
+}
+
+/* raw footage becomes a reel */
+.reel-flow {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 14px;
+  align-items: center;
+}
+
+.reel-flow svg {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: var(--s-ink-2);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.raw {
+  padding: 14px 16px;
+  background: var(--s-tone);
+  border-radius: 10px;
+}
+
+.raw span {
+  display: block;
+  font-size: 13px;
+  color: var(--s-ink-2);
+}
+
+.raw b {
+  display: block;
+  margin-top: 4px;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.raw-done {
+  background: var(--accent);
+  color: var(--ink);
+}
+
+.raw-done span {
+  color: #3d4a12;
+}
+
+.panel.is-active .reel-flow > * {
+  animation: pop 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.panel.is-active .reel-flow > :nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.panel.is-active .reel-flow > :nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+/* audience segments for one message */
+.segments {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.segments li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 10px;
+  align-items: center;
+  padding: 14px 16px;
+  background: var(--s-tone);
+  border-radius: 10px;
+}
+
+.segments i {
+  grid-row: span 2;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  background: var(--accent);
+  box-shadow: inset 0 0 0 4px var(--accent), inset 0 0 0 9px var(--ink);
+}
+
+.segments span {
+  font-size: 13px;
+  color: var(--s-ink-2);
+}
+
+.segments b {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.compose {
+  display: grid;
+  gap: 12px;
+  margin-top: auto;
+  padding: 16px;
+  background: var(--s-tone);
+  border-radius: 10px;
+}
+
+.compose-msg {
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.panel.is-active .segments li {
+  animation: pop 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.panel.is-active .segments li:nth-child(2) {
+  animation-delay: 0.06s;
+}
+
+.panel.is-active .segments li:nth-child(3) {
+  animation-delay: 0.12s;
+}
+
+.panel.is-active .segments li:nth-child(4) {
+  animation-delay: 0.18s;
+}
+
+/* banner locations on a small street map */
+.map {
+  overflow: hidden;
+  background: var(--s-tone);
+  border-radius: 10px;
+}
+
+.map svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.map-road {
+  fill: none;
+  stroke: var(--s-tone-2);
+  stroke-width: 9;
+}
+
+.map-block {
+  fill: #2f3137;
+}
+
+.map-spot {
+  fill: var(--s-ink-2);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.map-hot {
+  fill: var(--accent);
+}
+
+.map-home {
+  fill: var(--s-ink);
+}
+
+.panel.is-active .map-spot {
+  animation: spot-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1.4) both;
+}
+
+.panel.is-active .map-spot:nth-of-type(2) {
+  animation-delay: 0.1s;
+}
+
+.panel.is-active .map-spot:nth-of-type(3) {
+  animation-delay: 0.2s;
+}
+
+.panel.is-active .map-spot:nth-of-type(4) {
+  animation-delay: 0.3s;
+}
+
+.panel.is-active .map-hot {
+  animation: spot-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1.4) both, spot-ping 2.4s ease-out 0.8s infinite;
+}
+
+@keyframes spot-in {
+  from {
+    transform: scale(0);
+  }
+}
+
+@keyframes spot-ping {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  15% {
+    transform: scale(1.35);
+  }
+  35% {
+    transform: scale(1);
+  }
+}
+
 @media (max-width: 560px) {
   .screen-body {
     padding: 16px;
@@ -1164,15 +1397,35 @@ h3 {
   .ad {
     grid-template-columns: 110px 1fr;
   }
+  .segments b {
+    font-size: 20px;
+  }
 }
 
 /* ------------------------------------------------------------ strategy (dark field) */
 .strategy {
+  position: relative;
   margin-top: var(--gap-section);
   padding: clamp(80px, 9vw, 120px) 0;
   background: var(--field);
   color: var(--on-field);
   overflow: hidden;
+}
+
+.strategy-net {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.strategy-net canvas {
+  opacity: 0.5;
+}
+
+.strategy-pin {
+  position: relative;
+  z-index: 1;
 }
 
 .strategy-head {
@@ -1219,6 +1472,7 @@ h3 {
 }
 
 .play {
+  position: relative;
   display: flex;
   flex-direction: column;
   width: 330px;
@@ -1898,6 +2152,32 @@ h3 {
   gap: 12px;
   margin-top: 32px;
   font-size: var(--t-small);
+}
+
+/* ------------------------------------------------------------ spotlight cards */
+.has-spotlight {
+  position: relative;
+  isolation: isolate;
+}
+
+.has-spotlight::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(360px circle at var(--mx, 50%) var(--my, 50%), var(--spot, rgba(255, 255, 255, 0.07)), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.has-spotlight:hover::after {
+  opacity: 1;
+}
+
+.steps .has-spotlight {
+  --spot: rgba(255, 255, 255, 0.55);
 }
 
 /* ------------------------------------------------------------ reduced motion */
